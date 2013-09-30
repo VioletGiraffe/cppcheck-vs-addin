@@ -46,7 +46,6 @@ namespace VSPackage.CPPCheckPlugin
         /// </summary>
         public CPPCheckPluginPackage()
         {
-            Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
         }
 
         /// <summary>
@@ -82,7 +81,9 @@ namespace VSPackage.CPPCheckPlugin
             Debug.WriteLine (string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
             base.Initialize();
 
-            //_applicationObject = (DTE2)GetAutomationObject(;
+            _applicationObject = (EnvDTE.DTE)GetService(typeof(SDTE));
+            _eventsHandlers = _applicationObject.Events.DocumentEvents;
+            _eventsHandlers.DocumentSaved += documentSaved;
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
@@ -107,7 +108,10 @@ namespace VSPackage.CPPCheckPlugin
         /// </summary>
         private void MenuItemCallback(object sender, EventArgs e)
         {
+        }
 
+        private void documentSaved(Document Document)
+        {
         }
 
         DTE _applicationObject = null;
