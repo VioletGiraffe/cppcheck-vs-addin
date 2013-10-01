@@ -8,6 +8,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.OLE;
 using EnvDTE;
 
 namespace VSPackage.CPPCheckPlugin
@@ -81,9 +82,12 @@ namespace VSPackage.CPPCheckPlugin
             Debug.WriteLine (string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
             base.Initialize();
 
-            _applicationObject = (EnvDTE.DTE)GetService(typeof(SDTE));
-            _eventsHandlers = _applicationObject.Events.DocumentEvents;
+            _dte = (EnvDTE.DTE)GetService(typeof(SDTE));
+            _eventsHandlers = _dte.Events.DocumentEvents;
             _eventsHandlers.DocumentSaved += documentSaved;
+
+            OutputWindow outputWindow = (OutputWindow)_dte.Application.Windows.Item(EnvDTE.Constants.vsWindowKindOutput).Object;
+            _outputWindow = outputWindow.OutputWindowPanes.Add("cppcheck output");
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
@@ -110,11 +114,67 @@ namespace VSPackage.CPPCheckPlugin
         {
         }
 
-        private void documentSaved(Document Document)
+        private void documentSaved(Document document)
         {
+            const String cppheckargs = @"--enable=style,information --template=vs";
+            if (document.FullName.ToLower().EndsWith(".cpp") || document.FullName.ToLower().EndsWith(".c")   ||
+                document.FullName.ToLower().EndsWith(".h")   || document.FullName.ToLower().EndsWith(".hpp") || 
+                document.FullName.ToLower().EndsWith(".cxx") || document.FullName.ToLower().EndsWith(".cc"))
+            {
+                runAnalyzer("c:\\Program Files (x86)\\Cppcheck\\cppcheck.exe", cppheckargs + @" """ + document.FullName + @"""");
+            }
         }
 
-        DTE _applicationObject = null;
-        DocumentEvents _eventsHandlers = null;
+        private void runAnalyzer(String analyzerExePath, String parameters)
+        {
+            if (_outputWindow != null)
+                _outputWindow.Clear();
+
+            System.Diagnostics.Process process;
+            process = new System.Diagnostics.Process();
+            process.StartInfo.FileName = analyzerExePath;
+            process.StartInfo.Arguments = parameters;
+            process.StartInfo.CreateNoWindow = true;
+
+            // Set UseShellExecute to false for output redirection.
+            process.StartInfo.UseShellExecute = false;
+
+            // Redirect the standard output of the command.   
+            process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.RedirectStandardError = true;
+
+            // Set our event handler to asynchronously read the sort output.
+            process.OutputDataReceived += new DataReceivedEventHandler(analyzerOutputHandler);
+            process.ErrorDataReceived += new DataReceivedEventHandler(analyzerOutputHandler);
+
+            // Start the process.
+            process.Start();
+
+            // Start the asynchronous read of the sort output stream.
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            // Wait for analysis completion
+            process.WaitForExit();
+            string o = process.StandardOutput.ReadToEnd();
+            string e = process.StandardError.ReadToEnd();
+            int retCode = process.ExitCode;
+            process.Close();
+        }
+
+        private static void analyzerOutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
+        {
+            if (!String.IsNullOrEmpty(outLine.Data))
+            {
+                String output = outLine.Data;
+                if (_outputWindow != null)
+                    _outputWindow.OutputString(output + "\n");
+            }
+        }
+
+
+        private DTE _dte = null;
+        private DocumentEvents _eventsHandlers = null;
+
+        private static OutputWindowPane _outputWindow = null;
     }
 }
