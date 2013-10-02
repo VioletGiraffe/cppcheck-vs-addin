@@ -5,11 +5,15 @@ using System.Runtime.InteropServices;
 using System.ComponentModel.Design;
 using Microsoft.Win32;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.VCCodeModel;
+using Microsoft.VisualStudio.VCProjectEngine;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.OLE;
 using EnvDTE;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -115,13 +119,52 @@ namespace VSPackage.CPPCheckPlugin
         }
 
         private void documentSaved(Document document)
-        {
-            const String cppheckargs = @"--enable=style,information --template=vs";
-            if (document.FullName.ToLower().EndsWith(".cpp") || document.FullName.ToLower().EndsWith(".c")   ||
-                document.FullName.ToLower().EndsWith(".h")   || document.FullName.ToLower().EndsWith(".hpp") || 
-                document.FullName.ToLower().EndsWith(".cxx") || document.FullName.ToLower().EndsWith(".cc"))
+        {            
+            if (document.Language == "C/C++")
             {
-                runAnalyzer("c:\\Program Files (x86)\\Cppcheck\\cppcheck.exe", cppheckargs + @" """ + document.FullName + @"""");
+                try
+                {
+                    VCProject project = document.ProjectItem.ContainingProject.Object as VCProject;
+                    String currentConfigName = document.ProjectItem.ConfigurationManager.ActiveConfiguration.ConfigurationName as String;
+                    VCConfiguration config = project.Configurations.Item(currentConfigName);
+                    IVCCollection toolsCollection = config.Tools;
+                    List<string> includePaths = null;
+                    foreach (var tool in toolsCollection)
+                    {
+                        // Project-specific includes
+                        if (tool is VCCLCompilerTool)
+                        {
+                            VCCLCompilerTool compilerTool = tool as VCCLCompilerTool;
+                            String includes = compilerTool.AdditionalIncludeDirectories;
+                            includePaths = includes.Split(';').ToList();
+                            break;
+                        }
+                    }
+
+                    // Global platform includes
+                    VCPlatform platfrom = config.Platform as VCPlatform;
+                    includePaths.AddRange(platfrom.IncludeDirectories.Split(';').ToList());
+
+                    String cppheckargs = @"--enable=style,information --template=vs --check-config";
+                    String basePath = project.ProjectDirectory.Replace(@"""", "");
+                    if (includePaths != null)
+                        foreach (string path in includePaths)
+                        {
+                            if (!String.IsNullOrEmpty(path))
+                            {
+                                String fullIncludePath = path.Contains(':') ? path : (basePath + path);
+                                if (fullIncludePath.EndsWith("\\"))
+                                    fullIncludePath = fullIncludePath.Substring(0, fullIncludePath.Length - 1);
+                                String includeArgument = @" -I""" + fullIncludePath.Replace("\"", "") + @"""";
+                                cppheckargs += (" " + includeArgument);
+                            }
+                        }
+                    runAnalyzer("c:\\Program Files (x86)\\Cppcheck\\cppcheck.exe", cppheckargs + @" """ + document.FullName + @"""");
+                }
+                catch (System.Exception ex)
+                {
+                    return;
+                }
             }
         }
 
@@ -171,6 +214,17 @@ namespace VSPackage.CPPCheckPlugin
             }
         }
 
+        private string SafeGetPropertyValue(Property prop)
+        {
+            try
+            {
+                return string.Format("{0} = {1}", prop.Name, prop.Value);
+            }
+            catch (Exception ex)
+            {
+                return string.Format("{0} = {1}", prop.Name, ex.GetType());
+            }
+        }
 
         private DTE _dte = null;
         private DocumentEvents _eventsHandlers = null;
