@@ -2,6 +2,7 @@
 using System.Text;
 using System;
 using EnvDTE;
+using System.Threading;
 using System.Diagnostics;
 
 namespace VSPackage.CPPCheckPlugin
@@ -19,12 +20,15 @@ namespace VSPackage.CPPCheckPlugin
 
         protected void run(string analyzerExePath, string arguments, OutputWindowPane outputWindow)
         {
-            Debug.Assert(!String.IsNullOrEmpty(analyzerExePath) && !String.IsNullOrEmpty(arguments) && outputWindow != null);
-
             _outputWindow = outputWindow;
+            var t = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath, arguments));
+            t.Start();
+        }
 
-            System.Diagnostics.Process process;
-            process = new System.Diagnostics.Process();
+        private void analyzerThreadFunc(string analyzerExePath, string arguments)
+        {
+            Debug.Assert(!String.IsNullOrEmpty(analyzerExePath) && !String.IsNullOrEmpty(arguments) && _outputWindow != null);
+            var process = new System.Diagnostics.Process();
             process.StartInfo.FileName = analyzerExePath;
             process.StartInfo.Arguments = arguments;
             process.StartInfo.CreateNoWindow = true;
@@ -37,8 +41,8 @@ namespace VSPackage.CPPCheckPlugin
             process.StartInfo.RedirectStandardError = true;
 
             // Set our event handler to asynchronously read the sort output.
-            process.OutputDataReceived += new DataReceivedEventHandler(analyzerOutputHandler);
-            process.ErrorDataReceived += new DataReceivedEventHandler(analyzerOutputHandler);
+            process.OutputDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
+            process.ErrorDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
 
             // Start the process.
             process.Start();
@@ -53,7 +57,7 @@ namespace VSPackage.CPPCheckPlugin
             process.Close();
         }
 
-        private static void analyzerOutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
+        private void analyzerOutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
         {
             if (!String.IsNullOrEmpty(outLine.Data))
             {
@@ -62,6 +66,6 @@ namespace VSPackage.CPPCheckPlugin
             }
         }
 
-        private static OutputWindowPane _outputWindow = null;
+        private OutputWindowPane _outputWindow = null;
     }
 }

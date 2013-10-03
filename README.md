@@ -1,4 +1,4 @@
 cppcheck-vs-addin
 =================
 
-Visual Studio integration for cppcheck analyzer
+Visual Studio integration for cppcheck - static C++ source code analyzer.
