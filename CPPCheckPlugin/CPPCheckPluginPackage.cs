@@ -138,20 +138,22 @@ namespace VSPackage.CPPCheckPlugin
                         {
                             VCCLCompilerTool compilerTool = tool as VCCLCompilerTool;
                             String includes = compilerTool.AdditionalIncludeDirectories;
-                            sourceForAnalysis.addIncludePath(includes.Split(';').ToList());
+                            string a = compilerTool.AdditionalOptions;
+                            sourceForAnalysis.addIncludePaths(includes.Split(';').ToList());
+                            sourceForAnalysis.addMacros(compilerTool.PreprocessorDefinitions.Split(';').ToList());
                             break;
                         }
                     }
 
                     // Global platform includes
-                    VCPlatform platfrom = config.Platform as VCPlatform;
-                    var globalIncludes = platfrom.IncludeDirectories.Split(';').ToList();
-                    // Resolving variables in include paths
-                    for (int i = 0; i < globalIncludes.Count; ++i)
-                    {
-                        globalIncludes[i] = platfrom.Evaluate(globalIncludes[i]);
-                    }
-                    sourceForAnalysis.addIncludePath(globalIncludes);
+//                     VCPlatform platfrom = config.Platform as VCPlatform;
+//                     var globalIncludes = platfrom.IncludeDirectories.Split(';').ToList();
+//                     // Resolving variables in include paths
+//                     for (int i = 0; i < globalIncludes.Count; ++i)
+//                     {
+//                         globalIncludes[i] = platfrom.Evaluate(globalIncludes[i]);
+//                     }
+//                     sourceForAnalysis.addIncludePaths(globalIncludes);
 
                     _outputWindow.Clear();
                     foreach (var analyzer in _analyzers)

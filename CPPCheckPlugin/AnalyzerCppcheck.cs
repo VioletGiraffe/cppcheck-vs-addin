@@ -10,7 +10,7 @@ namespace VSPackage.CPPCheckPlugin
     {
         public override void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow)
         {
-            String cppheckargs = @"--enable=style,information --template=vs --check-config";
+            String cppheckargs = @"--enable=style,information --template=vs --force --quiet --suppress=missingIncludeSystem --check-config";
             Debug.Assert(filesToAnalyze.Count == 1);
             foreach (SourceFile file in filesToAnalyze)
             {

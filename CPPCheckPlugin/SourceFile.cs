@@ -20,7 +20,7 @@ namespace VSPackage.CPPCheckPlugin
                 _includePaths.Add(cleanPath(path.Contains(":") ? path : (_projectBasePath + path)));
         }
 
-        public void addIncludePath(List<string> paths)
+        public void addIncludePaths(List<string> paths)
         {
             foreach (string path in paths)
             {
@@ -31,6 +31,14 @@ namespace VSPackage.CPPCheckPlugin
         public void addMacro(string macro)
         {
             _activeMacros.Add(macro);
+        }
+
+        public void addMacros(List<string> macros)
+        {
+            foreach (string macro in macros)
+            {
+                addMacro(macro);
+            }
         }
 
         public string FilePath
