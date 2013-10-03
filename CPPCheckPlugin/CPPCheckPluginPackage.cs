@@ -91,7 +91,9 @@ namespace VSPackage.CPPCheckPlugin
             _eventsHandlers.DocumentSaved += documentSaved;
 
             OutputWindow outputWindow = (OutputWindow)_dte.Application.Windows.Item(EnvDTE.Constants.vsWindowKindOutput).Object;
-            _outputWindow = outputWindow.OutputWindowPanes.Add("cppcheck output");
+            _outputWindow = outputWindow.OutputWindowPanes.Add("Code analysis output");
+
+            _analyzers.Add(new AnalyzerCppcheck());
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
@@ -128,7 +130,7 @@ namespace VSPackage.CPPCheckPlugin
                     String currentConfigName = document.ProjectItem.ConfigurationManager.ActiveConfiguration.ConfigurationName as String;
                     VCConfiguration config = project.Configurations.Item(currentConfigName);
                     IVCCollection toolsCollection = config.Tools;
-                    List<string> includePaths = null;
+                    SourceFile sourceForAnalysis = new SourceFile(document.FullName, project.ProjectDirectory.Replace(@"""", ""));
                     foreach (var tool in toolsCollection)
                     {
                         // Project-specific includes
@@ -136,98 +138,43 @@ namespace VSPackage.CPPCheckPlugin
                         {
                             VCCLCompilerTool compilerTool = tool as VCCLCompilerTool;
                             String includes = compilerTool.AdditionalIncludeDirectories;
-                            includePaths = includes.Split(';').ToList();
+                            sourceForAnalysis.addIncludePath(includes.Split(';').ToList());
                             break;
                         }
                     }
 
                     // Global platform includes
                     VCPlatform platfrom = config.Platform as VCPlatform;
-                    includePaths.AddRange(platfrom.IncludeDirectories.Split(';').ToList());
+                    var globalIncludes = platfrom.IncludeDirectories.Split(';').ToList();
+                    // Resolving variables in include paths
+                    for (int i = 0; i < globalIncludes.Count; ++i)
+                    {
+                        globalIncludes[i] = platfrom.Evaluate(globalIncludes[i]);
+                    }
+                    sourceForAnalysis.addIncludePath(globalIncludes);
 
-                    String cppheckargs = @"--enable=style,information --template=vs --check-config";
-                    String basePath = project.ProjectDirectory.Replace(@"""", "");
-                    if (includePaths != null)
-                        foreach (string path in includePaths)
-                        {
-                            if (!String.IsNullOrEmpty(path))
-                            {
-                                String fullIncludePath = path.Contains(':') ? path : (basePath + path);
-                                if (fullIncludePath.EndsWith("\\"))
-                                    fullIncludePath = fullIncludePath.Substring(0, fullIncludePath.Length - 1);
-                                String includeArgument = @" -I""" + fullIncludePath.Replace("\"", "") + @"""";
-                                cppheckargs += (" " + includeArgument);
-                            }
-                        }
-                    runAnalyzer("c:\\Program Files (x86)\\Cppcheck\\cppcheck.exe", cppheckargs + @" """ + document.FullName + @"""");
+                    _outputWindow.Clear();
+                    foreach (var analyzer in _analyzers)
+                    {
+                        analyzer.analyze(sourceForAnalysis, _outputWindow);
+                    }
                 }
                 catch (System.Exception ex)
                 {
+                    if (_outputWindow != null)
+                    {
+                        _outputWindow.Clear();
+                        _outputWindow.OutputString("Exception occurred in cppcheck add-in: " + ex.Message);
+                    }
+                    Debug.WriteLine("Exception occurred in cppcheck add-in: " + ex.Message);
                     return;
                 }
             }
         }
 
-        private void runAnalyzer(String analyzerExePath, String parameters)
-        {
-            if (_outputWindow != null)
-                _outputWindow.Clear();
-
-            System.Diagnostics.Process process;
-            process = new System.Diagnostics.Process();
-            process.StartInfo.FileName = analyzerExePath;
-            process.StartInfo.Arguments = parameters;
-            process.StartInfo.CreateNoWindow = true;
-
-            // Set UseShellExecute to false for output redirection.
-            process.StartInfo.UseShellExecute = false;
-
-            // Redirect the standard output of the command.   
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.RedirectStandardError = true;
-
-            // Set our event handler to asynchronously read the sort output.
-            process.OutputDataReceived += new DataReceivedEventHandler(analyzerOutputHandler);
-            process.ErrorDataReceived += new DataReceivedEventHandler(analyzerOutputHandler);
-
-            // Start the process.
-            process.Start();
-
-            // Start the asynchronous read of the sort output stream.
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-            // Wait for analysis completion
-            process.WaitForExit();
-            string o = process.StandardOutput.ReadToEnd();
-            string e = process.StandardError.ReadToEnd();
-            int retCode = process.ExitCode;
-            process.Close();
-        }
-
-        private static void analyzerOutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
-        {
-            if (!String.IsNullOrEmpty(outLine.Data))
-            {
-                String output = outLine.Data;
-                if (_outputWindow != null)
-                    _outputWindow.OutputString(output + "\n");
-            }
-        }
-
-        private string SafeGetPropertyValue(Property prop)
-        {
-            try
-            {
-                return string.Format("{0} = {1}", prop.Name, prop.Value);
-            }
-            catch (Exception ex)
-            {
-                return string.Format("{0} = {1}", prop.Name, ex.GetType());
-            }
-        }
-
         private DTE _dte = null;
         private DocumentEvents _eventsHandlers = null;
+        private List<ICodeAnalyzer> _analyzers = new List<ICodeAnalyzer>();
 
         private static OutputWindowPane _outputWindow = null;
     }
