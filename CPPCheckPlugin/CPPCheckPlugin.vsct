@@ -61,11 +61,11 @@
               <CommandFlag>DynamicVisibility</CommandFlag>
           If you do not want an image next to your command, remove the Icon node /> -->
 
-      <Button guid="guidCPPCheckPluginCmdSet" id="cmdidSettings" priority="0x0100" type="Button">
+      <Button guid="guidCPPCheckPluginCmdSet" id="cmdidCheckProjectCppcheck" priority="0x0100" type="Button">
         <Parent guid="guidCPPCheckPluginCmdSet" id="MyMenuGroup" />
         <Icon guid="guidImages" id="bmpPic1" />
         <Strings>
-          <ButtonText>CPPCheck Settings</ButtonText>
+          <ButtonText>Check current project with cppcheck</ButtonText>
         </Strings>
       </Button>
 
@@ -95,9 +95,6 @@
   </Commands>
 
 
-
-
-
   <Symbols>
     <!-- This is the package guid. -->
     <GuidSymbol name="guidCPPCheckPluginPkg" value="{127d8bd3-8cd7-491a-9a63-9b4e89118da9}" />
@@ -105,8 +102,8 @@
     <!-- This is the guid used to group the menu commands together -->
     <GuidSymbol name="guidCPPCheckPluginCmdSet" value="{7fcb87ef-4f0c-4713-8217-5bef43dc0de4}">
 
-      <IDSymbol name="MyMenuGroup" value="0x1020" />
-      <IDSymbol name="cmdidSettings" value="0x0100" />
+      <IDSymbol name="MyMenuGroup" value="0x1021" />
+      <IDSymbol name="cmdidCheckProjectCppcheck" value="0x0100" />
       <IDSymbol name="cmdidMyTool" value="0x0101" />
     </GuidSymbol>
     

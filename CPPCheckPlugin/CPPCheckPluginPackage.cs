@@ -17,18 +17,6 @@ using System.Linq;
 
 namespace VSPackage.CPPCheckPlugin
 {
-    /// <summary>
-    /// This is the class that implements the package exposed by this assembly.
-    ///
-    /// The minimum requirement for a class to be considered a valid package for Visual Studio
-    /// is to implement the IVsPackage interface and register itself with the shell.
-    /// This package uses the helper classes defined inside the Managed Package Framework (MPF)
-    /// to do it: it derives from the Package class that provides the implementation of the 
-    /// IVsPackage interface and uses the registration attributes defined in the framework to 
-    /// register itself and its components with the shell.
-    /// </summary>
-    // This attribute tells the PkgDef creation utility (CreatePkgDef.exe) that this class is
-    // a package.
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [DefaultRegistryRoot(@"Software\Microsoft\VisualStudio\11.0")]
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExists_string)]
@@ -42,13 +30,6 @@ namespace VSPackage.CPPCheckPlugin
     [Guid(GuidList.guidCPPCheckPluginPkgString)]
     public sealed class CPPCheckPluginPackage : Package
     {
-        /// <summary>
-        /// Default constructor of the package.
-        /// Inside this method you can place any initialization code that does not require 
-        /// any Visual Studio service because at this point the package object is created but 
-        /// not sited yet inside Visual Studio environment. The place to do all the other 
-        /// initialization is the Initialize method.
-        /// </summary>
         public CPPCheckPluginPackage()
         {
         }
@@ -73,14 +54,8 @@ namespace VSPackage.CPPCheckPlugin
         }
 
 
-        /////////////////////////////////////////////////////////////////////////////
-        // Overridden Package Implementation
         #region Package Members
 
-        /// <summary>
-        /// Initialization of the package; this method is called right after the package is sited, so this is the place
-        /// where you can put all the initialization code that rely on services provided by VisualStudio.
-        /// </summary>
         protected override void Initialize()
         {
             Debug.WriteLine (string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
@@ -100,7 +75,7 @@ namespace VSPackage.CPPCheckPlugin
             if ( null != mcs )
             {
                 // Create the command for the menu item.
-                CommandID menuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidSettings);
+                CommandID menuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidCheckProjectCppcheck);
                 MenuCommand menuItem = new MenuCommand(MenuItemCallback, menuCommandID );
                 mcs.AddCommand( menuItem );
                 // Create the command for the tool window
@@ -111,13 +86,9 @@ namespace VSPackage.CPPCheckPlugin
         }
         #endregion
 
-        /// <summary>
-        /// This function is the callback used to execute a command when the a menu item is clicked.
-        /// See the Initialize method to see how the menu item is associated to this function using
-        /// the OleMenuCommandService service and the MenuCommand class.
-        /// </summary>
         private void MenuItemCallback(object sender, EventArgs e)
         {
+            checkCurrentProject();
         }
 
         private void documentSaved(Document document)
@@ -128,32 +99,9 @@ namespace VSPackage.CPPCheckPlugin
                 {
                     VCProject project = document.ProjectItem.ContainingProject.Object as VCProject;
                     String currentConfigName = document.ProjectItem.ConfigurationManager.ActiveConfiguration.ConfigurationName as String;
-                    VCConfiguration config = project.Configurations.Item(currentConfigName);
-                    IVCCollection toolsCollection = config.Tools;
-                    SourceFile sourceForAnalysis = new SourceFile(document.FullName, project.ProjectDirectory.Replace(@"""", ""));
-                    foreach (var tool in toolsCollection)
-                    {
-                        // Project-specific includes
-                        if (tool is VCCLCompilerTool)
-                        {
-                            VCCLCompilerTool compilerTool = tool as VCCLCompilerTool;
-                            String includes = compilerTool.AdditionalIncludeDirectories;
-                            string a = compilerTool.AdditionalOptions;
-                            sourceForAnalysis.addIncludePaths(includes.Split(';').ToList());
-                            sourceForAnalysis.addMacros(compilerTool.PreprocessorDefinitions.Split(';').ToList());
-                            break;
-                        }
-                    }
-
-                    // Global platform includes
-//                     VCPlatform platfrom = config.Platform as VCPlatform;
-//                     var globalIncludes = platfrom.IncludeDirectories.Split(';').ToList();
-//                     // Resolving variables in include paths
-//                     for (int i = 0; i < globalIncludes.Count; ++i)
-//                     {
-//                         globalIncludes[i] = platfrom.Evaluate(globalIncludes[i]);
-//                     }
-//                     sourceForAnalysis.addIncludePaths(globalIncludes);
+                    SourceFile sourceForAnalysis = createSourceFile(document.FullName, currentConfigName, project);
+                    if (sourceForAnalysis == null)
+                        return;
 
                     _outputWindow.Clear();
                     foreach (var analyzer in _analyzers)
@@ -169,8 +117,67 @@ namespace VSPackage.CPPCheckPlugin
                         _outputWindow.OutputString("Exception occurred in cppcheck add-in: " + ex.Message);
                     }
                     Debug.WriteLine("Exception occurred in cppcheck add-in: " + ex.Message);
-                    return;
                 }
+            }
+        }
+
+        private void checkCurrentProject()
+        {
+            if (_dte.ActiveDocument == null)
+                return;
+
+            VCProject project = _dte.ActiveDocument.ProjectItem.ContainingProject.Object as VCProject;
+            if (project == null)
+                return;
+
+            String currentConfigName = _dte.ActiveDocument.ProjectItem.ConfigurationManager.ActiveConfiguration.ConfigurationName as String;
+            List<SourceFile> files = new List<SourceFile>();
+            foreach (VCFile file in project.Files)
+            {
+                if (file.FileType == eFileType.eFileTypeCppHeader || file.FileType == eFileType.eFileTypeCppCode || file.FileType == eFileType.eFileTypeCppClass)
+                {
+                    if (!(file.Name.StartsWith("moc_") && file.Name.EndsWith(".cpp")) && !(file.Name.StartsWith("ui_") && file.Name.EndsWith(".h")) && !(file.Name.StartsWith("qrc_") && file.Name.EndsWith(".cpp"))) // Ignoring Qt MOC and UI files
+                    {
+                        SourceFile f = createSourceFile(file.FullPath, currentConfigName, project);
+                        if (f != null)
+                            files.Add(f);
+                    }
+                }
+            }
+
+            _outputWindow.Clear();
+            foreach (var analyzer in _analyzers)
+            {
+                analyzer.analyze(files, _outputWindow);
+            }
+        }
+
+        SourceFile createSourceFile(string filePath, string configurationName, VCProject project)
+        {
+            try
+            {
+                VCConfiguration config = project.Configurations.Item(configurationName);
+                IVCCollection toolsCollection = config.Tools;
+                SourceFile sourceForAnalysis = new SourceFile(filePath, project.ProjectDirectory.Replace(@"""", ""));
+                foreach (var tool in toolsCollection)
+                {
+                    // Project-specific includes
+                    if (tool is VCCLCompilerTool)
+                    {
+                        VCCLCompilerTool compilerTool = tool as VCCLCompilerTool;
+                        String includes = compilerTool.AdditionalIncludeDirectories;
+                        string a = compilerTool.AdditionalOptions;
+                        sourceForAnalysis.addIncludePaths(includes.Split(';').ToList());
+                        sourceForAnalysis.addMacros(compilerTool.PreprocessorDefinitions.Split(';').ToList());
+                        break;
+                    }
+                }
+                return sourceForAnalysis;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.WriteLine("Exception occurred in cppcheck add-in: " + ex.Message);
+                return null;
             }
         }
 

@@ -4,11 +4,21 @@ using System;
 using EnvDTE;
 using System.Threading;
 using System.Diagnostics;
+using System.Management;
 
 namespace VSPackage.CPPCheckPlugin
 {
     abstract class ICodeAnalyzer
     {
+        protected ICodeAnalyzer()
+        {
+            _numCores = 0;
+            foreach (var item in new System.Management.ManagementObjectSearcher("Select * from Win32_Processor").Get())
+            {
+                _numCores += int.Parse(item["NumberOfCores"].ToString());
+            }
+        }
+
         public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow);
 
         public void analyze(SourceFile fileToAnalyze, OutputWindowPane outputWindow)
@@ -44,6 +54,7 @@ namespace VSPackage.CPPCheckPlugin
             process.OutputDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
             process.ErrorDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
 
+            var timer = Stopwatch.StartNew();
             // Start the process.
             process.Start();
 
@@ -52,8 +63,12 @@ namespace VSPackage.CPPCheckPlugin
             process.BeginErrorReadLine();
             // Wait for analysis completion
             process.WaitForExit();
+            timer.Stop();
+            float timeElapsed = timer.ElapsedMilliseconds / 1000.0f;
             if (process.ExitCode != 0)
                 _outputWindow.OutputString("The tool " + analyzerExePath + " has exited with code " + process.ExitCode.ToString() + "\n");
+            else
+                _outputWindow.OutputString("Analysis completed in " + timeElapsed.ToString() + " seconds\n");
             process.Close();
         }
 
@@ -67,5 +82,7 @@ namespace VSPackage.CPPCheckPlugin
         }
 
         private OutputWindowPane _outputWindow = null;
+
+        protected int _numCores;
     }
 }
