@@ -47,6 +47,11 @@ namespace VSPackage.CPPCheckPlugin
             get { return _fullPath; }
         }
 
+        public string RelativeFilePath
+        {
+            get { return cleanPath(_fullPath.Replace(_projectBasePath, "")); }
+        }
+
         public string BaseProjectPath
         {
             set { Debug.Assert(_projectBasePath == null); _projectBasePath = cleanPath(value); } // Only makes sense to set this once, a second set call is probably a mistake

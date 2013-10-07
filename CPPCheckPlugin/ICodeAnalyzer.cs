@@ -2,6 +2,7 @@
 using System.Text;
 using System;
 using EnvDTE;
+using System.IO;
 using System.Threading;
 using System.Diagnostics;
 using System.Management;
@@ -26,6 +27,46 @@ namespace VSPackage.CPPCheckPlugin
             List<SourceFile> list = new List<SourceFile>();
             list.Add(fileToAnalyze);
             analyze(list, outputWindow);
+        }
+
+        protected static HashSet<string> readSuppressions(string projectBasePath)
+        {
+            string settingsFilePath = projectBasePath + "\\suppressions.cfg";
+            HashSet<string> suppressions = new HashSet<string>();
+            if (File.Exists(settingsFilePath))
+            {
+                StreamReader stream = File.OpenText(settingsFilePath);
+                string line = null;
+                
+                string currentGroup = "";
+                while ((line = stream.ReadLine()) != null)
+                {
+                    if (line.Contains("["))
+                    {
+                        currentGroup = line.Replace("[", "").Replace("]", "");
+                        continue; // to the next line
+                    }
+                    if (currentGroup == "cppcheck")
+                    {
+                        var components = line.Split(':');
+                        if (components.Length >= 2 && components[1] == "*")                          // id and "*" for a file specified
+                            components[1] = @"""" + projectBasePath + @"*""";                        // adding path to this specific project
+                        else if (components.Length >= 2 && !components[1].StartsWith("*"))           // id and some path without "*"
+                            components[1] = @"""" + projectBasePath + @"\\" + components[1] + @""""; // adding path to this specific project
+
+                        string suppression = components[0];
+                        if (components.Length > 1)
+                            suppression += ":" + components[1];
+                        if (components.Length > 2)
+                            suppression += ":"+ components[2];
+
+                        if (!string.IsNullOrEmpty(suppression))
+                            suppressions.Add(suppression.Replace("\\\\", "\\"));
+                    }
+                }
+            }
+
+            return suppressions;
         }
 
         protected void run(string analyzerExePath, string arguments, OutputWindowPane outputWindow)

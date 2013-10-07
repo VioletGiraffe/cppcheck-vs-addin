@@ -13,13 +13,22 @@ namespace VSPackage.CPPCheckPlugin
             Debug.Assert(filesToAnalyze.Count == 1);
             Debug.Assert(_numCores > 0);
             String cppheckargs = "";
-//             string[] problematicQtMacros = { "Q_DECL_EXPORT", "Q_CORE_EXPORT", "Q_GUI_EXPORT", "Q_WIDGETS_EXPORT" };
-//             foreach (string macro in problematicQtMacros)
-//             {
-//                 cppheckargs += " -D" + macro;
-//             }
 
-            String[] suppressions = { "cstyleCast", "missingIncludeSystem", "unusedStructMember", "unmatchedSuppression", "class_X_Y", "missingInclude"};
+            HashSet<string> suppressions = new HashSet<string> { "cstyleCast", "missingIncludeSystem", "unusedStructMember", "unmatchedSuppression", "class_X_Y", "missingInclude"};
+
+            // Creating the list of all different project locations (no duplicates)
+            HashSet<string> projectPaths = new HashSet<string>(); // enforce uniqueness on the list of project paths
+            foreach (var file in filesToAnalyze)
+            {
+                projectPaths.Add(file.BaseProjectPath);
+            }
+
+            // Creating the list of all different suppressions (no duplicates)
+            foreach (var path in projectPaths)
+            {
+                suppressions.UnionWith(readSuppressions(path));
+            }
+
             cppheckargs += (@"--enable=style,information,warning,performance,portability --template=vs --force --quiet -j " + _numCores.ToString());
             foreach (string suppression in suppressions)
             {

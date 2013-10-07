@@ -132,9 +132,9 @@ namespace VSPackage.CPPCheckPlugin
 			String currentConfigName = _dte.Solution.Projects.Item(1).ConfigurationManager.ActiveConfiguration.ConfigurationName as String;
 			List<SourceFile> files = new List<SourceFile>();
 			Object[] activeProjects = _dte.ActiveSolutionProjects as Object[];
-			foreach (Object o in activeProjects)
+			foreach (dynamic o in activeProjects)
 			{
-				VCProject project = convertToProject(o);
+                VCProject project = o.Object as VCProject;
 				foreach (VCFile file in project.Files)
 				{
 					if (file.FileType == eFileType.eFileTypeCppHeader || file.FileType == eFileType.eFileTypeCppCode || file.FileType == eFileType.eFileTypeCppClass)
@@ -155,11 +155,6 @@ namespace VSPackage.CPPCheckPlugin
                 analyzer.analyze(files, _outputWindow);
             }
         }
-
-		static VCProject convertToProject(dynamic comObject)
-		{
-			return comObject.Object;
-		}
 
         SourceFile createSourceFile(string filePath, string configurationName, VCProject project)
         {
