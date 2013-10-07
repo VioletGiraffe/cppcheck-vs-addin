@@ -3,10 +3,12 @@
   <Metadata>
     <Identity Id="127d8bd3-8cd7-491a-9a63-9b4e89118da9" Version="1.0" Language="en-US" Publisher="-" />
     <DisplayName>CPPCheckPlugin</DisplayName>
-    <Description>cppcheck wrapper</Description>
+    <Description xml:space="preserve">cppcheck wrapper</Description>
   </Metadata>
-  <Installation InstalledByMsi="false">
-    <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="11.0" />
+  <Installation InstalledByMsi="false" AllUsers="true">
+    <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[11.0,12.0]" />
+    <InstallationTarget Id="Microsoft.VisualStudio.Ultimate" Version="[11.0,12.0]" />
+    <InstallationTarget Version="[11.0,13.0)" Id="Microsoft.VisualStudio.Premium" />
   </Installation>
   <Dependencies>
     <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="4.5" />

@@ -123,34 +123,43 @@ namespace VSPackage.CPPCheckPlugin
 
         private void checkCurrentProject()
         {
-            if (_dte.ActiveDocument == null)
-                return;
+			if ((_dte.ActiveSolutionProjects as Object[]).Length <= 0)
+			{
+				System.Windows.MessageBox.Show("No projects are selected in Solution Explorer - nothing to check.");
+				return;
+			}
 
-            VCProject project = _dte.ActiveDocument.ProjectItem.ContainingProject.Object as VCProject;
-            if (project == null)
-                return;
-
-            String currentConfigName = _dte.ActiveDocument.ProjectItem.ConfigurationManager.ActiveConfiguration.ConfigurationName as String;
-            List<SourceFile> files = new List<SourceFile>();
-            foreach (VCFile file in project.Files)
-            {
-                if (file.FileType == eFileType.eFileTypeCppHeader || file.FileType == eFileType.eFileTypeCppCode || file.FileType == eFileType.eFileTypeCppClass)
-                {
-                    if (!(file.Name.StartsWith("moc_") && file.Name.EndsWith(".cpp")) && !(file.Name.StartsWith("ui_") && file.Name.EndsWith(".h")) && !(file.Name.StartsWith("qrc_") && file.Name.EndsWith(".cpp"))) // Ignoring Qt MOC and UI files
-                    {
-                        SourceFile f = createSourceFile(file.FullPath, currentConfigName, project);
-                        if (f != null)
-                            files.Add(f);
-                    }
-                }
-            }
-
+			String currentConfigName = _dte.Solution.Projects.Item(1).ConfigurationManager.ActiveConfiguration.ConfigurationName as String;
+			List<SourceFile> files = new List<SourceFile>();
+			Object[] activeProjects = _dte.ActiveSolutionProjects as Object[];
+			foreach (Object o in activeProjects)
+			{
+				VCProject project = convertToProject(o);
+				foreach (VCFile file in project.Files)
+				{
+					if (file.FileType == eFileType.eFileTypeCppHeader || file.FileType == eFileType.eFileTypeCppCode || file.FileType == eFileType.eFileTypeCppClass)
+					{
+						if (!(file.Name.StartsWith("moc_") && file.Name.EndsWith(".cpp")) && !(file.Name.StartsWith("ui_") && file.Name.EndsWith(".h")) && !(file.Name.StartsWith("qrc_") && file.Name.EndsWith(".cpp"))) // Ignoring Qt MOC and UI files
+						{
+							SourceFile f = createSourceFile(file.FullPath, currentConfigName, project);
+							if (f != null)
+								files.Add(f);
+						}
+					}
+				}
+			}
+            
             _outputWindow.Clear();
             foreach (var analyzer in _analyzers)
             {
                 analyzer.analyze(files, _outputWindow);
             }
         }
+
+		static VCProject convertToProject(dynamic comObject)
+		{
+			return comObject.Object;
+		}
 
         SourceFile createSourceFile(string filePath, string configurationName, VCProject project)
         {

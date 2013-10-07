@@ -26,37 +26,19 @@ namespace VSPackage.CPPCheckPlugin
                 cppheckargs += (" --suppress=" + suppression);
             }
 
-            // For the sake of simplicity, assume all the files in the list are from the same project
-            // So they share a common set of include paths
-            // Let's assert this
-            bool includePathsAreCommon = true;
-            foreach (SourceFile file1 in filesToAnalyze)
-            {
-                foreach (SourceFile file2 in filesToAnalyze)
+            // We only add include paths once, and then specify a set of files to check
+			HashSet<string> includePaths = new HashSet<string>();
+            foreach (var file in filesToAnalyze)
+				foreach (string path in file.IncludePaths)
                 {
-                    if (file1 != file2)
-                        foreach (string path in file1.IncludePaths)
-                        {
-                            if (!includePathsAreCommon)
-                                break;
-
-                            if (!file2.IncludePaths.Contains(path))
-                            {
-                                includePathsAreCommon = false;
-                                break;
-                            }
-                        }
+					includePaths.Add(path);
                 }
-            }
-            Debug.Assert(includePathsAreCommon);
 
-            // So we can only add include paths once, and then specify a set of files to check
-            if (filesToAnalyze.Count > 0)
-                foreach (string path in filesToAnalyze[0].IncludePaths)
-                {
-                    String includeArgument = @" -I""" + path + @"""";
-                    cppheckargs = cppheckargs + " " + includeArgument;
-                }
+			foreach (string path in includePaths)
+			{
+				String includeArgument = @" -I""" + path + @"""";
+				cppheckargs = cppheckargs + " " + includeArgument;
+			}
 
             foreach (SourceFile file in filesToAnalyze)
             {
