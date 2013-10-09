@@ -10,11 +10,10 @@ namespace VSPackage.CPPCheckPlugin
     {
         public override void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow)
         {
-            Debug.Assert(filesToAnalyze.Count == 1);
             Debug.Assert(_numCores > 0);
             String cppheckargs = "";
 
-            HashSet<string> suppressions = new HashSet<string> { "cstyleCast", "missingIncludeSystem", "unusedStructMember", "unmatchedSuppression", "class_X_Y", "missingInclude"};
+			HashSet<string> suppressions = new HashSet<string> { "cstyleCast", "missingIncludeSystem", "unusedStructMember", "unmatchedSuppression", "class_X_Y", "missingInclude", "constStatement", "unusedPrivateFunction"};
 
             // Creating the list of all different project locations (no duplicates)
             HashSet<string> projectPaths = new HashSet<string>(); // enforce uniqueness on the list of project paths

@@ -5,7 +5,6 @@ using System.Runtime.InteropServices;
 using System.ComponentModel.Design;
 using Microsoft.Win32;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.VCCodeModel;
 using Microsoft.VisualStudio.VCProjectEngine;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -93,7 +92,7 @@ namespace VSPackage.CPPCheckPlugin
 
         private void documentSaved(Document document)
         {            
-            if (document.Language == "C/C++")
+            if (document != null && document.Language == "C/C++")
             {
                 try
                 {
@@ -170,7 +169,6 @@ namespace VSPackage.CPPCheckPlugin
                     {
                         VCCLCompilerTool compilerTool = tool as VCCLCompilerTool;
                         String includes = compilerTool.AdditionalIncludeDirectories;
-                        string a = compilerTool.AdditionalOptions;
                         sourceForAnalysis.addIncludePaths(includes.Split(';').ToList());
                         sourceForAnalysis.addMacros(compilerTool.PreprocessorDefinitions.Split(';').ToList());
                         break;
