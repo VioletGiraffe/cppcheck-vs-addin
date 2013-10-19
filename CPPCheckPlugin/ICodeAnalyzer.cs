@@ -2,7 +2,6 @@
 using System.Text;
 using System;
 using EnvDTE;
-using System.IO;
 using System.Threading;
 using System.Diagnostics;
 using System.Management;
@@ -20,97 +19,76 @@ namespace VSPackage.CPPCheckPlugin
             }
         }
 
-        public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow);
+        public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration);
 
-        public void analyze(SourceFile fileToAnalyze, OutputWindowPane outputWindow)
+		public void analyze(SourceFile fileToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration)
         {
             List<SourceFile> list = new List<SourceFile>();
             list.Add(fileToAnalyze);
-            analyze(list, outputWindow);
+            analyze(list, outputWindow, is64bitConfiguration);
         }
 
-        protected static HashSet<string> readSuppressions(string projectBasePath)
-        {
-            string settingsFilePath = projectBasePath + "\\suppressions.cfg";
-            HashSet<string> suppressions = new HashSet<string>();
-            if (File.Exists(settingsFilePath))
-            {
-                StreamReader stream = File.OpenText(settingsFilePath);
-                string line = null;
-                
-                string currentGroup = "";
-                while ((line = stream.ReadLine()) != null)
-                {
-                    if (line.Contains("["))
-                    {
-                        currentGroup = line.Replace("[", "").Replace("]", "");
-                        continue; // to the next line
-                    }
-                    if (currentGroup == "cppcheck")
-                    {
-                        var components = line.Split(':');
-                        if (components.Length >= 2 && components[1] == "*")                          // id and "*" for a file specified
-                            components[1] = @"""" + projectBasePath + @"*""";                        // adding path to this specific project
-                        else if (components.Length >= 2 && !components[1].StartsWith("*"))           // id and some path without "*"
-                            components[1] = @"""" + projectBasePath + @"\\" + components[1] + @""""; // adding path to this specific project
-
-                        string suppression = components[0];
-                        if (components.Length > 1)
-                            suppression += ":" + components[1];
-                        if (components.Length > 2)
-                            suppression += ":"+ components[2];
-
-                        if (!string.IsNullOrEmpty(suppression))
-                            suppressions.Add(suppression.Replace("\\\\", "\\"));
-                    }
-                }
-            }
-
-            return suppressions;
-        }
+        protected abstract HashSet<string> readSuppressions(string projectBasePath);
 
         protected void run(string analyzerExePath, string arguments, OutputWindowPane outputWindow)
         {
             _outputWindow = outputWindow;
-            var t = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath, arguments));
-            t.Start();
+			try
+			{
+				if (!_process.HasExited)
+				{
+					_process.Kill();
+					_process.WaitForExit();
+					_thread.Join();
+				}
+			}
+			catch (System.Exception /*ex*/) {}
+
+			_process = new System.Diagnostics.Process(); // Resuing the same process instance seems to not be possible because of BeginOutputReadLine and BeginErrorReadLine
+			_thread = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath, arguments));
+			_thread.Start();
         }
 
         private void analyzerThreadFunc(string analyzerExePath, string arguments)
         {
-            Debug.Assert(!String.IsNullOrEmpty(analyzerExePath) && !String.IsNullOrEmpty(arguments) && _outputWindow != null);
-            var process = new System.Diagnostics.Process();
-            process.StartInfo.FileName = analyzerExePath;
-            process.StartInfo.Arguments = arguments;
-            process.StartInfo.CreateNoWindow = true;
+			try
+			{
+				Debug.Assert(!String.IsNullOrEmpty(analyzerExePath) && !String.IsNullOrEmpty(arguments) && _outputWindow != null);
+				_process.StartInfo.FileName = analyzerExePath;
+				_process.StartInfo.Arguments = arguments;
+				_process.StartInfo.CreateNoWindow = true;
 
-            // Set UseShellExecute to false for output redirection.
-            process.StartInfo.UseShellExecute = false;
+				// Set UseShellExecute to false for output redirection.
+				_process.StartInfo.UseShellExecute = false;
 
-            // Redirect the standard output of the command.   
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.RedirectStandardError = true;
+				// Redirect the standard output of the command.   
+				_process.StartInfo.RedirectStandardOutput = true;
+				_process.StartInfo.RedirectStandardError = true;
 
-            // Set our event handler to asynchronously read the sort output.
-            process.OutputDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
-            process.ErrorDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
+				// Set our event handler to asynchronously read the sort output.
+				_process.OutputDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
+				_process.ErrorDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
 
-            var timer = Stopwatch.StartNew();
-            // Start the process.
-            process.Start();
+				var timer = Stopwatch.StartNew();
+				// Start the process.
+				_process.Start();
 
-            // Start the asynchronous read of the sort output stream.
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-            // Wait for analysis completion
-            process.WaitForExit();
-            timer.Stop();
-            float timeElapsed = timer.ElapsedMilliseconds / 1000.0f;
-            if (process.ExitCode != 0)
-                _outputWindow.OutputString("The tool " + analyzerExePath + " has exited with code " + process.ExitCode.ToString() + "\n");
-            else
-                _outputWindow.OutputString("Analysis completed in " + timeElapsed.ToString() + " seconds\n");
-            process.Close();
+				// Start the asynchronous read of the sort output stream.
+				_process.BeginOutputReadLine();
+				_process.BeginErrorReadLine();
+				// Wait for analysis completion
+				_process.WaitForExit();
+				timer.Stop();
+				float timeElapsed = timer.ElapsedMilliseconds / 1000.0f;
+				if (_process.ExitCode != 0)
+					_outputWindow.OutputString(analyzerExePath + " has exited with code " + _process.ExitCode.ToString() + "\n");
+				else
+					_outputWindow.OutputString("Analysis completed in " + timeElapsed.ToString() + " seconds\n");
+				_process.Close();
+
+			} catch (System.Exception ex) {
+				System.Windows.MessageBox.Show("Exception has occurred: " + ex.Message + " at " + ex.Source);
+			}
         }
 
         private void analyzerOutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
@@ -125,5 +103,8 @@ namespace VSPackage.CPPCheckPlugin
         private OutputWindowPane _outputWindow = null;
 
         protected int _numCores;
+
+		private static System.Diagnostics.Process _process = new System.Diagnostics.Process();
+		private static System.Threading.Thread _thread = null;
     }
 }

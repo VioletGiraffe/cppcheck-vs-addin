@@ -105,7 +105,7 @@ namespace VSPackage.CPPCheckPlugin
                     _outputWindow.Clear();
                     foreach (var analyzer in _analyzers)
                     {
-                        analyzer.analyze(sourceForAnalysis, _outputWindow);
+						analyzer.analyze(sourceForAnalysis, _outputWindow, currentConfigName.Contains("64"));
                     }
                 }
                 catch (System.Exception ex)
@@ -124,7 +124,7 @@ namespace VSPackage.CPPCheckPlugin
         {
 			if ((_dte.ActiveSolutionProjects as Object[]).Length <= 0)
 			{
-				System.Windows.MessageBox.Show("No projects are selected in Solution Explorer - nothing to check.");
+				System.Windows.MessageBox.Show("No project selected in Solution Explorer - nothing to check.");
 				return;
 			}
 
@@ -146,12 +146,13 @@ namespace VSPackage.CPPCheckPlugin
 						}
 					}
 				}
+                break; // Only checking one project at a time for now
 			}
             
             _outputWindow.Clear();
             foreach (var analyzer in _analyzers)
             {
-                analyzer.analyze(files, _outputWindow);
+				analyzer.analyze(files, _outputWindow, currentConfigName.Contains("64"));
             }
         }
 
