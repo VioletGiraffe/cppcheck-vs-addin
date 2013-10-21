@@ -4,6 +4,7 @@ using System.Text;
 using EnvDTE;
 using System.Diagnostics;
 using System.IO;
+using System.Windows.Forms;
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -87,7 +88,20 @@ namespace VSPackage.CPPCheckPlugin
 				}
 			}
 
-            run(_analyzerPath, cppheckargs, outputWindow);
+			string analyzerPath = Properties.Settings.Default.CPPcheckPath;
+			while (!File.Exists(analyzerPath))
+			{
+				OpenFileDialog dialog = new OpenFileDialog();
+				dialog.Filter = "cppcheck executable|cppcheck.exe";
+				if (dialog.ShowDialog() != DialogResult.OK)
+					return;
+
+				analyzerPath = dialog.FileName;
+			}
+
+			Properties.Settings.Default["CPPcheckPath"] = analyzerPath;
+			Properties.Settings.Default.Save();
+			run(analyzerPath, cppheckargs, outputWindow);
         }
 
 		protected override HashSet<string> readSuppressions(string projectBasePath)
@@ -129,7 +143,5 @@ namespace VSPackage.CPPCheckPlugin
 
 			return suppressions;
 		}
-
-        private const string _analyzerPath = "c:\\Program Files (x86)\\Cppcheck\\cppcheck.exe";
     }
 }
