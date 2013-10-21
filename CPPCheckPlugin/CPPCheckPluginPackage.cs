@@ -136,7 +136,8 @@ namespace VSPackage.CPPCheckPlugin
                 VCProject project = o.Object as VCProject;
 				foreach (VCFile file in project.Files)
 				{
-					if (file.FileType == eFileType.eFileTypeCppHeader || file.FileType == eFileType.eFileTypeCppCode || file.FileType == eFileType.eFileTypeCppClass)
+					// Only checking cpp files (performance)
+					if (file.FileType == eFileType.eFileTypeCppCode)
 					{
 						if (!(file.Name.StartsWith("moc_") && file.Name.EndsWith(".cpp")) && !(file.Name.StartsWith("ui_") && file.Name.EndsWith(".h")) && !(file.Name.StartsWith("qrc_") && file.Name.EndsWith(".cpp"))) // Ignoring Qt MOC and UI files
 						{

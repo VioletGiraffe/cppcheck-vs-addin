@@ -12,11 +12,7 @@ namespace VSPackage.CPPCheckPlugin
     {
         protected ICodeAnalyzer()
         {
-            _numCores = 0;
-            foreach (var item in new System.Management.ManagementObjectSearcher("Select * from Win32_Processor").Get())
-            {
-                _numCores += int.Parse(item["NumberOfCores"].ToString());
-            }
+			_numCores = Environment.ProcessorCount;
         }
 
         public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration);
@@ -35,17 +31,14 @@ namespace VSPackage.CPPCheckPlugin
             _outputWindow = outputWindow;
 			try
 			{
-				if (!_process.HasExited)
-				{
-					_process.Kill();
-					_process.WaitForExit();
-					_thread.Join();
-				}
+				_process.Kill();
+				_thread.Abort();
 			}
 			catch (System.Exception /*ex*/) {}
 
-			_process = new System.Diagnostics.Process(); // Resuing the same process instance seems to not be possible because of BeginOutputReadLine and BeginErrorReadLine
+			_process = new System.Diagnostics.Process(); // Reusing the same process instance seems to not be possible because of BeginOutputReadLine and BeginErrorReadLine
 			_thread = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath, arguments));
+			_thread.Name = "cppcheck";
 			_thread.Start();
         }
 
@@ -61,7 +54,7 @@ namespace VSPackage.CPPCheckPlugin
 				// Set UseShellExecute to false for output redirection.
 				_process.StartInfo.UseShellExecute = false;
 
-				// Redirect the standard output of the command.   
+				// Redirect the standard output of the command.
 				_process.StartInfo.RedirectStandardOutput = true;
 				_process.StartInfo.RedirectStandardError = true;
 
@@ -87,7 +80,7 @@ namespace VSPackage.CPPCheckPlugin
 				_process.Close();
 
 			} catch (System.Exception ex) {
-				System.Windows.MessageBox.Show("Exception has occurred: " + ex.Message + " at " + ex.Source);
+				
 			}
         }
 

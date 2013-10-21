@@ -29,7 +29,7 @@ namespace VSPackage.CPPCheckPlugin
                 suppressions.UnionWith(readSuppressions(path));
             }
 
-			cppheckargs += (@"--enable=style,information,warning,performance,portability -q --force --template=vs -j " + _numCores.ToString());
+			cppheckargs += (@"--enable=style,information,warning,performance,portability --inline-suppr -q --force --template=vs -j " + _numCores.ToString());
             foreach (string suppression in suppressions)
             {
                 cppheckargs += (" --suppress=" + suppression);
