@@ -15,7 +15,7 @@ namespace VSPackage.CPPCheckPlugin
 			Debug.Assert(_numCores > 0);
 			String cppheckargs = "";
 
-			HashSet<string> suppressions = new HashSet<string> { "cstyleCast", "missingIncludeSystem", "unusedStructMember", "unmatchedSuppression", "class_X_Y", "missingInclude", "constStatement", "unusedPrivateFunction"};
+			HashSet<string> suppressions = new HashSet<string> { "passedByValue", "cstyleCast", "missingIncludeSystem", "unusedStructMember", "unmatchedSuppression", "class_X_Y", "missingInclude", "constStatement", "unusedPrivateFunction" };
 
 			// Creating the list of all different project locations (no duplicates)
 			HashSet<string> projectPaths = new HashSet<string>(); // enforce uniqueness on the list of project paths
