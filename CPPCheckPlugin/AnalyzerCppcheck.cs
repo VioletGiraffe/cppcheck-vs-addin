@@ -8,41 +8,41 @@ using System.Windows.Forms;
 
 namespace VSPackage.CPPCheckPlugin
 {
-    class AnalyzerCppcheck : ICodeAnalyzer
-    {
-        public override void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration)
-        {
-            Debug.Assert(_numCores > 0);
-            String cppheckargs = "";
+	class AnalyzerCppcheck : ICodeAnalyzer
+	{
+		public override void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration)
+		{
+			Debug.Assert(_numCores > 0);
+			String cppheckargs = "";
 
-			HashSet<string> suppressions = new HashSet<string> { "cstyleCast", "missingIncludeSystem", "unusedStructMember", "unmatchedSuppression", "class_X_Y", "missingInclude", "constStatement", "unusedPrivateFunction"};
+			HashSet<string> suppressions = new HashSet<string> { "passedByValue", "cstyleCast", "missingIncludeSystem", "unusedStructMember", "unmatchedSuppression", "class_X_Y", "missingInclude", "constStatement", "unusedPrivateFunction" };
 
-            // Creating the list of all different project locations (no duplicates)
-            HashSet<string> projectPaths = new HashSet<string>(); // enforce uniqueness on the list of project paths
-            foreach (var file in filesToAnalyze)
-            {
-                projectPaths.Add(file.BaseProjectPath);
-            }
+			// Creating the list of all different project locations (no duplicates)
+			HashSet<string> projectPaths = new HashSet<string>(); // enforce uniqueness on the list of project paths
+			foreach (var file in filesToAnalyze)
+			{
+				projectPaths.Add(file.BaseProjectPath);
+			}
 
-            // Creating the list of all different suppressions (no duplicates)
-            foreach (var path in projectPaths)
-            {
-                suppressions.UnionWith(readSuppressions(path));
-            }
+			// Creating the list of all different suppressions (no duplicates)
+			foreach (var path in projectPaths)
+			{
+				suppressions.UnionWith(readSuppressions(path));
+			}
 
 			cppheckargs += (@"--enable=style,information,warning,performance,portability --inline-suppr -q --force --template=vs -j " + _numCores.ToString());
-            foreach (string suppression in suppressions)
-            {
-                cppheckargs += (" --suppress=" + suppression);
-            }
+			foreach (string suppression in suppressions)
+			{
+				cppheckargs += (" --suppress=" + suppression);
+			}
 
-            // We only add include paths once, and then specify a set of files to check
+			// We only add include paths once, and then specify a set of files to check
 			HashSet<string> includePaths = new HashSet<string>();
-            foreach (var file in filesToAnalyze)
+			foreach (var file in filesToAnalyze)
 				foreach (string path in file.IncludePaths)
-                {
+				{
 					includePaths.Add(path);
-                }
+				}
 
 			foreach (string path in includePaths)
 			{
@@ -102,7 +102,7 @@ namespace VSPackage.CPPCheckPlugin
 			Properties.Settings.Default["CPPcheckPath"] = analyzerPath;
 			Properties.Settings.Default.Save();
 			run(analyzerPath, cppheckargs, outputWindow);
-        }
+		}
 
 		protected override HashSet<string> readSuppressions(string projectBasePath)
 		{
@@ -143,5 +143,5 @@ namespace VSPackage.CPPCheckPlugin
 
 			return suppressions;
 		}
-    }
+	}
 }

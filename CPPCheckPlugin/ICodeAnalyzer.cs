@@ -10,25 +10,25 @@ namespace VSPackage.CPPCheckPlugin
 {
     abstract class ICodeAnalyzer
     {
-        protected ICodeAnalyzer()
-        {
+		protected ICodeAnalyzer()
+		{
 			_numCores = Environment.ProcessorCount;
-        }
+		}
 
-        public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration);
+		public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration);
 
 		public void analyze(SourceFile fileToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration)
-        {
-            List<SourceFile> list = new List<SourceFile>();
-            list.Add(fileToAnalyze);
-            analyze(list, outputWindow, is64bitConfiguration);
-        }
+		{
+			List<SourceFile> list = new List<SourceFile>();
+			list.Add(fileToAnalyze);
+			analyze(list, outputWindow, is64bitConfiguration);
+		}
 
-        protected abstract HashSet<string> readSuppressions(string projectBasePath);
+		protected abstract HashSet<string> readSuppressions(string projectBasePath);
 
-        protected void run(string analyzerExePath, string arguments, OutputWindowPane outputWindow)
-        {
-            _outputWindow = outputWindow;
+		protected void run(string analyzerExePath, string arguments, OutputWindowPane outputWindow)
+		{
+			_outputWindow = outputWindow;
 			try
 			{
 				_process.Kill();
@@ -40,10 +40,10 @@ namespace VSPackage.CPPCheckPlugin
 			_thread = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath, arguments));
 			_thread.Name = "cppcheck";
 			_thread.Start();
-        }
+		}
 
-        private void analyzerThreadFunc(string analyzerExePath, string arguments)
-        {
+		private void analyzerThreadFunc(string analyzerExePath, string arguments)
+		{
 			try
 			{
 				Debug.Assert(!String.IsNullOrEmpty(analyzerExePath) && !String.IsNullOrEmpty(arguments) && _outputWindow != null);
@@ -82,22 +82,22 @@ namespace VSPackage.CPPCheckPlugin
 			} catch (System.Exception ex) {
 				
 			}
-        }
+		}
 
-        private void analyzerOutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
-        {
-            if (!String.IsNullOrEmpty(outLine.Data))
-            {
-                String output = outLine.Data;
-                _outputWindow.OutputString(output + "\n");
-            }
-        }
+		private void analyzerOutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
+		{
+			if (!String.IsNullOrEmpty(outLine.Data))
+			{
+				String output = outLine.Data;
+				_outputWindow.OutputString(output + "\n");
+			}
+		}
 
-        private OutputWindowPane _outputWindow = null;
+		private OutputWindowPane _outputWindow = null;
 
-        protected int _numCores;
+		protected int _numCores;
 
 		private static System.Diagnostics.Process _process = new System.Diagnostics.Process();
 		private static System.Threading.Thread _thread = null;
-    }
+	}
 }
