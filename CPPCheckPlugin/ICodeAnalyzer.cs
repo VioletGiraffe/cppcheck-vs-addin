@@ -15,13 +15,13 @@ namespace VSPackage.CPPCheckPlugin
 			_numCores = Environment.ProcessorCount;
 		}
 
-		public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration);
+		public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration, bool isDebugConfiguration);
 
-		public void analyze(SourceFile fileToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration)
+		public void analyze(SourceFile fileToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration, bool isDebugConfiguration)
 		{
 			List<SourceFile> list = new List<SourceFile>();
 			list.Add(fileToAnalyze);
-			analyze(list, outputWindow, is64bitConfiguration);
+			analyze(list, outputWindow, is64bitConfiguration, isDebugConfiguration);
 		}
 
 		protected abstract HashSet<string> readSuppressions(string projectBasePath);

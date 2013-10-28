@@ -10,7 +10,7 @@ namespace VSPackage.CPPCheckPlugin
 {
 	class AnalyzerCppcheck : ICodeAnalyzer
 	{
-		public override void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration)
+		public override void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration, bool isDebugConfiguration)
 		{
 			Debug.Assert(_numCores > 0);
 			String cppheckargs = "";
@@ -80,6 +80,9 @@ namespace VSPackage.CPPCheckPlugin
 				{
 					macros.Add("_M_IX86");
 				}
+
+				if (isDebugConfiguration)
+					macros.Add("_DEBUG");
 
 				foreach (string macro in macros)
 				{

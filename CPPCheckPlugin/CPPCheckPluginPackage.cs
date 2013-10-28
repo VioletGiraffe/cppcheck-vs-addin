@@ -105,7 +105,7 @@ namespace VSPackage.CPPCheckPlugin
 					_outputWindow.Clear();
 					foreach (var analyzer in _analyzers)
 					{
-						analyzer.analyze(sourceForAnalysis, _outputWindow, currentConfigName.Contains("64"));
+						analyzer.analyze(sourceForAnalysis, _outputWindow, currentConfigName.Contains("64"), currentConfigName.ToLower().Contains("debug"));
 					}
 				}
 				catch (System.Exception ex)
@@ -153,7 +153,7 @@ namespace VSPackage.CPPCheckPlugin
 			_outputWindow.Clear();
 			foreach (var analyzer in _analyzers)
 			{
-				analyzer.analyze(files, _outputWindow, currentConfigName.Contains("64"));
+				analyzer.analyze(files, _outputWindow, currentConfigName.Contains("64"), currentConfigName.ToLower().Contains("debug"));
 			}
 		}
 
