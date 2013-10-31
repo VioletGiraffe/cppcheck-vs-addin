@@ -34,5 +34,29 @@ namespace VSPackage.CPPCheckPlugin.Properties {
                 this["CPPcheckPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool InconclusiveChecksEnabled {
+            get {
+                return ((bool)(this["InconclusiveChecksEnabled"]));
+            }
+            set {
+                this["InconclusiveChecksEnabled"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string DefaultArguments {
+            get {
+                return ((string)(this["DefaultArguments"]));
+            }
+            set {
+                this["DefaultArguments"] = value;
+            }
+        }
     }
 }

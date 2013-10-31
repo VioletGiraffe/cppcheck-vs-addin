@@ -79,7 +79,7 @@ namespace VSPackage.CPPCheckPlugin
 					_outputWindow.OutputString("Analysis completed in " + timeElapsed.ToString() + " seconds\n");
 				_process.Close();
 
-			} catch (System.Exception ex) {
+			} catch (System.Exception /*ex*/) {
 				
 			}
 		}

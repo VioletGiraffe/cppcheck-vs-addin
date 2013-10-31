@@ -13,7 +13,7 @@ namespace VSPackage.CPPCheckPlugin
 		public override void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration, bool isDebugConfiguration)
 		{
 			Debug.Assert(_numCores > 0);
-			String cppheckargs = "";
+			String cppheckargs = Properties.Settings.Default.DefaultArguments;
 
 			HashSet<string> suppressions = new HashSet<string> { "passedByValue", "cstyleCast", "missingIncludeSystem", "unusedStructMember", "unmatchedSuppression", "class_X_Y", "missingInclude", "constStatement", "unusedPrivateFunction" };
 
@@ -30,7 +30,10 @@ namespace VSPackage.CPPCheckPlugin
 				suppressions.UnionWith(readSuppressions(path));
 			}
 
-			cppheckargs += (@"--enable=style,information,warning,performance,portability --inline-suppr -q --force --template=vs -j " + _numCores.ToString());
+			cppheckargs += (" -j " + _numCores.ToString());
+			if (Properties.Settings.Default.InconclusiveChecksEnabled)
+				cppheckargs += " --inconclusive ";
+
 			foreach (string suppression in suppressions)
 			{
 				cppheckargs += (" --suppress=" + suppression);
@@ -68,9 +71,9 @@ namespace VSPackage.CPPCheckPlugin
 						macros.Add(macro);
 				}
 				macros.Add("_MSC_VER");
-				macros.Add("__cplusplus");
 				macros.Add("WIN32");
 				macros.Add("_WIN32");
+				macros.Add("__cplusplus");
 				if (is64bitConfiguration)
 				{
 					macros.Add("_M_X64");

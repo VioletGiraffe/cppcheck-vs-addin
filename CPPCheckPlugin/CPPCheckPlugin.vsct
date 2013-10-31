@@ -70,11 +70,11 @@
       </Button>
 
 
-      <Button guid="guidCPPCheckPluginCmdSet" id="cmdidMyTool" priority="0x0100" type="Button">
-        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Button guid="guidCPPCheckPluginCmdSet" id="cmdidSettings" priority="0x0100" type="Button">
+        <Parent guid="guidCPPCheckPluginCmdSet" id="MyMenuGroup"/>
         <Icon guid="guidImages" id="bmpPic2" />
         <Strings>
-          <ButtonText>Settings</ButtonText>
+          <ButtonText>Cppcheck settings</ButtonText>
         </Strings>
       </Button>
 
@@ -104,7 +104,7 @@
 
       <IDSymbol name="MyMenuGroup" value="0x1021" />
       <IDSymbol name="cmdidCheckProjectCppcheck" value="0x0100" />
-      <IDSymbol name="cmdidMyTool" value="0x0101" />
+      <IDSymbol name="cmdidSettings" value="0x0101" />
     </GuidSymbol>
     
     
