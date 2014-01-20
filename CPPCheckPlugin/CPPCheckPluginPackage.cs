@@ -81,48 +81,48 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void documentSaved(Document document)
 		{
-			if (document != null && document.Language == "C/C++")
-			{
-				try
-				{
-					VCProject project = document.ProjectItem.ContainingProject.Object as VCProject;
-					String currentConfigName = document.ProjectItem.ConfigurationManager.ActiveConfiguration.ConfigurationName as String;
-					SourceFile sourceForAnalysis = createSourceFile(document.FullName, currentConfigName, project);
-					if (sourceForAnalysis == null)
-						return;
+			if (document == null || document.Language != "C/C++")
+				return;
 
-					_outputWindow.Clear();
-					foreach (var analyzer in _analyzers)
-					{
-						analyzer.analyze(sourceForAnalysis, _outputWindow, currentConfigName.Contains("64"), currentConfigName.ToLower().Contains("debug"));
-					}
-				}
-				catch (System.Exception ex)
+			try
+			{
+				VCProject project = (VCProject)document.ProjectItem.ContainingProject.Object;
+				String currentConfigName = document.ProjectItem.ConfigurationManager.ActiveConfiguration.ConfigurationName;
+				SourceFile sourceForAnalysis = createSourceFile(document.FullName, currentConfigName, project);
+				if (sourceForAnalysis == null)
+					return;
+
+				_outputWindow.Clear();
+				foreach (var analyzer in _analyzers)
 				{
-					if (_outputWindow != null)
-					{
-						_outputWindow.Clear();
-						_outputWindow.OutputString("Exception occurred in cppcheck add-in: " + ex.Message);
-					}
-					Debug.WriteLine("Exception occurred in cppcheck add-in: " + ex.Message);
+					analyzer.analyze(sourceForAnalysis, _outputWindow, currentConfigName.Contains("64"), currentConfigName.ToLower().Contains("debug"));
 				}
+			}
+			catch (System.Exception ex)
+			{
+				if (_outputWindow != null)
+				{
+					_outputWindow.Clear();
+					_outputWindow.OutputString("Exception occurred in cppcheck add-in: " + ex.Message);
+				}
+				Debug.WriteLine("Exception occurred in cppcheck add-in: " + ex.Message);
 			}
 		}
 
 		private void checkCurrentProject()
 		{
-			if ((_dte.ActiveSolutionProjects as Object[]).Length <= 0)
+			Object[] activeProjects = (Object[])_dte.ActiveSolutionProjects;
+			if (!activeProjects.Any())
 			{
 				System.Windows.MessageBox.Show("No project selected in Solution Explorer - nothing to check.");
 				return;
 			}
 
-			String currentConfigName = _dte.Solution.Projects.Item(1).ConfigurationManager.ActiveConfiguration.ConfigurationName as String;
+			String currentConfigName = _dte.Solution.Projects.Item(1).ConfigurationManager.ActiveConfiguration.ConfigurationName;
 			List<SourceFile> files = new List<SourceFile>();
-			Object[] activeProjects = _dte.ActiveSolutionProjects as Object[];
 			foreach (dynamic o in activeProjects)
 			{
-				VCProject project = o.Object as VCProject;
+				VCProject project = (VCProject)o.Object;
 				foreach (VCFile file in project.Files)
 				{
 					// Only checking cpp files (performance)
@@ -156,9 +156,9 @@ namespace VSPackage.CPPCheckPlugin
 				foreach (var tool in toolsCollection)
 				{
 					// Project-specific includes
-					if (tool is VCCLCompilerTool)
+					VCCLCompilerTool compilerTool = tool as VCCLCompilerTool;
+					if (compilerTool != null)
 					{
-						VCCLCompilerTool compilerTool = tool as VCCLCompilerTool;
 						String includes = compilerTool.AdditionalIncludeDirectories;
 						sourceForAnalysis.addIncludePaths(includes.Split(';').ToList());
 						sourceForAnalysis.addMacros(compilerTool.PreprocessorDefinitions.Split(';').ToList());
