@@ -8,8 +8,8 @@ using System.Management;
 
 namespace VSPackage.CPPCheckPlugin
 {
-    abstract class ICodeAnalyzer
-    {
+	abstract class ICodeAnalyzer
+	{
 		protected ICodeAnalyzer()
 		{
 			_numCores = Environment.ProcessorCount;
