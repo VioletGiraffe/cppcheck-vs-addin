@@ -10,7 +10,8 @@ namespace VSPackage.CPPCheckPlugin
 {
 	class AnalyzerCppcheck : ICodeAnalyzer
 	{
-		public override void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration, bool isDebugConfiguration)
+		public override void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration,
+			bool isDebugConfiguration, bool bringOutputToFrontAfterAnalysis)
 		{
 			Debug.Assert(_numCores > 0);
 			String cppheckargs = Properties.Settings.Default.DefaultArguments;
@@ -107,7 +108,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			Properties.Settings.Default["CPPcheckPath"] = analyzerPath;
 			Properties.Settings.Default.Save();
-			run(analyzerPath, cppheckargs, outputWindow);
+			run(analyzerPath, cppheckargs, outputWindow, bringOutputToFrontAfterAnalysis);
 		}
 
 		protected override HashSet<string> readSuppressions(string projectBasePath)
