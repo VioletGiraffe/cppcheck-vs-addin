@@ -86,9 +86,9 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void analyzerOutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
 		{
-			if (!String.IsNullOrEmpty(outLine.Data))
+			String output = outLine.Data;
+			(!String.IsNullOrEmpty(output))
 			{
-				String output = outLine.Data;
 				_outputWindow.OutputString(output + "\n");
 			}
 		}
