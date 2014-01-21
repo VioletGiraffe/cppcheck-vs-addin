@@ -42,7 +42,7 @@ namespace VSPackage.CPPCheckPlugin
 			_eventsHandlers = _dte.Events.DocumentEvents;
 			_eventsHandlers.DocumentSaved += documentSaved;
 
-			OutputWindow outputWindow = (OutputWindow)_dte.Application.Windows.Item(EnvDTE.Constants.vsWindowKindOutput).Object;
+			OutputWindow outputWindow = (OutputWindow)_dte.Windows.Item(EnvDTE.Constants.vsWindowKindOutput).Object;
 			_outputWindow = outputWindow.OutputWindowPanes.Add("Code analysis output");
 
 			_analyzers.Add(new AnalyzerCppcheck());
