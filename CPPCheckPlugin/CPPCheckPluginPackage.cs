@@ -122,7 +122,12 @@ namespace VSPackage.CPPCheckPlugin
 			List<SourceFile> files = new List<SourceFile>();
 			foreach (dynamic o in activeProjects)
 			{
-				VCProject project = (VCProject)o.Object;
+				VCProject project = o.Object as VCProject;
+				if (project == null)
+				{
+					System.Windows.MessageBox.Show("Only C++ projects can be checked.");
+					return;
+				}
 				foreach (VCFile file in project.Files)
 				{
 					// Only checking cpp files (performance)
