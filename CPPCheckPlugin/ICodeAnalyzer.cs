@@ -15,18 +15,12 @@ namespace VSPackage.CPPCheckPlugin
 			_numCores = Environment.ProcessorCount;
 		}
 
-		public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration, bool isDebugConfiguration);
-
-		public void analyze(SourceFile fileToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration, bool isDebugConfiguration)
-		{
-			List<SourceFile> list = new List<SourceFile>();
-			list.Add(fileToAnalyze);
-			analyze(list, outputWindow, is64bitConfiguration, isDebugConfiguration);
-		}
+		public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration,
+			bool isDebugConfiguration, bool bringOutputToFrontAfterAnalysis);
 
 		protected abstract HashSet<string> readSuppressions(string projectBasePath);
 
-		protected void run(string analyzerExePath, string arguments, OutputWindowPane outputWindow)
+		protected void run(string analyzerExePath, string arguments, OutputWindowPane outputWindow, bool bringOutputToFrontAfterAnalysis)
 		{
 			_outputWindow = outputWindow;
 			try
@@ -37,12 +31,12 @@ namespace VSPackage.CPPCheckPlugin
 			catch (System.Exception /*ex*/) {}
 
 			_process = new System.Diagnostics.Process(); // Reusing the same process instance seems to not be possible because of BeginOutputReadLine and BeginErrorReadLine
-			_thread = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath, arguments));
+			_thread = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath, arguments, bringOutputToFrontAfterAnalysis));
 			_thread.Name = "cppcheck";
 			_thread.Start();
 		}
 
-		private void analyzerThreadFunc(string analyzerExePath, string arguments)
+		private void analyzerThreadFunc(string analyzerExePath, string arguments, bool bringOutputToFrontAfterAnalysis)
 		{
 			try
 			{
@@ -78,7 +72,12 @@ namespace VSPackage.CPPCheckPlugin
 				else
 					_outputWindow.OutputString("Analysis completed in " + timeElapsed.ToString() + " seconds\n");
 				_process.Close();
-
+				if (bringOutputToFrontAfterAnalysis)
+				{
+					Window outputWindow = _outputWindow.DTE.Windows.Item(EnvDTE.Constants.vsWindowKindOutput);
+					outputWindow.Visible = true;
+					_outputWindow.Activate();
+				}
 			} catch (System.Exception /*ex*/) {
 				
 			}
@@ -86,9 +85,9 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void analyzerOutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
 		{
-			if (!String.IsNullOrEmpty(outLine.Data))
+			String output = outLine.Data;
+			if (!String.IsNullOrEmpty(output))
 			{
-				String output = outLine.Data;
 				_outputWindow.OutputString(output + "\n");
 			}
 		}
