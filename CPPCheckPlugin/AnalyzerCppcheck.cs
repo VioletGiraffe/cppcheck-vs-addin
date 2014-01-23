@@ -31,6 +31,7 @@ namespace VSPackage.CPPCheckPlugin
 				suppressions.UnionWith(readSuppressions(path));
 			}
 
+			cppheckargs += (" --relative-paths=\"" + filesToAnalyze[0].BaseProjectPath + "\"");
 			cppheckargs += (" -j " + _numCores.ToString());
 			if (Properties.Settings.Default.InconclusiveChecksEnabled)
 				cppheckargs += " --inconclusive ";
