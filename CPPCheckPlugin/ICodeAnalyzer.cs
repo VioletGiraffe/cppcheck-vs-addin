@@ -1,10 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Text;
 using System;
 using EnvDTE;
-using System.Threading;
 using System.Diagnostics;
-using System.Management;
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -15,14 +12,14 @@ namespace VSPackage.CPPCheckPlugin
 			_numCores = Environment.ProcessorCount;
 		}
 
-		public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration,
+		public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputPane, bool is64bitConfiguration,
 			bool isDebugConfiguration, bool bringOutputToFrontAfterAnalysis);
 
 		protected abstract HashSet<string> readSuppressions(string projectBasePath);
 
-		protected void run(string analyzerExePath, string arguments, OutputWindowPane outputWindow, bool bringOutputToFrontAfterAnalysis)
+		protected void run(string analyzerExePath, string arguments, OutputWindowPane outputPane, bool bringOutputToFrontAfterAnalysis)
 		{
-			_outputWindow = outputWindow;
+			_outputPane = outputPane;
 			try
 			{
 				_process.Kill();
@@ -40,7 +37,9 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			try
 			{
-				Debug.Assert(!String.IsNullOrEmpty(analyzerExePath) && !String.IsNullOrEmpty(arguments) && _outputWindow != null);
+				Debug.Assert(!String.IsNullOrEmpty(analyzerExePath));
+				Debug.Assert(!String.IsNullOrEmpty(arguments));
+				Debug.Assert(_outputPane != null);
 				_process.StartInfo.FileName = analyzerExePath;
 				_process.StartInfo.Arguments = arguments;
 				_process.StartInfo.CreateNoWindow = true;
@@ -68,15 +67,15 @@ namespace VSPackage.CPPCheckPlugin
 				timer.Stop();
 				float timeElapsed = timer.ElapsedMilliseconds / 1000.0f;
 				if (_process.ExitCode != 0)
-					_outputWindow.OutputString(analyzerExePath + " has exited with code " + _process.ExitCode.ToString() + "\n");
+					_outputPane.OutputString(analyzerExePath + " has exited with code " + _process.ExitCode.ToString() + "\n");
 				else
-					_outputWindow.OutputString("Analysis completed in " + timeElapsed.ToString() + " seconds\n");
+					_outputPane.OutputString("Analysis completed in " + timeElapsed.ToString() + " seconds\n");
 				_process.Close();
 				if (bringOutputToFrontAfterAnalysis)
 				{
-					Window outputWindow = _outputWindow.DTE.Windows.Item(EnvDTE.Constants.vsWindowKindOutput);
+					Window outputWindow = _outputPane.DTE.GetOutputWindow();
 					outputWindow.Visible = true;
-					_outputWindow.Activate();
+					_outputPane.Activate();
 				}
 			} catch (System.Exception /*ex*/) {
 				
@@ -88,12 +87,11 @@ namespace VSPackage.CPPCheckPlugin
 			String output = outLine.Data;
 			if (!String.IsNullOrEmpty(output))
 			{
-				_outputWindow.OutputString(output + "\n");
+				_outputPane.OutputString(output + "\n");
 			}
 		}
 
-		private OutputWindowPane _outputWindow = null;
-
+		private OutputWindowPane _outputPane = null;
 		protected int _numCores;
 
 		private static System.Diagnostics.Process _process = new System.Diagnostics.Process();

@@ -3,13 +3,10 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.ComponentModel.Design;
-using Microsoft.Win32;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.VCProjectEngine;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.OLE;
 using EnvDTE;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,8 +39,10 @@ namespace VSPackage.CPPCheckPlugin
 			_eventsHandlers = _dte.Events.DocumentEvents;
 			_eventsHandlers.DocumentSaved += documentSaved;
 
-			OutputWindow outputWindow = (OutputWindow)_dte.Windows.Item(EnvDTE.Constants.vsWindowKindOutput).Object;
-			_outputWindow = outputWindow.OutputWindowPanes.Add("Code analysis output");
+			{
+				var outputWindow = (OutputWindow)_dte.GetOutputWindow().Object;
+				_outputPane = outputWindow.OutputWindowPanes.Add("Code analysis output");
+			}
 
 			_analyzers.Add(new AnalyzerCppcheck());
 
@@ -63,8 +62,6 @@ namespace VSPackage.CPPCheckPlugin
 				MenuCommand menuSettings = new MenuCommand(onSettingsWindowRequested, settingsWndCmdId);
 				mcs.AddCommand(menuSettings);
 			}
-
-
 		}
 		#endregion
 
@@ -96,10 +93,10 @@ namespace VSPackage.CPPCheckPlugin
 			}
 			catch (System.Exception ex)
 			{
-				if (_outputWindow != null)
+				if (_outputPane != null)
 				{
-					_outputWindow.Clear();
-					_outputWindow.OutputString("Exception occurred in cppcheck add-in: " + ex.Message);
+					_outputPane.Clear();
+					_outputPane.OutputString("Exception occurred in cppcheck add-in: " + ex.Message);
 				}
 				Debug.WriteLine("Exception occurred in cppcheck add-in: " + ex.Message);
 			}
@@ -152,11 +149,11 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void runAnalysis(List<SourceFile> files, Configuration currentConfig, bool bringOutputToFrontAfterAnalysis)
 		{
-			_outputWindow.Clear();
+			_outputPane.Clear();
 			var currentConfigName = currentConfig.ConfigurationName;
 			foreach (var analyzer in _analyzers)
 			{
-				analyzer.analyze(files, _outputWindow, currentConfigName.Contains("64"), currentConfigName.ToLower().Contains("debug"), bringOutputToFrontAfterAnalysis);
+				analyzer.analyze(files, _outputPane, currentConfigName.Contains("64"), currentConfigName.ToLower().Contains("debug"), bringOutputToFrontAfterAnalysis);
 			}
 		}
 
@@ -193,6 +190,6 @@ namespace VSPackage.CPPCheckPlugin
 		private DocumentEvents _eventsHandlers = null;
 		private List<ICodeAnalyzer> _analyzers = new List<ICodeAnalyzer>();
 
-		private static OutputWindowPane _outputWindow = null;
+		private static OutputWindowPane _outputPane = null;
 	}
 }
