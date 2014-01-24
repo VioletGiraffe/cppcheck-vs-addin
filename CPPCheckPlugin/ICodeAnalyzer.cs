@@ -20,14 +20,17 @@ namespace VSPackage.CPPCheckPlugin
 		protected void run(string analyzerExePath, string arguments, OutputWindowPane outputPane, bool bringOutputToFrontAfterAnalysis)
 		{
 			_outputPane = outputPane;
-			try
+			if (_thread != null)
 			{
-				_process.Kill();
-				_thread.Abort();
-			}
-			catch (System.Exception /*ex*/) {}
 
-			_process = new System.Diagnostics.Process(); // Reusing the same process instance seems to not be possible because of BeginOutputReadLine and BeginErrorReadLine
+				try
+				{
+					_thread.Abort();
+				}
+				catch (System.Exception /*ex*/) { }
+				_thread = null;
+			}
+
 			_thread = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath, arguments, bringOutputToFrontAfterAnalysis));
 			_thread.Name = "cppcheck";
 			_thread.Start();
@@ -35,50 +38,64 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void analyzerThreadFunc(string analyzerExePath, string arguments, bool bringOutputToFrontAfterAnalysis)
 		{
+			System.Diagnostics.Process process = null;
 			try
 			{
 				Debug.Assert(!String.IsNullOrEmpty(analyzerExePath));
 				Debug.Assert(!String.IsNullOrEmpty(arguments));
 				Debug.Assert(_outputPane != null);
-				_process.StartInfo.FileName = analyzerExePath;
-				_process.StartInfo.Arguments = arguments;
-				_process.StartInfo.CreateNoWindow = true;
+				process = new System.Diagnostics.Process();
+				process.StartInfo.FileName = analyzerExePath;
+				process.StartInfo.Arguments = arguments;
+				process.StartInfo.CreateNoWindow = true;
 
 				// Set UseShellExecute to false for output redirection.
-				_process.StartInfo.UseShellExecute = false;
+				process.StartInfo.UseShellExecute = false;
 
 				// Redirect the standard output of the command.
-				_process.StartInfo.RedirectStandardOutput = true;
-				_process.StartInfo.RedirectStandardError = true;
+				process.StartInfo.RedirectStandardOutput = true;
+				process.StartInfo.RedirectStandardError = true;
 
 				// Set our event handler to asynchronously read the sort output.
-				_process.OutputDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
-				_process.ErrorDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
+				process.OutputDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
+				process.ErrorDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
 
 				var timer = Stopwatch.StartNew();
 				// Start the process.
-				_process.Start();
+				process.Start();
 
 				// Start the asynchronous read of the sort output stream.
-				_process.BeginOutputReadLine();
-				_process.BeginErrorReadLine();
+				process.BeginOutputReadLine();
+				process.BeginErrorReadLine();
 				// Wait for analysis completion
-				_process.WaitForExit();
+				process.WaitForExit();
 				timer.Stop();
 				float timeElapsed = timer.ElapsedMilliseconds / 1000.0f;
-				if (_process.ExitCode != 0)
-					_outputPane.OutputString(analyzerExePath + " has exited with code " + _process.ExitCode.ToString() + "\n");
+				if (process.ExitCode != 0)
+					_outputPane.OutputString(analyzerExePath + " has exited with code " + process.ExitCode.ToString() + "\n");
 				else
 					_outputPane.OutputString("Analysis completed in " + timeElapsed.ToString() + " seconds\n");
-				_process.Close();
+				process.Close();
+				process = null;
 				if (bringOutputToFrontAfterAnalysis)
 				{
 					Window outputWindow = _outputPane.DTE.GetOutputWindow();
 					outputWindow.Visible = true;
 					_outputPane.Activate();
 				}
-			} catch (System.Exception /*ex*/) {
-				
+			}
+			catch (System.Exception /*ex*/) { }
+			finally
+			{
+				if (process != null)
+				{
+					try
+					{
+						process.Kill();
+					}
+					catch (Exception) { }
+					process.Dispose();
+				}
 			}
 		}
 
@@ -94,7 +111,6 @@ namespace VSPackage.CPPCheckPlugin
 		private OutputWindowPane _outputPane = null;
 		protected int _numCores;
 
-		private static System.Diagnostics.Process _process = new System.Diagnostics.Process();
-		private static System.Threading.Thread _thread = null;
+		private System.Threading.Thread _thread = null;
 	}
 }
