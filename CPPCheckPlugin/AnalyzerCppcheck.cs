@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using EnvDTE;
 using System.Diagnostics;
 using System.IO;
