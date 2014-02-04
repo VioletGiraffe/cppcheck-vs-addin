@@ -1,0 +1,5 @@
+UpgradeLog*.htm*
+*.suo
+Backup*
+CPPCheckPlugin/bin
+CPPCheckPlugin/obj
