@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.ComponentModel.Design;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.VCProjectEngine;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell;
 using EnvDTE;
@@ -83,7 +82,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			try
 			{
-				VCProject project = (VCProject)document.ProjectItem.ContainingProject.Object;
+				dynamic project = document.ProjectItem.ContainingProject.Object;
 				var currentConfig = document.ProjectItem.ConfigurationManager.ActiveConfiguration;
 				SourceFile sourceForAnalysis = createSourceFile(document.FullName, currentConfig, project);
 				if (sourceForAnalysis == null)
@@ -115,16 +114,20 @@ namespace VSPackage.CPPCheckPlugin
 			List<SourceFile> files = new List<SourceFile>();
 			foreach (dynamic o in activeProjects)
 			{
-				VCProject project = o.Object as VCProject;
-				if (project == null)
+				dynamic project = o.Object;
+				Type projectType = project.GetType();
+				if (!projectType.FullName.EndsWith("VCProjectShim"))
 				{
 					System.Windows.MessageBox.Show("Only C++ projects can be checked.");
 					return;
 				}
-				foreach (VCFile file in project.Files)
+				foreach (dynamic file in project.Files)
 				{
 					// Only checking cpp files (performance)
-					if (file.FileType == eFileType.eFileTypeCppCode)
+					dynamic fileType = file.FileType;
+					Type fileTypeEnumType = fileType.GetType();
+					var fileTypeEnumConstant = Enum.GetName(fileTypeEnumType, fileType);
+					if (fileTypeEnumConstant == "eFileTypeCppCode")
 					{
 						if (!(file.Name.StartsWith("moc_") && file.Name.EndsWith(".cpp")) && !(file.Name.StartsWith("ui_") && file.Name.EndsWith(".h")) && !(file.Name.StartsWith("qrc_") && file.Name.EndsWith(".cpp"))) // Ignoring Qt MOC and UI files
 						{
@@ -157,23 +160,24 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		SourceFile createSourceFile(string filePath, Configuration targetConfig, VCProject project)
+		SourceFile createSourceFile(string filePath, Configuration targetConfig, dynamic project)
 		{
 			try
 			{
 				var configurationName = targetConfig.ConfigurationName;
-				VCConfiguration config = project.Configurations.Item(configurationName);
+				dynamic config = project.Configurations.Item(configurationName);
 				SourceFile sourceForAnalysis = new SourceFile(filePath, project.ProjectDirectory.Replace(@"""", ""));
-				IVCCollection toolsCollection = config.Tools;
+				dynamic toolsCollection = config.Tools;
 				foreach (var tool in toolsCollection)
 				{
 					// Project-specific includes
-					VCCLCompilerTool compilerTool = tool as VCCLCompilerTool;
-					if (compilerTool != null)
+					Type toolType = tool.GetType();
+					if (toolType.FullName.EndsWith("VCCLCompilerToolShim"))
 					{
-						String includes = compilerTool.AdditionalIncludeDirectories;
+						String includes = tool.AdditionalIncludeDirectories;
+						String definitions = tool.PreprocessorDefinitions;
 						sourceForAnalysis.addIncludePaths(includes.Split(';').ToList());
-						sourceForAnalysis.addMacros(compilerTool.PreprocessorDefinitions.Split(';').ToList());
+						sourceForAnalysis.addMacros(definitions.Split(';').ToList());
 						break;
 					}
 				}
