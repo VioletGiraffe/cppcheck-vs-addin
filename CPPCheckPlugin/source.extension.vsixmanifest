@@ -2,8 +2,8 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
     <Identity Id="127d8bd3-8cd7-491a-9a63-9b4e89118da9" Version="1.0" Language="en-US" Publisher="-" />
-    <DisplayName>CPPCheckPlugin</DisplayName>
-    <Description xml:space="preserve">cppcheck wrapper</Description>
+    <DisplayName>cppcheck plugin</DisplayName>
+    <Description xml:space="preserve">Integration for cppcheck - C/C++ code static analysis tool </Description>
     <License>PackageInstallerLicense.txt</License>
   </Metadata>
   <Installation InstalledByMsi="false">

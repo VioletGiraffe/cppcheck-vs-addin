@@ -7,11 +7,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("CPPCheckPlugin")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("cppcheck plugin")]
+[assembly: AssemblyDescription("cppcheck integration plugin")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("-")]
-[assembly: AssemblyProduct("CPPCheckPlugin")]
+[assembly: AssemblyProduct("cppcheck plugin")]
 [assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]   
