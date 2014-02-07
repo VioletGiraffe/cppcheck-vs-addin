@@ -124,10 +124,8 @@ namespace VSPackage.CPPCheckPlugin
 				foreach (dynamic file in project.Files)
 				{
 					// Only checking cpp files (performance)
-					dynamic fileType = file.FileType;
-					Type fileTypeEnumType = fileType.GetType();
-					var fileTypeEnumConstant = Enum.GetName(fileTypeEnumType, fileType);
-					if (fileTypeEnumConstant == "eFileTypeCppCode")
+					String fileExtension = (file.Extension as String).ToLower();
+					if (fileExtension == ".cpp" || fileExtension == ".cxx" || fileExtension == ".c" || fileExtension == ".c++" || fileExtension == ".cc" || fileExtension == ".cp")
 					{
 						if (!(file.Name.StartsWith("moc_") && file.Name.EndsWith(".cpp")) && !(file.Name.StartsWith("ui_") && file.Name.EndsWith(".h")) && !(file.Name.StartsWith("qrc_") && file.Name.EndsWith(".cpp"))) // Ignoring Qt MOC and UI files
 						{
@@ -136,6 +134,7 @@ namespace VSPackage.CPPCheckPlugin
 								files.Add(f);
 						}
 					}
+					
 				}
 				break; // Only checking one project at a time for now
 			}

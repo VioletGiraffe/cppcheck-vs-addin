@@ -12,6 +12,9 @@ namespace VSPackage.CPPCheckPlugin
 		public override void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration,
 			bool isDebugConfiguration, bool bringOutputToFrontAfterAnalysis)
 		{
+			if (filesToAnalyze.Count == 0)
+				return;
+
 			Debug.Assert(_numCores > 0);
 			String cppheckargs = CppcheckSettings.DefaultArguments;
 
