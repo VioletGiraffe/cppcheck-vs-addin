@@ -13,7 +13,7 @@ namespace VSPackage.CPPCheckPlugin
 			bool isDebugConfiguration, bool bringOutputToFrontAfterAnalysis)
 		{
 			Debug.Assert(_numCores > 0);
-			String cppheckargs = Properties.Settings.Default.DefaultArguments;
+			String cppheckargs = CppcheckSettings.DefaultArguments;
 
 			HashSet<string> suppressions = new HashSet<string> { "passedByValue", "cstyleCast", "missingIncludeSystem", "unusedStructMember", "unmatchedSuppression", "class_X_Y", "missingInclude", "constStatement", "unusedPrivateFunction" };
 

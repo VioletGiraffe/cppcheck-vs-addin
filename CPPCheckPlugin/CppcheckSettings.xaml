@@ -1,11 +1,11 @@
 ﻿<Window x:Class="VSPackage.CPPCheckPlugin.CppcheckSettings"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Cppcheck settings" Height="271" Width="696">
+        Title="Cppcheck settings" Height="141.952" Width="338.968">
     <Grid>
         <CheckBox Content="Enable inconclusive checks" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.309,0.75" Name="InconclusiveChecks" Checked="inconclusive_Checked" Unchecked="inconclusive_Unchecked"/>
-        <Label Content="Arguments:" HorizontalAlignment="Left" Margin="10,31,0,0" VerticalAlignment="Top"/>
-        <Button Content="Reset arguments to default" HorizontalAlignment="Stretch" Margin="265,148,265,0" VerticalAlignment="Top" Width="158" Click="onDefaultArguments"/>
-        <TextBox HorizontalAlignment="Stretch" Margin="10,62,10,0" TextWrapping="NoWrap" Name="ArgumentsEditor" VerticalAlignment="Top" ScrollViewer.CanContentScroll="True" Height="81"/>
+        <Label Content="Arguments:" HorizontalAlignment="Left" Margin="10,31,0,0" VerticalAlignment="Top" Visibility="Hidden"/>
+        <Button Content="Reset arguments to default" HorizontalAlignment="Stretch" Margin="265,148,265,0" VerticalAlignment="Top" Width="158" Click="onDefaultArguments" Visibility="Hidden"/>
+        <TextBox HorizontalAlignment="Stretch" Margin="10,62,10,0" TextWrapping="NoWrap" Name="ArgumentsEditor" VerticalAlignment="Top" ScrollViewer.CanContentScroll="True" Height="81" Visibility="Hidden"/>
     </Grid>
 </Window>
