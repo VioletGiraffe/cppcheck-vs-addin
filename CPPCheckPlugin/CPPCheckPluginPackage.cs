@@ -40,7 +40,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			{
 				var outputWindow = (OutputWindow)_dte.GetOutputWindow().Object;
-				_outputPane = outputWindow.OutputWindowPanes.Add("Code analysis output");
+				_fileAnalysisOutputPane = outputWindow.OutputWindowPanes.Add("[cppcheck] File analysis output");
 			}
 
 			_analyzers.Add(new AnalyzerCppcheck());
@@ -88,14 +88,14 @@ namespace VSPackage.CPPCheckPlugin
 				if (sourceForAnalysis == null)
 					return;
 
-				runAnalysis(sourceForAnalysis, currentConfig, false);
+				runAnalysis(sourceForAnalysis, currentConfig, false, _fileAnalysisOutputPane);
 			}
 			catch (System.Exception ex)
 			{
-				if (_outputPane != null)
+				if (_fileAnalysisOutputPane != null)
 				{
-					_outputPane.Clear();
-					_outputPane.OutputString("Exception occurred in cppcheck add-in: " + ex.Message);
+					_fileAnalysisOutputPane.Clear();
+					_fileAnalysisOutputPane.OutputString("Exception occurred in cppcheck add-in: " + ex.Message);
 				}
 				Debug.WriteLine("Exception occurred in cppcheck add-in: " + ex.Message);
 			}
@@ -140,23 +140,30 @@ namespace VSPackage.CPPCheckPlugin
 				break; // Only checking one project at a time for now
 			}
 
-			runAnalysis(files, currentConfig, true);
+			if (_projectAnalysisOutputPane == null)
+			{
+				var outputWindow = (OutputWindow)_dte.GetOutputWindow().Object;
+				_projectAnalysisOutputPane = outputWindow.OutputWindowPanes.Add("[cppcheck] Project analysis output");
+			}
+
+			runAnalysis(files, currentConfig, true, _projectAnalysisOutputPane);
 		}
 
-		private void runAnalysis(SourceFile file, Configuration currentConfig, bool bringOutputToFrontAfterAnalysis)
+		private void runAnalysis(SourceFile file, Configuration currentConfig, bool bringOutputToFrontAfterAnalysis, OutputWindowPane outputPane)
 		{
 			var list = new List<SourceFile>();
 			list.Add(file);
-			runAnalysis(list, currentConfig, bringOutputToFrontAfterAnalysis);
+			runAnalysis(list, currentConfig, bringOutputToFrontAfterAnalysis, outputPane);
 		}
 
-		private void runAnalysis(List<SourceFile> files, Configuration currentConfig, bool bringOutputToFrontAfterAnalysis)
+		private void runAnalysis(List<SourceFile> files, Configuration currentConfig, bool bringOutputToFrontAfterAnalysis, OutputWindowPane outputPane)
 		{
-			_outputPane.Clear();
+			Debug.Assert(outputPane != null);
+			outputPane.Clear();
 			var currentConfigName = currentConfig.ConfigurationName;
 			foreach (var analyzer in _analyzers)
 			{
-				analyzer.analyze(files, _outputPane, currentConfigName.Contains("64"), currentConfigName.ToLower().Contains("debug"), bringOutputToFrontAfterAnalysis);
+				analyzer.analyze(files, outputPane, currentConfigName.Contains("64"), currentConfigName.ToLower().Contains("debug"), bringOutputToFrontAfterAnalysis);
 			}
 		}
 
@@ -194,6 +201,6 @@ namespace VSPackage.CPPCheckPlugin
 		private DocumentEvents _eventsHandlers = null;
 		private List<ICodeAnalyzer> _analyzers = new List<ICodeAnalyzer>();
 
-		private static OutputWindowPane _outputPane = null;
+		private static OutputWindowPane _fileAnalysisOutputPane = null, _projectAnalysisOutputPane = null;
 	}
 }
