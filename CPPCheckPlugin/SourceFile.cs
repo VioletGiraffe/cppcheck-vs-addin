@@ -7,19 +7,37 @@ namespace VSPackage.CPPCheckPlugin
 {
 	class SourceFile
 	{
-		public SourceFile(string fullPath, string projectBasePath)
+		public enum VCCompilerVersion { vc2010, vc2012, vc2013, vcFuture };
+
+		public SourceFile(string fullPath, string projectBasePath, string vcCompilerName)
 		{
 			_fullPath = cleanPath(fullPath);
 			_projectBasePath = cleanPath(projectBasePath);
+
+			if (vcCompilerName.Contains("2010"))
+				_compilerVersion = VCCompilerVersion.vc2010;
+			else if (vcCompilerName.Contains("2012"))
+				_compilerVersion = VCCompilerVersion.vc2012;
+			else if (vcCompilerName.Contains("2013"))
+				_compilerVersion = VCCompilerVersion.vc2013;
+			else
+				_compilerVersion = VCCompilerVersion.vcFuture;
 		}
 
 		// All include paths being added are resolved against projectBasePath
 		public void addIncludePath(string path)
 		{
-			if (!String.IsNullOrEmpty(_projectBasePath) && !String.IsNullOrEmpty(path))
+			if (!String.IsNullOrEmpty(_projectBasePath) && !String.IsNullOrEmpty(path) && !path.Equals(".") && !path.Equals("\\\".\\\""))
 			{
-				Debug.WriteLine("Processing path: " + path);
-				_includePaths.Add(cleanPath(path.Contains(":") ? path : Path.Combine(_projectBasePath, path)));
+				Debug.WriteLine("Processing path: " + path);				
+				if (path.Contains("\\:")) // absolute path
+					_includePaths.Add(cleanPath(path));
+				else
+				{
+					// Relative path - converting to absolute
+					String pathForCombine = path.Replace("\"", String.Empty).TrimStart('\\', '/');
+					_includePaths.Add(cleanPath(Path.GetFullPath(Path.Combine(_projectBasePath, pathForCombine)))); // Workaround for Path.Combine bugs
+				}
 			}
 		}
 
@@ -71,6 +89,11 @@ namespace VSPackage.CPPCheckPlugin
 			get { return _activeMacros; }
 		}
 
+		public VCCompilerVersion vcCompilerVersion
+		{
+			get { return _compilerVersion; }
+		}
+
 		private static string cleanPath(string path)
 		{
 			string result = path.Replace("\"", "").Replace("\\\\", "\\");
@@ -85,5 +108,6 @@ namespace VSPackage.CPPCheckPlugin
 		private string _projectBasePath = null;
 		private List<string> _includePaths = new List<string>();
 		private List<string> _activeMacros = new List<string>();
+		private VCCompilerVersion _compilerVersion;
 	}
 }

@@ -65,19 +65,36 @@ namespace VSPackage.CPPCheckPlugin
 				cppheckargs += " \"" + file.FilePath + "\"";
 			}
 
-			if (filesToAnalyze.Count > 1) // For single file only checking current configuration (for speed)
+			// Creating the list of all different macros (no duplicates)
+			HashSet<string> macros = new HashSet<string>();
+			macros.Add("__cplusplus=199711L"); // At least in VS2012, this is still 199711L
+			// Assuming all files passed here are from the same project / same toolset, which should be true, so peeking the first file for global settings
+			switch (filesToAnalyze[0].vcCompilerVersion)
 			{
-				// Creating the list of all different macros (no duplicates)
-				HashSet<string> macros = new HashSet<string>();
+				case SourceFile.VCCompilerVersion.vc2010:
+					macros.Add("_MSC_VER=1600");
+					break;
+				case SourceFile.VCCompilerVersion.vc2012:
+					macros.Add("_MSC_VER=1700");
+					break;
+				case SourceFile.VCCompilerVersion.vc2013:
+					macros.Add("_MSC_VER=1800");
+					break;
+				case SourceFile.VCCompilerVersion.vcFuture:
+					macros.Add("_MSC_VER=1900");
+					break;
+			}
+			
+			if (filesToAnalyze.Count == 1) // For single file only checking current configuration (for speed)
+			{
 				foreach (var file in filesToAnalyze)
 				{
 					foreach (string macro in file.Macros)
 						macros.Add(macro);
 				}
-				macros.Add("_MSC_VER");
 				macros.Add("WIN32");
 				macros.Add("_WIN32");
-				macros.Add("__cplusplus");
+				
 				if (is64bitConfiguration)
 				{
 					macros.Add("_M_X64");
@@ -90,12 +107,12 @@ namespace VSPackage.CPPCheckPlugin
 
 				if (isDebugConfiguration)
 					macros.Add("_DEBUG");
+			}
 
-				foreach (string macro in macros)
-				{
-					String macroArgument = " -D" + macro;
-					cppheckargs += macroArgument;
-				}
+			foreach (string macro in macros)
+			{
+				String macroArgument = " -D" + macro;
+				cppheckargs += macroArgument;
 			}
 
 			string analyzerPath = Properties.Settings.Default.CPPcheckPath;
