@@ -60,6 +60,8 @@ namespace VSPackage.CPPCheckPlugin
 				process.OutputDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
 				process.ErrorDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
 
+				_outputPane.OutputString("Starting analyzer with arguments: " + arguments + "\n");
+
 				var timer = Stopwatch.StartNew();
 				// Start the process.
 				process.Start();
