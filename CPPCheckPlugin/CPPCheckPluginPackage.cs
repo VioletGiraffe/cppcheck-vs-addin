@@ -115,8 +115,9 @@ namespace VSPackage.CPPCheckPlugin
 			foreach (dynamic o in activeProjects)
 			{
 				dynamic project = o.Object;
-				Type projectType = project.GetType();
-				if (!projectType.FullName.EndsWith("VCProjectShim"))
+				Type projectObjectType = project.GetType();
+				var projectInterface = projectObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCProject");
+				if (projectInterface == null)
 				{
 					System.Windows.MessageBox.Show("Only C++ projects can be checked.");
 					return;
@@ -124,10 +125,17 @@ namespace VSPackage.CPPCheckPlugin
 				foreach (dynamic file in project.Files)
 				{
 					// Only checking cpp files (performance)
-					String fileExtension = (file.Extension as String).ToLower();
-					if (fileExtension == ".cpp" || fileExtension == ".cxx" || fileExtension == ".c" || fileExtension == ".c++" || fileExtension == ".cc" || fileExtension == ".cp")
+					Type fileObjectType = file.GetType();
+					// Automatic property binding fails with VS2013 for some unknown reason, using Reflection directly instead.
+					var vcFileInterface = fileObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCFile");
+					var fileType = vcFileInterface.GetProperty("FileType").GetValue(file);
+					Type fileTypeEnumType = fileType.GetType();
+					var fileTypeEnumConstant = Enum.GetName(fileTypeEnumType, fileType);
+					if (fileTypeEnumConstant == "eFileTypeCppCode")
 					{
-						if (!(file.Name.StartsWith("moc_") && file.Name.EndsWith(".cpp")) && !(file.Name.StartsWith("ui_") && file.Name.EndsWith(".h")) && !(file.Name.StartsWith("qrc_") && file.Name.EndsWith(".cpp"))) // Ignoring Qt MOC and UI files
+						String fileName = file.Name;
+						// Ignoring Qt MOC and UI files
+						if (!(fileName.StartsWith("moc_") && fileName.EndsWith(".cpp")) && !(fileName.StartsWith("ui_") && fileName.EndsWith(".h")) && !(fileName.StartsWith("qrc_") && fileName.EndsWith(".cpp")))
 						{
 							SourceFile f = createSourceFile(file.FullPath, currentConfig, project);
 							if (f != null)
@@ -178,7 +186,8 @@ namespace VSPackage.CPPCheckPlugin
 				{
 					// Project-specific includes
 					Type toolType = tool.GetType();
-					if (toolType.FullName.EndsWith("VCCLCompilerToolShim"))
+					var compilerToolInterface = toolType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool");
+					if (compilerToolInterface != null)
 					{
 						String includes = tool.AdditionalIncludeDirectories;
 						String definitions = tool.PreprocessorDefinitions;
