@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -15,8 +16,11 @@ namespace VSPackage.CPPCheckPlugin
 		// All include paths being added are resolved against projectBasePath
 		public void addIncludePath(string path)
 		{
-			if (!String.IsNullOrEmpty(_projectBasePath))
-				_includePaths.Add(cleanPath(path.Contains(":") ? path : (_projectBasePath + path)));
+			if (!String.IsNullOrEmpty(_projectBasePath) && !String.IsNullOrEmpty(path))
+			{
+				Debug.WriteLine("Processing path: " + path);
+				_includePaths.Add(cleanPath(path.Contains(":") ? path : Path.Combine(_projectBasePath, path)));
+			}
 		}
 
 		public void addIncludePaths(List<string> paths)

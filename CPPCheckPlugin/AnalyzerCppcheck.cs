@@ -55,14 +55,14 @@ namespace VSPackage.CPPCheckPlugin
 			{
 				if (!path.ToLower().Contains("qt"))
 				{
-					String includeArgument = @" -I""" + (path.EndsWith("\\") ? path : path+@"\\") + @"""";					
+					String includeArgument = " -I\"" + path + "\"";
 					cppheckargs = cppheckargs + " " + includeArgument;
 				}
 			}
 
 			foreach (SourceFile file in filesToAnalyze)
 			{
-				cppheckargs += @" """ + file.FilePath + @"""";
+				cppheckargs += " \"" + file.FilePath + "\"";
 			}
 
 			if (filesToAnalyze.Count > 1) // For single file only checking current configuration (for speed)
@@ -134,8 +134,6 @@ namespace VSPackage.CPPCheckPlugin
 					if (currentGroup == "cppcheck")
 					{
 						var components = line.Split(':');
-// 						if (components.Length >= 2 && components[1] == "*")                          // id and "*" for a file specified
-// 							components[1] = @"""" + projectBasePath + @"*""";                        // adding path to this specific project
 						if (components.Length >= 2 && !components[1].StartsWith("*"))           // id and some path without "*"
 							components[1] = "*" + components[1]; // adding * in front
 

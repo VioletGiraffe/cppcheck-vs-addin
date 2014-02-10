@@ -124,14 +124,13 @@ namespace VSPackage.CPPCheckPlugin
 				}
 				foreach (dynamic file in project.Files)
 				{
-					// Only checking cpp files (performance)
 					Type fileObjectType = file.GetType();
 					// Automatic property binding fails with VS2013 for some unknown reason, using Reflection directly instead.
 					var vcFileInterface = fileObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCFile");
 					var fileType = vcFileInterface.GetProperty("FileType").GetValue(file);
 					Type fileTypeEnumType = fileType.GetType();
 					var fileTypeEnumConstant = Enum.GetName(fileTypeEnumType, fileType);
-					if (fileTypeEnumConstant == "eFileTypeCppCode")
+					if (fileTypeEnumConstant == "eFileTypeCppCode") // Only checking cpp files (performance)
 					{
 						String fileName = file.Name;
 						// Ignoring Qt MOC and UI files
