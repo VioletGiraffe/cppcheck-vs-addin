@@ -55,7 +55,7 @@ namespace VSPackage.CPPCheckPlugin
 			{
 				if (!path.ToLower().Contains("qt"))
 				{
-					String includeArgument = @" -I""" + path + @"""";
+					String includeArgument = @" -I""" + (path.EndsWith("\\") ? path : path+@"\\") + @"""";					
 					cppheckargs = cppheckargs + " " + includeArgument;
 				}
 			}
