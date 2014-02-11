@@ -5,11 +5,16 @@ using System.Diagnostics;
 
 namespace VSPackage.CPPCheckPlugin
 {
-	abstract class ICodeAnalyzer
+	abstract class ICodeAnalyzer : IDisposable
 	{
 		protected ICodeAnalyzer()
 		{
 			_numCores = Environment.ProcessorCount;
+		}
+
+		~ICodeAnalyzer()
+		{
+			Dispose(false);
 		}
 
 		public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputPane, bool is64bitConfiguration,
@@ -107,6 +112,20 @@ namespace VSPackage.CPPCheckPlugin
 			if (!String.IsNullOrEmpty(output))
 			{
 				_outputPane.OutputString(output + "\n");
+			}
+		}
+
+		public void Dispose()
+		{
+			Dispose(true);
+		}
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (_thread != null)
+			{
+				_thread.Abort();
+				_thread = null;
 			}
 		}
 
