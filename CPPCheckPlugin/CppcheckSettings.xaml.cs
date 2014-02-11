@@ -19,6 +19,8 @@ namespace VSPackage.CPPCheckPlugin
 	/// </summary>
 	public partial class CppcheckSettings : Window
 	{
+		public static string DefaultArguments = "--enable=style,information,warning,performance,portability --inline-suppr -q --force --template=vs";
+
 		public CppcheckSettings()
 		{
 			InitializeComponent();
@@ -32,29 +34,57 @@ namespace VSPackage.CPPCheckPlugin
 		private void onActivated(object o, EventArgs e)
 		{
 			InconclusiveChecks.IsChecked = Properties.Settings.Default.InconclusiveChecksEnabled;
+			Project_OnlyCheckCurrentConfig.IsChecked = Properties.Settings.Default.ProjectOnlyCheckCurrentConfig;
+			File_OnlyCheckCurrentConfig.IsChecked = Properties.Settings.Default.FileOnlyCheckCurrentConfig;
 			ArgumentsEditor.Text = Properties.Settings.Default.DefaultArguments;
 		}
 
 		private void OnClosed(object o, EventArgs e)
 		{
 			Properties.Settings.Default["DefaultArguments"] = String.IsNullOrEmpty(ArgumentsEditor.Text) ? DefaultArguments.Replace('\n', ' ').Replace('\r', ' ') : ArgumentsEditor.Text;
+			Properties.Settings.Default.Save();
 		}
 
 		private void inconclusive_Unchecked(object sender, RoutedEventArgs e)
 		{
 			Properties.Settings.Default["InconclusiveChecksEnabled"] = false;
+			Properties.Settings.Default.Save();
 		}
 
 		private void inconclusive_Checked(object sender, RoutedEventArgs e)
 		{
 			Properties.Settings.Default["InconclusiveChecksEnabled"] = true;
+			Properties.Settings.Default.Save();
 		}
 		private void onDefaultArguments(object sender, RoutedEventArgs e)
 		{
 			Properties.Settings.Default["DefaultArguments"] = DefaultArguments;
 			ArgumentsEditor.Text = DefaultArguments;
+			Properties.Settings.Default.Save();
 		}
 
-		public static string DefaultArguments = "--enable=style,information,warning,performance,portability --inline-suppr -q --force --template=vs";
+		private void Project_OnlyCheckCurrentConfig_Checked(object sender, RoutedEventArgs e)
+		{
+			Properties.Settings.Default["ProjectOnlyCheckCurrentConfig"] = true;
+			Properties.Settings.Default.Save();
+		}
+
+		private void Project_OnlyCheckCurrentConfig_Unchecked(object sender, RoutedEventArgs e)
+		{
+			Properties.Settings.Default["ProjectOnlyCheckCurrentConfig"] = false;
+			Properties.Settings.Default.Save();
+		}
+
+		private void File_OnlyCheckCurrentConfig_Checked(object sender, RoutedEventArgs e)
+		{
+			Properties.Settings.Default["FileOnlyCheckCurrentConfig"] = true;
+			Properties.Settings.Default.Save();
+		}
+
+		private void File_OnlyCheckCurrentConfig_Unchecked(object sender, RoutedEventArgs e)
+		{
+			Properties.Settings.Default["FileOnlyCheckCurrentConfig"] = true;
+			Properties.Settings.Default.Save();
+		}
 	}
 }

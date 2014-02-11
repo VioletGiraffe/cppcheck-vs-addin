@@ -58,5 +58,29 @@ namespace VSPackage.CPPCheckPlugin.Properties {
                 this["DefaultArguments"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ProjectOnlyCheckCurrentConfig {
+            get {
+                return ((bool)(this["ProjectOnlyCheckCurrentConfig"]));
+            }
+            set {
+                this["ProjectOnlyCheckCurrentConfig"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool FileOnlyCheckCurrentConfig {
+            get {
+                return ((bool)(this["FileOnlyCheckCurrentConfig"]));
+            }
+            set {
+                this["FileOnlyCheckCurrentConfig"] = value;
+            }
+        }
     }
 }
