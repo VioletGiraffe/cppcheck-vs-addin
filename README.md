@@ -9,7 +9,8 @@ This plugin integrates Cppcheck into Visual Studio and allows:
 
 ###Download
 Visual Studio 2012 and 2013 (except Express editions) supported.
-<a style="display:block; width: 12em; text-aligh:center; background-color: rgb(0,120,0);color: white; padding:8px; border-radius:0.8em; text-align:center;text-decoration: none;" href="https://github.com/VioletGiraffe/cppcheck-vs-addin/releases/latest">Get the latest release</a>
+
+**<a href="https://github.com/VioletGiraffe/cppcheck-vs-addin/releases/latest">Get the latest release</a>**
 
 ###Note
 
