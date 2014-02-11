@@ -83,6 +83,10 @@ namespace VSPackage.CPPCheckPlugin
 			try
 			{
 				dynamic project = document.ProjectItem.ContainingProject.Object;
+				if (!isVisualCppProject(project))
+				{
+					return;
+				}
 				var currentConfig = document.ProjectItem.ConfigurationManager.ActiveConfiguration;
 				SourceFile sourceForAnalysis = createSourceFile(document.FullName, currentConfig, project);
 				if (sourceForAnalysis == null)
@@ -115,9 +119,7 @@ namespace VSPackage.CPPCheckPlugin
 			foreach (dynamic o in activeProjects)
 			{
 				dynamic project = o.Object;
-				Type projectObjectType = project.GetType();
-				var projectInterface = projectObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCProject");
-				if (projectInterface == null)
+				if (!isVisualCppProject(project))
 				{
 					System.Windows.MessageBox.Show("Only C++ projects can be checked.");
 					return;
@@ -203,6 +205,13 @@ namespace VSPackage.CPPCheckPlugin
 				Debug.WriteLine("Exception occurred in cppcheck add-in: " + ex.Message);
 				return null;
 			}
+		}
+
+		private static bool isVisualCppProject(object project)
+		{
+			Type projectObjectType = project.GetType();
+			var projectInterface = projectObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCProject");
+			return projectInterface != null;
 		}
 
 		private DTE _dte = null;
