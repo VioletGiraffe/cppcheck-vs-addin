@@ -168,10 +168,5 @@ namespace VSPackage.CPPCheckPlugin
 
 			return suppressions;
 		}
-
-		protected virtual void Dispose(bool disposing)
-		{
-			base.Dispose(disposing);
-		}
 	}
 }

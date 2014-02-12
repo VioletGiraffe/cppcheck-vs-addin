@@ -62,6 +62,19 @@ namespace VSPackage.CPPCheckPlugin
 				mcs.AddCommand(menuSettings);
 			}
 		}
+
+		protected override int QueryClose(out bool canClose)
+		{
+			int result = base.QueryClose(out canClose);
+			if (canClose)
+			{
+				foreach (var item in _analyzers)
+				{
+					item.Dispose();
+				}
+			}
+			return result;
+		}
 		#endregion
 
 		private void onCheckCurrentProjectRequested(object sender, EventArgs e)
