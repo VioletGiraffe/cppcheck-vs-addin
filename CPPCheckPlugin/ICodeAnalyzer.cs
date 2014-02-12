@@ -25,9 +25,17 @@ namespace VSPackage.CPPCheckPlugin
 		protected void run(string analyzerExePath, string arguments, OutputWindowPane outputPane, bool bringOutputToFrontAfterAnalysis)
 		{
 			_outputPane = outputPane;
+
+			abortThreadIfAny();
+			_thread = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath, arguments, bringOutputToFrontAfterAnalysis));
+			_thread.Name = "cppcheck";
+			_thread.Start();
+		}
+
+		private void abortThreadIfAny()
+		{
 			if (_thread != null)
 			{
-
 				try
 				{
 					_thread.Abort();
@@ -35,10 +43,6 @@ namespace VSPackage.CPPCheckPlugin
 				catch (System.Exception /*ex*/) { }
 				_thread = null;
 			}
-
-			_thread = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath, arguments, bringOutputToFrontAfterAnalysis));
-			_thread.Name = "cppcheck";
-			_thread.Start();
 		}
 
 		private void analyzerThreadFunc(string analyzerExePath, string arguments, bool bringOutputToFrontAfterAnalysis)
@@ -108,6 +112,11 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void analyzerOutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
 		{
+			if (_thread == null)
+			{
+				// We got here because the environment is shutting down, the current object was disposed and the thread was aborted.
+				return;
+			}
 			String output = outLine.Data;
 			if (!String.IsNullOrEmpty(output))
 			{
@@ -122,11 +131,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		protected virtual void Dispose(bool disposing)
 		{
-			if (_thread != null)
-			{
-				_thread.Abort();
-				_thread = null;
-			}
+			abortThreadIfAny();
 		}
 
 		private OutputWindowPane _outputPane = null;
