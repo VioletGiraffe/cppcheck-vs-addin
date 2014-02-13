@@ -206,7 +206,11 @@ namespace VSPackage.CPPCheckPlugin
 					{
 						String includes = tool.AdditionalIncludeDirectories;
 						String definitions = tool.PreprocessorDefinitions;
-						sourceForAnalysis.addIncludePaths(includes.Split(';').ToList());
+						List<string> includePaths = includes.Split(';').ToList();
+						for (int i = 0; i < includePaths.Count; ++i)
+							includePaths[i] = config.Evaluate(includePaths[i]);
+
+						sourceForAnalysis.addIncludePaths(includePaths);
 						sourceForAnalysis.addMacros(definitions.Split(';').ToList());
 						break;
 					}
