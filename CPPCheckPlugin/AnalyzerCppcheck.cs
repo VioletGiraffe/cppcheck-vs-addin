@@ -137,31 +137,36 @@ namespace VSPackage.CPPCheckPlugin
 			HashSet<string> suppressions = new HashSet<string>();
 			if (File.Exists(settingsFilePath))
 			{
-				StreamReader stream = File.OpenText(settingsFilePath);
-				string line = null;
-
-				string currentGroup = "";
-				while ((line = stream.ReadLine()) != null)
+				using( StreamReader stream = File.OpenText(settingsFilePath) )
 				{
-					if (line.Contains("["))
+					string currentGroup = "";
+					while (true)
 					{
-						currentGroup = line.Replace("[", "").Replace("]", "");
-						continue; // to the next line
-					}
-					if (currentGroup == "cppcheck")
-					{
-						var components = line.Split(':');
-						if (components.Length >= 2 && !components[1].StartsWith("*"))           // id and some path without "*"
-							components[1] = "*" + components[1]; // adding * in front
+						var line = stream.ReadLine();
+						if (line == null)
+						{
+							break;
+						}
+						if (line.Contains("["))
+						{
+							currentGroup = line.Replace("[", "").Replace("]", "");
+							continue; // to the next line
+						}
+						if (currentGroup == "cppcheck")
+						{
+							var components = line.Split(':');
+							if (components.Length >= 2 && !components[1].StartsWith("*"))           // id and some path without "*"
+								components[1] = "*" + components[1]; // adding * in front
 
-						string suppression = components[0];
-						if (components.Length > 1)
-							suppression += ":" + components[1];
-						if (components.Length > 2)
-							suppression += ":"+ components[2];
+							string suppression = components[0];
+							if (components.Length > 1)
+								suppression += ":" + components[1];
+							if (components.Length > 2)
+								suppression += ":" + components[2];
 
-						if (!string.IsNullOrEmpty(suppression))
-							suppressions.Add(suppression.Replace("\\\\", "\\"));
+							if (!string.IsNullOrEmpty(suppression))
+								suppressions.Add(suppression.Replace("\\\\", "\\"));
+						}
 					}
 				}
 			}
