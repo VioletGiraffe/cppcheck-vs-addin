@@ -38,7 +38,8 @@ namespace VSPackage.CPPCheckPlugin
 			{
 				try
 				{
-					_thread.Abort();
+					_terminateThread = true;
+					_thread.Join();
 				}
 				catch (System.Exception /*ex*/) { }
 				_thread = null;
@@ -48,6 +49,7 @@ namespace VSPackage.CPPCheckPlugin
 		private void analyzerThreadFunc(string analyzerExePath, string arguments, bool bringOutputToFrontAfterAnalysis)
 		{
 			System.Diagnostics.Process process = null;
+			_terminateThread = false;
 			try
 			{
 				Debug.Assert(!String.IsNullOrEmpty(analyzerExePath));
@@ -79,7 +81,16 @@ namespace VSPackage.CPPCheckPlugin
 				process.BeginOutputReadLine();
 				process.BeginErrorReadLine();
 				// Wait for analysis completion
-				process.WaitForExit();
+				while (!process.HasExited)
+				{
+					if (!_terminateThread)
+						System.Threading.Thread.Sleep(30);
+					else
+					{
+						process.Kill();
+						return;
+					}
+				}
 				timer.Stop();
 				float timeElapsed = timer.ElapsedMilliseconds / 1000.0f;
 				if (process.ExitCode != 0)
@@ -138,5 +149,6 @@ namespace VSPackage.CPPCheckPlugin
 		protected int _numCores;
 
 		private System.Threading.Thread _thread = null;
+		private bool _terminateThread = false;
 	}
 }
