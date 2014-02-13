@@ -83,13 +83,12 @@ namespace VSPackage.CPPCheckPlugin
 				// Wait for analysis completion
 				while (!process.HasExited)
 				{
-					if (!_terminateThread)
-						System.Threading.Thread.Sleep(30);
-					else
+					if (_terminateThread)
 					{
-						process.Kill();
+						// finally block will run anyway and do the cleanup
 						return;
 					}
+					System.Threading.Thread.Sleep(30);
 				}
 				timer.Stop();
 				float timeElapsed = timer.ElapsedMilliseconds / 1000.0f;
