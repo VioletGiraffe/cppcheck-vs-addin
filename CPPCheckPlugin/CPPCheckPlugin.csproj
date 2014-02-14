@@ -119,6 +119,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AnalyzerCppcheck.cs" />
+    <Compile Include="ChecksPanel.cs" />
     <Compile Include="CppcheckSettings.xaml.cs">
       <DependentUpon>CppcheckSettings.xaml</DependentUpon>
     </Compile>
