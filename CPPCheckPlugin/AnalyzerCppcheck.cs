@@ -110,8 +110,11 @@ namespace VSPackage.CPPCheckPlugin
 
 				foreach (string macro in macros)
 				{
-					String macroArgument = " -D" + macro;
-					cppheckargs += macroArgument;
+					if (!String.IsNullOrEmpty(macro))
+					{
+						String macroArgument = " -D" + macro;
+						cppheckargs += macroArgument;
+					}
 				}
 			}
 
