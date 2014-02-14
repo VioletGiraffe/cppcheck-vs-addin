@@ -94,11 +94,17 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void LoadChecksList()
 		{
-			// TODO: generate xml file by running next command:
-			// cppcheck --errorlist --xml-version=2
+			System.Diagnostics.Process p = new System.Diagnostics.Process();
+			p.StartInfo.UseShellExecute = false;
+			p.StartInfo.RedirectStandardOutput = true;
+			p.StartInfo.FileName = Properties.Settings.Default.CPPcheckPath;
+			p.StartInfo.Arguments = "--errorlist --xml-version=2";
+			p.Start();
+			string output = p.StandardOutput.ReadToEnd();
+			p.WaitForExit();
 
 			System.Xml.XmlDocument checksList = new System.Xml.XmlDocument();
-			checksList.Load(@"C:\Users\Altren\Documents\checksList.xml");
+			checksList.LoadXml(output);
 
 			foreach (XmlNode node in checksList.SelectNodes("//errors/error"))
 			{
