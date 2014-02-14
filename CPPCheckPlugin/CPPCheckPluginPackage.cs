@@ -195,6 +195,8 @@ namespace VSPackage.CPPCheckPlugin
 				var configurationName = targetConfig.ConfigurationName;
 				dynamic config = project.Configurations.Item(configurationName);
 				String toolSetName = config.PlatformToolsetShortName;
+				if (String.IsNullOrEmpty(toolSetName))
+					toolSetName = config.PlatformToolsetFriendlyName;
 				SourceFile sourceForAnalysis = new SourceFile(filePath, project.ProjectDirectory.Replace("\"", ""), toolSetName);
 				dynamic toolsCollection = config.Tools;
 				foreach (var tool in toolsCollection)
