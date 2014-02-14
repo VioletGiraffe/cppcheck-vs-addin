@@ -49,6 +49,9 @@ namespace VSPackage.CPPCheckPlugin
 				}
 			}
 
+			mChecks["error"].box.IsChecked = true;
+			mChecks["error"].box.IsEnabled = false;
+			mChecks["error"].scrollView.IsEnabled = true;
 			foreach (var severity in enabledSeverities)
 			{
 				if (mChecks.ContainsKey(severity))
@@ -64,7 +67,7 @@ namespace VSPackage.CPPCheckPlugin
 			string result = "";
 			foreach (var severity in mChecks)
 			{
-				if (severity.Value.box.IsChecked == true)
+				if (severity.Key != "error" && severity.Value.box.IsChecked == true)
 				{
 					if (result.Length != 0)
 						result += ",";

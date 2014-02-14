@@ -22,6 +22,7 @@ namespace VSPackage.CPPCheckPlugin
 				cppheckargs += " --enable=" + Properties.Settings.Default.SeveritiesString;
 
 			HashSet<string> suppressions = new HashSet<string>(Properties.Settings.Default.SuppressionsString.Split(','));
+			suppressions.Remove("");
 
 			// Creating the list of all different project locations (no duplicates)
 			HashSet<string> projectPaths = new HashSet<string>(); // enforce uniqueness on the list of project paths
