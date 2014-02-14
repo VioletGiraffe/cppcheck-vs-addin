@@ -127,7 +127,7 @@ namespace VSPackage.CPPCheckPlugin
 				return;
 			}
 
-			var currentConfig = _dte.Solution.Projects.Item(1).ConfigurationManager.ActiveConfiguration;
+			Configuration currentConfig = null;
 			List<SourceFile> files = new List<SourceFile>();
 			foreach (dynamic o in activeProjects)
 			{
@@ -137,6 +137,7 @@ namespace VSPackage.CPPCheckPlugin
 					System.Windows.MessageBox.Show("Only C++ projects can be checked.");
 					return;
 				}
+				currentConfig = ((Project)o).ConfigurationManager.ActiveConfiguration;
 				foreach (dynamic file in project.Files)
 				{
 					Type fileObjectType = file.GetType();
