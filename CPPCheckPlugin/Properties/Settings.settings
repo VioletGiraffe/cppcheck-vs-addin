@@ -17,5 +17,11 @@
     <Setting Name="FileOnlyCheckCurrentConfig" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="SeveritiesString" Type="System.String" Scope="User">
+      <Value Profile="(Default)">style,information,warning,performance,portability,error</Value>
+    </Setting>
+    <Setting Name="SuppressionsString" Type="System.String" Scope="User">
+      <Value Profile="(Default)">passedByValue,cstyleCast,missingIncludeSystem,unusedStructMember,unmatchedSuppression,class_X_Y,missingInclude,constStatement,unusedPrivateFunction</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
