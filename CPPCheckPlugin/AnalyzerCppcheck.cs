@@ -73,6 +73,15 @@ namespace VSPackage.CPPCheckPlugin
 				// Assuming all files passed here are from the same project / same toolset, which should be true, so peeking the first file for global settings
 				switch (filesToAnalyze[0].vcCompilerVersion)
 				{
+					case SourceFile.VCCompilerVersion.vc2003:
+						macros.Add("_MSC_VER=1310");
+						break;
+					case SourceFile.VCCompilerVersion.vc2005:
+						macros.Add("_MSC_VER=1400");
+						break;
+					case SourceFile.VCCompilerVersion.vc2008:
+						macros.Add("_MSC_VER=1500");
+						break;
 					case SourceFile.VCCompilerVersion.vc2010:
 						macros.Add("_MSC_VER=1600");
 						break;
