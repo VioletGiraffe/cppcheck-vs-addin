@@ -1,7 +1,7 @@
 ﻿<Window x:Class="VSPackage.CPPCheckPlugin.CppcheckSettings"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Cppcheck settings" Height="146.952"
+        Title="Cppcheck settings"
         SizeToContent="WidthAndHeight">
     <Grid>
         <CheckBox Content="Enable inconclusive checks" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Name="InconclusiveChecks" Checked="inconclusive_Checked" Unchecked="inconclusive_Unchecked"/>
@@ -10,5 +10,7 @@
         <TextBox HorizontalAlignment="Stretch" Margin="10,62,10,0" TextWrapping="NoWrap" Name="ArgumentsEditor" VerticalAlignment="Top" ScrollViewer.CanContentScroll="True" Height="81" Visibility="Hidden"/>
         <CheckBox Content="Checking a project: only check currently active #if/#ifdef branches (faster check)" HorizontalAlignment="Left" Margin="10,31,0,0" VerticalAlignment="Top" Name="Project_OnlyCheckCurrentConfig" Checked="Project_OnlyCheckCurrentConfig_Checked" Unchecked="Project_OnlyCheckCurrentConfig_Unchecked"/>
         <CheckBox Content="Checking a single file: only check currently active #if/#ifdef branches (faster check)" HorizontalAlignment="Left" Margin="10,52,0,0" VerticalAlignment="Top" Name="File_OnlyCheckCurrentConfig" Checked="File_OnlyCheckCurrentConfig_Checked" Unchecked="File_OnlyCheckCurrentConfig_Unchecked"/>
+        <Label Content="Checks" HorizontalAlignment="Left" Margin="10,73,0,0" VerticalAlignment="Top"/>
+        <StackPanel Orientation="Vertical" VerticalAlignment="Stretch" HorizontalAlignment="Left" Margin="10,99,0,0" Width="668" Name="Checks_Panel"/>
     </Grid>
 </Window>

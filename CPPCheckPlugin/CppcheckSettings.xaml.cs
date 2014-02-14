@@ -19,8 +19,8 @@ namespace VSPackage.CPPCheckPlugin
 	/// </summary>
 	public partial class CppcheckSettings : Window
 	{
-		public static string DefaultArguments = "--enable=style,information,warning,performance,portability --inline-suppr -q --force --template=vs";
-
+		public static string DefaultArguments = "--inline-suppr -q --force --template=vs";
+		private ChecksPanel mChecksPanel;
 		public CppcheckSettings()
 		{
 			InitializeComponent();
@@ -29,10 +29,13 @@ namespace VSPackage.CPPCheckPlugin
 
 			ArgumentsEditor.MaxLines = 1;
 			ArgumentsEditor.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
+
+			mChecksPanel = new ChecksPanel(Checks_Panel);
 		}
 
 		private void onActivated(object o, EventArgs e)
 		{
+			mChecksPanel.LoadSettings();
 			InconclusiveChecks.IsChecked = Properties.Settings.Default.InconclusiveChecksEnabled;
 			Project_OnlyCheckCurrentConfig.IsChecked = Properties.Settings.Default.ProjectOnlyCheckCurrentConfig;
 			File_OnlyCheckCurrentConfig.IsChecked = Properties.Settings.Default.FileOnlyCheckCurrentConfig;
