@@ -119,7 +119,7 @@ namespace VSPackage.CPPCheckPlugin
 
 				foreach (string macro in macros)
 				{
-					if (!String.IsNullOrEmpty(macro))
+					if (!String.IsNullOrEmpty(macro) || !macro.Contains(" ") /* macros with spaces are invalid in VS */)
 					{
 						String macroArgument = " -D" + macro;
 						cppheckargs += macroArgument;
