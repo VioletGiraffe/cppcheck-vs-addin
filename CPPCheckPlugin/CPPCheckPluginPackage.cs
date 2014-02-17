@@ -38,10 +38,7 @@ namespace VSPackage.CPPCheckPlugin
 			_eventsHandlers = _dte.Events.DocumentEvents;
 			_eventsHandlers.DocumentSaved += documentSaved;
 
-			{
-				var outputWindow = (OutputWindow)_dte.GetOutputWindow().Object;
-				_fileAnalysisOutputPane = outputWindow.OutputWindowPanes.Add("[cppcheck] File analysis output");
-			}
+			_fileAnalysisOutputPane = _dte.AddOutputWindowPane("[cppcheck] File analysis output");
 
 			_analyzers.Add(new AnalyzerCppcheck());
 
@@ -63,19 +60,30 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
+		protected override void Dispose(bool disposing)
+		{
+			cleanup();
+			base.Dispose(disposing);
+		}
+
 		protected override int QueryClose(out bool canClose)
 		{
 			int result = base.QueryClose(out canClose);
 			if (canClose)
 			{
-				foreach (var item in _analyzers)
-				{
-					item.Dispose();
-				}
+				cleanup();
 			}
 			return result;
 		}
 		#endregion
+
+		private void cleanup()
+		{
+			foreach (var item in _analyzers)
+			{
+				item.Dispose();
+			}
+		}
 
 		private void onCheckCurrentProjectRequested(object sender, EventArgs e)
 		{
@@ -138,7 +146,8 @@ namespace VSPackage.CPPCheckPlugin
 					return;
 				}
 				currentConfig = ((Project)o).ConfigurationManager.ActiveConfiguration;
-				foreach (dynamic file in project.Files)
+				dynamic projectFiles = project.Files;
+				foreach (dynamic file in projectFiles)
 				{
 					Type fileObjectType = file.GetType();
 					// Automatic property binding fails with VS2013 for some unknown reason, using Reflection directly instead.
@@ -164,8 +173,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			if (_projectAnalysisOutputPane == null)
 			{
-				var outputWindow = (OutputWindow)_dte.GetOutputWindow().Object;
-				_projectAnalysisOutputPane = outputWindow.OutputWindowPanes.Add("[cppcheck] Project analysis output");
+				_projectAnalysisOutputPane = _dte.AddOutputWindowPane("[cppcheck] Project analysis output");
 			}
 
 			runAnalysis(files, currentConfig, true, _projectAnalysisOutputPane);
@@ -181,6 +189,7 @@ namespace VSPackage.CPPCheckPlugin
 		private void runAnalysis(List<SourceFile> files, Configuration currentConfig, bool bringOutputToFrontAfterAnalysis, OutputWindowPane outputPane)
 		{
 			Debug.Assert(outputPane != null);
+			Debug.Assert(currentConfig != null);
 			outputPane.Clear();
 			var currentConfigName = currentConfig.ConfigurationName;
 			foreach (var analyzer in _analyzers)
