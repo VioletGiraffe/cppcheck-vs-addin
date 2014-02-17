@@ -30,7 +30,7 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			mPanel = panel;
 
-			LoadChecksList();
+			BuildChecksList();
 			GenerateControls();
 			LoadSettings();
 		}
@@ -95,19 +95,9 @@ namespace VSPackage.CPPCheckPlugin
 			return result;
 		}
 
-		private void LoadChecksList()
+		private void BuildChecksList()
 		{
-			System.Diagnostics.Process p = new System.Diagnostics.Process();
-			p.StartInfo.UseShellExecute = false;
-			p.StartInfo.RedirectStandardOutput = true;
-			p.StartInfo.FileName = Properties.Settings.Default.CPPcheckPath;
-			p.StartInfo.Arguments = "--errorlist --xml-version=2";
-			p.Start();
-			string output = p.StandardOutput.ReadToEnd();
-			p.WaitForExit();
-
-			System.Xml.XmlDocument checksList = new System.Xml.XmlDocument();
-			checksList.LoadXml(output);
+			var checksList = LoadChecksList();
 
 			foreach (XmlNode node in checksList.SelectNodes("//errors/error"))
 			{
@@ -120,6 +110,30 @@ namespace VSPackage.CPPCheckPlugin
 					mChecks.Add(severity, new SeverityInfo { id = severity, toolTip = "TODO" });
 
 				mChecks[severity].checks.Add(new CheckInfo { id = id, toolTip = verboseMessage });
+			}
+		}
+
+		private XmlDocument LoadChecksList()
+		{
+			using (var process = new System.Diagnostics.Process())
+			{
+				var startInfo = process.StartInfo;
+				startInfo.UseShellExecute = false;
+				startInfo.CreateNoWindow = true;
+				startInfo.RedirectStandardOutput = true;
+				startInfo.FileName = Properties.Settings.Default.CPPcheckPath;
+				startInfo.Arguments = "--errorlist --xml-version=2";
+				process.Start();
+				String output;
+				using (var outputStream = process.StandardOutput)
+				{
+					output = outputStream.ReadToEnd();
+				}
+				process.WaitForExit();
+
+				var checksList = new XmlDocument();
+				checksList.LoadXml(output);
+				return checksList;
 			}
 		}
 
