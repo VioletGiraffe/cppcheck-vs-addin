@@ -90,6 +90,19 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
+		public void addMacroToUndefine(string macro)
+		{
+			_macrosToUndefine.Add(macro);
+		}
+
+		public void addMacrosToUndefine(List<string> macros)
+		{
+			foreach (string macro in macros)
+			{
+				addMacroToUndefine(macro);
+			}
+		}
+
 		public string FilePath
 		{
 			set { Debug.Assert(_fullPath == null); _fullPath = cleanPath(value); } // Only makes sense to set this once, a second set call is probably a mistake
@@ -117,6 +130,11 @@ namespace VSPackage.CPPCheckPlugin
 			get { return _activeMacros; }
 		}
 
+		public List<string> MacrosToUndefine
+		{
+			get { return _macrosToUndefine; }
+		}
+
 		public VCCompilerVersion vcCompilerVersion
 		{
 			get { return _compilerVersion; }
@@ -136,6 +154,7 @@ namespace VSPackage.CPPCheckPlugin
 		private string _projectBasePath = null;
 		private List<string> _includePaths = new List<string>();
 		private List<string> _activeMacros = new List<string>();
+		private List<string> _macrosToUndefine = new List<string>();
 		private VCCompilerVersion _compilerVersion;
 	}
 }

@@ -22,7 +22,7 @@ namespace VSPackage.CPPCheckPlugin
 				cppheckargs += " --enable=" + Properties.Settings.Default.SeveritiesString;
 
 			HashSet<string> suppressions = new HashSet<string>(Properties.Settings.Default.SuppressionsString.Split(','));
-			suppressions.Remove("");
+			suppressions.Add("unmatchedSuppression");
 
 			// Creating the list of all different project locations (no duplicates)
 			HashSet<string> projectPaths = new HashSet<string>(); // enforce uniqueness on the list of project paths
@@ -117,7 +117,7 @@ namespace VSPackage.CPPCheckPlugin
 				{
 					macros.Add("_M_IX86");
 				}
-
+				
 				if (isDebugConfiguration)
 					macros.Add("_DEBUG");
 
@@ -127,6 +127,22 @@ namespace VSPackage.CPPCheckPlugin
 					{
 						String macroArgument = " -D" + macro;
 						cppheckargs += macroArgument;
+					}
+				}
+
+				HashSet<string> macrostoUndefine = new HashSet<string>();
+				foreach (var file in filesToAnalyze)
+				{
+					foreach (string macro in file.MacrosToUndefine)
+						macrostoUndefine.Add(macro);
+				}
+
+				foreach (string macro in macrostoUndefine)
+				{
+					if (!String.IsNullOrEmpty(macro) && !macro.Contains(" ") /* macros with spaces are invalid in VS */)
+					{
+						String macroUndefArgument = " -U" + macro;
+						cppheckargs += macroUndefArgument;
 					}
 				}
 			}
