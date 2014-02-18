@@ -44,7 +44,8 @@ namespace VSPackage.CPPCheckPlugin
 
 			foreach (string suppression in suppressions)
 			{
-				cppheckargs += (" --suppress=" + suppression);
+				if (!String.IsNullOrWhiteSpace(suppression))
+					cppheckargs += (" --suppress=" + suppression);
 			}
 
 			// We only add include paths once, and then specify a set of files to check
