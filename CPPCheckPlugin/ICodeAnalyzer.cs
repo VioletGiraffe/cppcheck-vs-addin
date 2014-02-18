@@ -81,21 +81,22 @@ namespace VSPackage.CPPCheckPlugin
 				process.BeginOutputReadLine();
 				process.BeginErrorReadLine();
 				// Wait for analysis completion
-				while (!process.HasExited)
+				while (!process.WaitForExit(30))
 				{
 					if (_terminateThread)
 					{
 						// finally block will run anyway and do the cleanup
 						return;
 					}
-					System.Threading.Thread.Sleep(30);
 				}
 				timer.Stop();
-				float timeElapsed = timer.ElapsedMilliseconds / 1000.0f;
 				if (process.ExitCode != 0)
 					_outputPane.OutputString(analyzerExePath + " has exited with code " + process.ExitCode.ToString() + "\n");
 				else
+				{
+					double timeElapsed = Math.Round(timer.Elapsed.TotalSeconds, 3);
 					_outputPane.OutputString("Analysis completed in " + timeElapsed.ToString() + " seconds\n");
+				}
 				process.Close();
 				process = null;
 				if (bringOutputToFrontAfterAnalysis)
