@@ -51,10 +51,9 @@ namespace VSPackage.CPPCheckPlugin
 			// We only add include paths once, and then specify a set of files to check
 			HashSet<string> includePaths = new HashSet<string>();
 			foreach (var file in filesToAnalyze)
-				foreach (string path in file.IncludePaths)
-				{
-					includePaths.Add(path);
-				}
+			{
+				includePaths.UnionWith(file.IncludePaths);
+			}
 
 			foreach (string path in includePaths)
 			{
@@ -103,8 +102,7 @@ namespace VSPackage.CPPCheckPlugin
 
 				foreach (var file in filesToAnalyze)
 				{
-					foreach (string macro in file.Macros)
-						macros.Add(macro);
+					macros.UnionWith(file.Macros);
 				}
 				macros.Add("WIN32");
 				macros.Add("_WIN32");
@@ -131,14 +129,13 @@ namespace VSPackage.CPPCheckPlugin
 					}
 				}
 
-				HashSet<string> macrostoUndefine = new HashSet<string>();
+				HashSet<string> macrosToUndefine = new HashSet<string>();
 				foreach (var file in filesToAnalyze)
 				{
-					foreach (string macro in file.MacrosToUndefine)
-						macrostoUndefine.Add(macro);
+					macrosToUndefine.UnionWith(file.MacrosToUndefine);
 				}
 
-				foreach (string macro in macrostoUndefine)
+				foreach (string macro in macrosToUndefine)
 				{
 					if (!String.IsNullOrEmpty(macro) && !macro.Contains(" ") /* macros with spaces are invalid in VS */)
 					{

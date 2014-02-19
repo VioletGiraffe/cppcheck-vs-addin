@@ -26,7 +26,9 @@ namespace VSPackage.CPPCheckPlugin
 			}
 			else if (vcToolsNumber < 2003) // an even older version, still setting to vc2003 for now
 				_compilerVersion = VCCompilerVersion.vc2003;
-			else switch (vcToolsNumber)
+			else
+			{
+				switch (vcToolsNumber)
 				{
 					case 2003:
 						_compilerVersion = VCCompilerVersion.vc2003;
@@ -50,26 +52,28 @@ namespace VSPackage.CPPCheckPlugin
 						_compilerVersion = VCCompilerVersion.vcFuture;
 						break;
 				}
+			}
 		}
 
 		// All include paths being added are resolved against projectBasePath
 		public void addIncludePath(string path)
 		{
-			if (!String.IsNullOrEmpty(_projectBasePath) && !String.IsNullOrEmpty(path) && !path.Equals(".") && !path.Equals("\\\".\\\""))
+			if (String.IsNullOrEmpty(_projectBasePath))
+				return;
+			if (String.IsNullOrEmpty(path)|| path.Equals(".") || path.Equals("\\\".\\\""))
+				return;
+			Debug.WriteLine("Processing path: " + path);				
+			if (path.Contains("\\:")) // absolute path
+				_includePaths.Add(cleanPath(path));
+			else
 			{
-				Debug.WriteLine("Processing path: " + path);				
-				if (path.Contains("\\:")) // absolute path
-					_includePaths.Add(cleanPath(path));
-				else
-				{
-					// Relative path - converting to absolute
-					String pathForCombine = path.Replace("\"", String.Empty).TrimStart('\\', '/');
-					_includePaths.Add(cleanPath(Path.GetFullPath(Path.Combine(_projectBasePath, pathForCombine)))); // Workaround for Path.Combine bugs
-				}
+				// Relative path - converting to absolute
+				String pathForCombine = path.Replace("\"", String.Empty).TrimStart('\\', '/');
+				_includePaths.Add(cleanPath(Path.GetFullPath(Path.Combine(_projectBasePath, pathForCombine)))); // Workaround for Path.Combine bugs
 			}
 		}
 
-		public void addIncludePaths(List<string> paths)
+		public void addIncludePaths(IEnumerable<string> paths)
 		{
 			foreach (string path in paths)
 			{
@@ -82,7 +86,7 @@ namespace VSPackage.CPPCheckPlugin
 			_activeMacros.Add(macro);
 		}
 
-		public void addMacros(List<string> macros)
+		public void addMacros(IEnumerable<string> macros)
 		{
 			foreach (string macro in macros)
 			{
@@ -95,7 +99,7 @@ namespace VSPackage.CPPCheckPlugin
 			_macrosToUndefine.Add(macro);
 		}
 
-		public void addMacrosToUndefine(List<string> macros)
+		public void addMacrosToUndefine(IEnumerable<string> macros)
 		{
 			foreach (string macro in macros)
 			{
@@ -105,7 +109,12 @@ namespace VSPackage.CPPCheckPlugin
 
 		public string FilePath
 		{
-			set { Debug.Assert(_fullPath == null); _fullPath = cleanPath(value); } // Only makes sense to set this once, a second set call is probably a mistake
+			set
+			{
+				// Only makes sense to set this once, a second set call is probably a mistake
+				Debug.Assert(_fullPath == null);
+				_fullPath = cleanPath(value);
+			}
 			get { return _fullPath; }
 		}
 
@@ -116,7 +125,12 @@ namespace VSPackage.CPPCheckPlugin
 
 		public string BaseProjectPath
 		{
-			set { Debug.Assert(_projectBasePath == null); _projectBasePath = cleanPath(value); } // Only makes sense to set this once, a second set call is probably a mistake
+			set
+			{
+				// Only makes sense to set this once, a second set call is probably a mistake
+				Debug.Assert(_projectBasePath == null);
+				_projectBasePath = cleanPath(value);
+			}
 			get { return _projectBasePath; }
 		}
 
