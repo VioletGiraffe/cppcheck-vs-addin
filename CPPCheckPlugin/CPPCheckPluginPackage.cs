@@ -101,6 +101,12 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			if (document == null || document.Language != "C/C++")
 				return;
+			if (document.ActiveWindow == null)
+			{
+				// We get here when new files are being created and added to the project and
+				// then trying to obtain document.ProjectItem yields an exception. Will just skip this.
+				return;
+			}
 
 			try
 			{
