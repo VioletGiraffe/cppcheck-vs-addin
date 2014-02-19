@@ -225,8 +225,8 @@ namespace VSPackage.CPPCheckPlugin
 							includePaths[i] = config.Evaluate(includePaths[i]);
 
 						sourceForAnalysis.addIncludePaths(includePaths);
-						sourceForAnalysis.addMacros(definitions.Split(';').ToList());
-						sourceForAnalysis.addMacrosToUndefine(macrosToUndefine.Split(';').ToList());
+						sourceForAnalysis.addMacros(definitions.Split(';'));
+						sourceForAnalysis.addMacrosToUndefine(macrosToUndefine.Split(';'));
 						break;
 					}
 				}
