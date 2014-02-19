@@ -20,6 +20,7 @@ namespace VSPackage.CPPCheckPlugin
 	[InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
 	// This attribute is needed to let the shell know that this package exposes some menus.
 	[ProvideMenuResource("Menus.ctmenu", 1)]
+	[ProvideToolWindow(typeof(MainToolWindow), Style=VsDockStyle.Tabbed, Window=Microsoft.VisualStudio.Shell.Interop.ToolWindowGuids.Outputwindow, MultiInstances=false, Transient=false)]
 	[Guid(GuidList.guidCPPCheckPluginPkgString)]
 	public sealed class CPPCheckPluginPackage : Package
 	{
@@ -243,6 +244,18 @@ namespace VSPackage.CPPCheckPlugin
 			Type projectObjectType = project.GetType();
 			var projectInterface = projectObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCProject");
 			return projectInterface != null;
+		}
+
+		private void showToolWindow()
+		{
+			try
+			{
+				ToolWindowPane window = FindToolWindow(typeof(MainToolWindow), 0, true);
+				IVsWindowFrame frame = window.Frame as IVsWindowFrame;
+				if (frame != null)
+					frame.Show();
+			}
+			catch {}
 		}
 
 		private DTE _dte = null;

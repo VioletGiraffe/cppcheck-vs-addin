@@ -94,6 +94,10 @@
     <Compile Include="DTEHelper.cs" />
     <Compile Include="ICodeAnalyzer.cs" />
     <Compile Include="Guids.cs" />
+    <Compile Include="MainToolWindow.cs" />
+    <Compile Include="MainToolWindowUI.xaml.cs">
+      <DependentUpon>MainToolWindowUI.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
@@ -153,6 +157,12 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="CppcheckSettings.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="MainToolWindowUI.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
