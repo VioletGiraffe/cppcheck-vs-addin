@@ -12,6 +12,7 @@ namespace VSPackage.CPPCheckPlugin
 		class CheckInfo
 		{
 			public string id;
+			public string label;
 			public string toolTip;
 			public CheckBox box;
 		};
@@ -110,7 +111,7 @@ namespace VSPackage.CPPCheckPlugin
 				if (!mChecks.ContainsKey(severity))
 					mChecks.Add(severity, new SeverityInfo { id = severity, toolTip = "TODO" });
 
-				mChecks[severity].checks.Add(new CheckInfo { id = id, toolTip = verboseMessage });
+				mChecks[severity].checks.Add(new CheckInfo { id = id, toolTip = verboseMessage, label = message });
 			}
 		}
 
@@ -163,12 +164,13 @@ namespace VSPackage.CPPCheckPlugin
 
 				scrollView.Content = subPanel;
 
+				severity.Value.checks.Sort((check1, check2) => check1.label.CompareTo(check2.label));
 				foreach (CheckInfo check in severity.Value.checks)
 				{
 					var box = new CheckBox();
 					check.box = box;
 					box.Name = check.id;
-					box.Content = check.id;
+					box.Content = /*check.id + ":\t" +*/ check.label;
 					box.ToolTip = check.toolTip;
 
 					box.Checked += Check_Changed;
