@@ -51,6 +51,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			mChecks["error"].box.IsChecked = true;
 			mChecks["error"].box.IsEnabled = false;
+			mChecks["error"].box.Content = "error (can't be disabled)";
 			mChecks["error"].scrollView.IsEnabled = true;
 			foreach (var severity in enabledSeverities)
 			{
@@ -155,12 +156,10 @@ namespace VSPackage.CPPCheckPlugin
 				var scrollView = new ScrollViewer();
 				scrollView.Margin = new System.Windows.Thickness(20, 0, 0, 0);
 				scrollView.MaxHeight = 100;
-				scrollView.Width = mPanel.Width - 20;
 				mPanel.Children.Add(scrollView);
 
 				var subPanel = new StackPanel();
 				severity.Value.scrollView = scrollView;
-				subPanel.Width = scrollView.Width;
 
 				scrollView.Content = subPanel;
 
