@@ -41,7 +41,10 @@ namespace VSPackage.CPPCheckPlugin
 					_terminateThread = true;
 					_thread.Join();
 				}
-				catch (System.Exception /*ex*/) { }
+				catch (Exception ex)
+				{
+					DebugTracer.Trace(ex);
+				}
 				_thread = null;
 			}
 		}
@@ -106,7 +109,10 @@ namespace VSPackage.CPPCheckPlugin
 					_outputPane.Activate();
 				}
 			}
-			catch (System.Exception /*ex*/) { }
+			catch (Exception ex)
+			{
+				DebugTracer.Trace(ex);
+			}
 			finally
 			{
 				if (process != null)
@@ -115,7 +121,10 @@ namespace VSPackage.CPPCheckPlugin
 					{
 						process.Kill();
 					}
-					catch (Exception) { }
+					catch (Exception ex)
+					{
+						DebugTracer.Trace(ex);
+					}
 					process.Dispose();
 				}
 			}
