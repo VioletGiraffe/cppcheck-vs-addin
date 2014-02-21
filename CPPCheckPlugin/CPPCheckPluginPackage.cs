@@ -129,7 +129,7 @@ namespace VSPackage.CPPCheckPlugin
 					_fileAnalysisOutputPane.Clear();
 					_fileAnalysisOutputPane.OutputString("Exception occurred in cppcheck add-in: " + ex.Message);
 				}
-				Debug.WriteLine("Exception occurred in cppcheck add-in: " + ex.Message);
+				DebugTracer.Trace(ex);
 			}
 		}
 
@@ -240,7 +240,7 @@ namespace VSPackage.CPPCheckPlugin
 			}
 			catch (System.Exception ex)
 			{
-				Debug.WriteLine("Exception occurred in cppcheck add-in: " + ex.Message);
+				DebugTracer.Trace(ex);
 				return null;
 			}
 		}
@@ -261,7 +261,10 @@ namespace VSPackage.CPPCheckPlugin
 				if (frame != null)
 					frame.Show();
 			}
-			catch {}
+			catch (Exception ex)
+			{
+				DebugTracer.Trace(ex);
+			}
 		}
 
 		private DTE _dte = null;
