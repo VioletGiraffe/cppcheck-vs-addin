@@ -16,7 +16,7 @@ namespace VSPackage.CPPCheckPlugin
 				return;
 
 			Debug.Assert(_numCores > 0);
-			String cppheckargs = CppcheckSettings.DefaultArguments;
+			String cppheckargs = Properties.Settings.Default.DefaultArguments;
 
 			if (Properties.Settings.Default.SeveritiesString.Length != 0)
 				cppheckargs += " --enable=" + Properties.Settings.Default.SeveritiesString;
