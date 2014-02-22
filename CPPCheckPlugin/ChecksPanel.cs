@@ -9,6 +9,18 @@ namespace VSPackage.CPPCheckPlugin
 	{
 		private StackPanel mPanel;
 
+		// copypasted from cppcheck documentation
+		private Dictionary<string, string> SeverityToolTips = new Dictionary<string, string>()
+		{
+			{"error", "Programming error.\nThis indicates severe error like memory leak etc.\nThe error is certain."},
+			{"warning", "Used for dangerous coding style that can cause severe runtime errors.\nFor example: forgetting to initialize a member variable in a constructor."},
+			{"style", "Style warning.\nUsed for general code cleanup recommendations. Fixing these will not fix any bugs but will make the code easier to maintain.\nFor example: redundant code, unreachable code, etc."},
+			{"performance", "Performance warning.\nNot an error as is but suboptimal code and fixing it probably leads to faster performance of the compiled code."},
+			{"portability", "Portability warning.\nThis warning indicates the code is not properly portable for different platforms and bitnesses (32/64 bit). If the code is meant to compile in different platforms and bitnesses these warnings should be fixed."},
+			{"information", "Checking information.\nInformation message about the checking (process) itself. These messages inform about header files not found etc issues that are not errors in the code but something user needs to know."},
+			{"debug", "Debug message.\nDebug-mode message useful for the developers."}
+		};
+
 		class CheckInfo
 		{
 			public string id;
@@ -109,10 +121,28 @@ namespace VSPackage.CPPCheckPlugin
 				string verboseMessage = node.Attributes["verbose"].Value;
 
 				if (!mChecks.ContainsKey(severity))
-					mChecks.Add(severity, new SeverityInfo { id = severity, toolTip = "TODO" });
+					mChecks.Add(severity, new SeverityInfo { id = severity, toolTip = SeverityToolTips[severity] });
 
-				mChecks[severity].checks.Add(new CheckInfo { id = id, toolTip = verboseMessage, label = message });
+				string checkToolTip = FormatTooltip(id, severity, message, verboseMessage);
+
+				mChecks[severity].checks.Add(new CheckInfo { id = id, toolTip = checkToolTip, label = message });
 			}
+		}
+
+		private static string FormatTooltip(string id, string severity, string message, string verboseMessage)
+		{
+			string multilineToolTip = "";
+			string remainingToolTip = "id : " + id + "\n" + verboseMessage;
+			while (remainingToolTip.Length > 100)
+			{
+				int spaceIdx = remainingToolTip.IndexOf(' ', 100);
+				if (spaceIdx == -1)
+					break;
+				multilineToolTip += remainingToolTip.Substring(0, spaceIdx) + Environment.NewLine;
+				remainingToolTip = remainingToolTip.Substring(spaceIdx + 1);
+			}
+			multilineToolTip += remainingToolTip;
+			return multilineToolTip;
 		}
 
 		private XmlDocument LoadChecksList()
