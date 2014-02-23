@@ -92,6 +92,7 @@
     <Compile Include="CppcheckSettings.xaml.cs">
       <DependentUpon>CppcheckSettings.xaml</DependentUpon>
     </Compile>
+    <Compile Include="DebugTracer.cs" />
     <Compile Include="DTEHelper.cs" />
     <Compile Include="ICodeAnalyzer.cs" />
     <Compile Include="Guids.cs" />
