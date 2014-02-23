@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using EnvDTE;
 using System.Diagnostics;
 using System.IO;
@@ -16,7 +17,7 @@ namespace VSPackage.CPPCheckPlugin
 				return;
 
 			Debug.Assert(_numCores > 0);
-			String cppheckargs = CppcheckSettings.DefaultArguments;
+			String cppheckargs = Properties.Settings.Default.DefaultArguments;
 
 			if (Properties.Settings.Default.SeveritiesString.Length != 0)
 				cppheckargs += " --enable=" + Properties.Settings.Default.SeveritiesString;
@@ -30,6 +31,9 @@ namespace VSPackage.CPPCheckPlugin
 			{
 				projectPaths.Add(file.BaseProjectPath);
 			}
+
+			Debug.Assert(projectPaths.Count == 1);
+			_projectBasePath = projectPaths.First();
 
 			// Creating the list of all different suppressions (no duplicates)
 			foreach (var path in projectPaths)
@@ -57,7 +61,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			foreach (string path in includePaths)
 			{
-				if (!path.ToLower().Contains("qt"))
+				if (!path.ToLower().Contains("qt")) // TODO: make ignore include path setting
 				{
 					String includeArgument = " -I\"" + path + "\"";
 					cppheckargs = cppheckargs + " " + includeArgument;
@@ -161,6 +165,11 @@ namespace VSPackage.CPPCheckPlugin
 			run(analyzerPath, cppheckargs, outputWindow, bringOutputToFrontAfterAnalysis);
 		}
 
+		public override void suppressProblem(Problem p, SuppressionScope scope)
+		{
+
+		}
+
 		protected override HashSet<string> readSuppressions(string projectBasePath)
 		{
 			string settingsFilePath = projectBasePath + "\\suppressions.cfg";
@@ -200,8 +209,23 @@ namespace VSPackage.CPPCheckPlugin
 					}
 				}
 			}
-
 			return suppressions;
+		}
+
+		protected override List<Problem> parseOutput(String output)
+		{
+			List<Problem> list = new List<Problem>();
+			String[] parsed = output.Split('|');
+			// template={file}|{line}|{severity}|{id}|{message}
+			Debug.Assert(parsed.Length == 5);
+			Problem.SeverityLevel severity = Problem.SeverityLevel.info;
+			if (parsed[2] == "error")
+				severity = Problem.SeverityLevel.error;
+			else if (parsed[2] == "warning")
+				severity = Problem.SeverityLevel.warning;
+
+			list.Add(new Problem(severity, parsed[3], parsed[4], parsed[0], Int32.Parse(parsed[1]), _projectBasePath));
+			return list;
 		}
 	}
 }

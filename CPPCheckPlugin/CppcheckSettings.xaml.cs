@@ -19,7 +19,7 @@ namespace VSPackage.CPPCheckPlugin
 	/// </summary>
 	public partial class CppcheckSettings : Window
 	{
-		public static string DefaultArguments = "--inline-suppr -q --force --template=vs";
+		public static string DefaultArguments = "--inline-suppr -q --force --template=\"{file}|{line}|{severity}|{id}|{message}\"";
 		private ChecksPanel mChecksPanel;
 		public CppcheckSettings()
 		{
@@ -31,6 +31,13 @@ namespace VSPackage.CPPCheckPlugin
 			ArgumentsEditor.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
 
 			mChecksPanel = new ChecksPanel(Checks_Panel);
+
+			if (String.IsNullOrWhiteSpace(Properties.Settings.Default.DefaultArguments))
+				Properties.Settings.Default["DefaultArguments"] = DefaultArguments;
+			else
+				Properties.Settings.Default["DefaultArguments"] = Properties.Settings.Default.DefaultArguments.Replace("--template=xml", "--template=\"{file}|{line}|{severity}|{id}|{message}\"");
+
+			Properties.Settings.Default.Save();
 		}
 
 		private void onActivated(object o, EventArgs e)

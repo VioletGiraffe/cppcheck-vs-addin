@@ -5,8 +5,10 @@ using System.Diagnostics;
 
 namespace VSPackage.CPPCheckPlugin
 {
-	abstract class ICodeAnalyzer : IDisposable
+	public abstract class ICodeAnalyzer : IDisposable
 	{
+		public enum SuppressionScope { suppressThisMessageGlobally, suppressThisMessageProjectOnly, suppressThisMessageFileOnly, suppressThisMessageFileLine, suppressAllMessagesThisFile };
+
 		protected ICodeAnalyzer()
 		{
 			_numCores = Environment.ProcessorCount;
@@ -20,16 +22,32 @@ namespace VSPackage.CPPCheckPlugin
 		public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputPane, bool is64bitConfiguration,
 			bool isDebugConfiguration, bool bringOutputToFrontAfterAnalysis);
 
+		public abstract void suppressProblem(Problem p, SuppressionScope scope);
+
 		protected abstract HashSet<string> readSuppressions(string projectBasePath);
+
+		protected abstract List<Problem> parseOutput(String output);
 
 		protected void run(string analyzerExePath, string arguments, OutputWindowPane outputPane, bool bringOutputToFrontAfterAnalysis)
 		{
 			_outputPane = outputPane;
 
 			abortThreadIfAny();
+			MainToolWindow.Instance.show();
+			MainToolWindow.Instance.clear();
 			_thread = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath, arguments, bringOutputToFrontAfterAnalysis));
 			_thread.Name = "cppcheck";
 			_thread.Start();
+		}
+
+		private void addProblemsToToolwindow(List<Problem> problems)
+		{
+			if (MainToolWindow.Instance == null)
+				return;
+			
+			foreach(var problem in problems)
+				MainToolWindow.Instance.displayProblem(problem);
+			MainToolWindow.Instance.show();
 		}
 
 		private void abortThreadIfAny()
@@ -106,7 +124,10 @@ namespace VSPackage.CPPCheckPlugin
 					_outputPane.Activate();
 				}
 			}
-			catch (System.Exception /*ex*/) { }
+			catch (System.Exception ex)
+			{
+				Debug.Assert(true);
+			}
 			finally
 			{
 				if (process != null)
@@ -131,6 +152,7 @@ namespace VSPackage.CPPCheckPlugin
 			String output = outLine.Data;
 			if (!String.IsNullOrEmpty(output))
 			{
+				addProblemsToToolwindow(parseOutput(output));
 				_outputPane.OutputString(output + "\n");
 			}
 		}
@@ -144,6 +166,8 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			abortThreadIfAny();
 		}
+
+		protected String _projectBasePath = null; // Base path for a project currently being checked
 
 		private OutputWindowPane _outputPane = null;
 		protected int _numCores;

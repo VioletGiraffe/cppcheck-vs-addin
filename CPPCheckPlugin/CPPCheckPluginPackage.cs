@@ -59,6 +59,9 @@ namespace VSPackage.CPPCheckPlugin
 				MenuCommand menuSettings = new MenuCommand(onSettingsWindowRequested, settingsWndCmdId);
 				mcs.AddCommand(menuSettings);
 			}
+
+			// Creating the tool window
+			FindToolWindow(typeof(MainToolWindow), 0, true);
 		}
 
 		protected override void Dispose(bool disposing)
@@ -254,14 +257,8 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void showToolWindow()
 		{
-			try
-			{
-				ToolWindowPane window = FindToolWindow(typeof(MainToolWindow), 0, true);
-				IVsWindowFrame frame = window.Frame as IVsWindowFrame;
-				if (frame != null)
-					frame.Show();
-			}
-			catch {}
+			if (MainToolWindow.Instance != null)
+				MainToolWindow.Instance.show();
 		}
 
 		private DTE _dte = null;

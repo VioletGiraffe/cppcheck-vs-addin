@@ -21,7 +21,7 @@
       <Value Profile="(Default)">style,information,warning,performance,portability</Value>
     </Setting>
     <Setting Name="SuppressionsString" Type="System.String" Scope="User">
-      <Value Profile="(Default)">passedByValue,cstyleCast,missingIncludeSystem,unusedStructMember,unmatchedSuppression,class_X_Y,missingInclude,constStatement,unusedPrivateFunction</Value>
+      <Value Profile="(Default)">unmatchedSuppression</Value>
     </Setting>
   </Settings>
 </SettingsFile>

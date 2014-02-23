@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace VSPackage.CPPCheckPlugin
 {
-	class SourceFile
+	public class SourceFile
 	{
 		public enum VCCompilerVersion { vc2003, vc2005, vc2008, vc2010, vc2012, vc2013, vcFuture };
 
