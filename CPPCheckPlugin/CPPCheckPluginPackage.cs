@@ -60,6 +60,8 @@ namespace VSPackage.CPPCheckPlugin
 				mcs.AddCommand(menuSettings);
 			}
 
+			_settings = new CppcheckSettings();
+
 			// Creating the tool window
 			FindToolWindow(typeof(MainToolWindow), 0, true);
 		}
@@ -96,8 +98,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void onSettingsWindowRequested(object sender, EventArgs e)
 		{
-			CppcheckSettings settings = new CppcheckSettings();
-			settings.Show();
+			_settings.Show();
 		}
 
 		private void documentSaved(Document document)
@@ -266,5 +267,7 @@ namespace VSPackage.CPPCheckPlugin
 		private List<ICodeAnalyzer> _analyzers = new List<ICodeAnalyzer>();
 
 		private static OutputWindowPane _fileAnalysisOutputPane = null, _projectAnalysisOutputPane = null;
+
+		private CppcheckSettings _settings = null;
 	}
 }

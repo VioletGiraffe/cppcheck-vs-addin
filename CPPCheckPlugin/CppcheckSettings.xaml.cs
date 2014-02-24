@@ -35,7 +35,7 @@ namespace VSPackage.CPPCheckPlugin
 			if (String.IsNullOrWhiteSpace(Properties.Settings.Default.DefaultArguments))
 				Properties.Settings.Default["DefaultArguments"] = DefaultArguments;
 			else
-				Properties.Settings.Default["DefaultArguments"] = Properties.Settings.Default.DefaultArguments.Replace("--template=xml", "--template=\"{file}|{line}|{severity}|{id}|{message}\"");
+				Properties.Settings.Default["DefaultArguments"] = Properties.Settings.Default.DefaultArguments.Replace("--template=vs", "--template=\"{file}|{line}|{severity}|{id}|{message}\"");
 
 			Properties.Settings.Default.Save();
 		}

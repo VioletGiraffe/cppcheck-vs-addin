@@ -61,9 +61,9 @@ namespace VSPackage.CPPCheckPlugin
 			IVsUIHierarchy hierarchy = null;
 			uint itemId = 0;
 			IVsWindowFrame windowFrame = null;
-			if (shellOpenDocument.OpenDocumentViaProject(problem.FileName, ref guidCodeView, out sp, out hierarchy, out itemId, out windowFrame) != VSConstants.S_OK)
+			if (shellOpenDocument.OpenDocumentViaProject(problem.FilePath, ref guidCodeView, out sp, out hierarchy, out itemId, out windowFrame) != VSConstants.S_OK)
 			{
-				Debug.WriteLine("Error opening file " + problem.FileName);
+				Debug.WriteLine("Error opening file " + problem.FilePath);
 				return;
 			}
 

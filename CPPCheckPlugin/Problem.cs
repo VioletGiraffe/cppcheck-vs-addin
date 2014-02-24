@@ -35,9 +35,21 @@ namespace VSPackage.CPPCheckPlugin
 			get { return _message; }
 		}
 
-		public String FileName
+		public String FilePath
 		{
-			get { return _file; }
+			get {
+				if (String.IsNullOrWhiteSpace(_file))
+					return _file;
+				else if (_file.Contains(":")) // Absolute path
+					return _file; 
+				else
+				{
+					if (String.IsNullOrWhiteSpace(_baseProjectPath))
+						return _file;
+					// Relative path - making absolute
+					return _baseProjectPath.EndsWith("\\") ? _baseProjectPath + _file : _baseProjectPath + "\\" + _file;
+				}
+			}
 		}
 
 		public int Line
