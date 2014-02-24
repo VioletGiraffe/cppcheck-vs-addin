@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Threading;
 using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
@@ -48,7 +49,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		public void displayProblem(Problem problem)
 		{
-			_listView.Items.Add(new MainToolWindowUI.ProblemsListItem(problem));
+			Application.Current.Dispatcher.BeginInvoke(new Action(()=>_listView.Items.Add(new MainToolWindowUI.ProblemsListItem(problem))));
 		}
 
 		private void openProblemInEditor(Problem problem)
