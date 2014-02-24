@@ -75,6 +75,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			if ((filesToAnalyze.Count == 1 && Properties.Settings.Default.FileOnlyCheckCurrentConfig) || (filesToAnalyze.Count > 1 && Properties.Settings.Default.ProjectOnlyCheckCurrentConfig)) // Only checking current macros configuration (for speed)
 			{
+				cppheckargs.Replace("--force", "");
 				// Creating the list of all different macros (no duplicates)
 				HashSet<string> macros = new HashSet<string>();
 				macros.Add("__cplusplus=199711L"); // At least in VS2012, this is still 199711L
@@ -110,7 +111,7 @@ namespace VSPackage.CPPCheckPlugin
 				}
 				macros.Add("WIN32");
 				macros.Add("_WIN32");
-				
+
 				if (is64bitConfiguration)
 				{
 					macros.Add("_M_X64");
@@ -120,7 +121,7 @@ namespace VSPackage.CPPCheckPlugin
 				{
 					macros.Add("_M_IX86");
 				}
-				
+
 				if (isDebugConfiguration)
 					macros.Add("_DEBUG");
 
@@ -148,6 +149,8 @@ namespace VSPackage.CPPCheckPlugin
 					}
 				}
 			}
+			else if (!cppheckargs.Contains("--force"))
+				cppheckargs += " --force";
 
 			string analyzerPath = Properties.Settings.Default.CPPcheckPath;
 			while (!File.Exists(analyzerPath))
