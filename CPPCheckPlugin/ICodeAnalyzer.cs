@@ -126,7 +126,7 @@ namespace VSPackage.CPPCheckPlugin
 			}
 			finally
 			{
-				if (process != null)
+				if (process != null && !process.HasExited)
 				{
 					try
 					{
@@ -136,8 +136,10 @@ namespace VSPackage.CPPCheckPlugin
 					{
 						DebugTracer.Trace(ex);
 					}
-					process.Dispose();
 				}
+
+				if (process != null)
+					process.Dispose();
 			}
 		}
 
