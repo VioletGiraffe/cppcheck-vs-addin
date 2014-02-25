@@ -161,7 +161,8 @@ namespace VSPackage.CPPCheckPlugin
 				foreach (dynamic file in projectFiles)
 				{
 					Type fileObjectType = file.GetType();
-					// Automatic property binding fails with VS2013 for some unknown reason, using Reflection directly instead.
+					// Automatic property binding fails with VS2013 because there the property is *explicitly implemented* and so
+					// only accessible via the declaring interface. Using Reflection to get to the interface and access the property directly instead.
 					var vcFileInterface = fileObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCFile");
 					var fileType = vcFileInterface.GetProperty("FileType").GetValue(file);
 					Type fileTypeEnumType = fileType.GetType();
