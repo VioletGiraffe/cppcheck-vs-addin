@@ -20,7 +20,7 @@ namespace VSPackage.CPPCheckPlugin
 		}
 
 		public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputPane, bool is64bitConfiguration,
-			bool isDebugConfiguration, bool bringOutputToFrontAfterAnalysis);
+			bool isDebugConfiguration);
 
 		public abstract void suppressProblem(Problem p, SuppressionScope scope);
 
@@ -28,14 +28,14 @@ namespace VSPackage.CPPCheckPlugin
 
 		protected abstract List<Problem> parseOutput(String output);
 
-		protected void run(string analyzerExePath, string arguments, OutputWindowPane outputPane, bool bringOutputToFrontAfterAnalysis)
+		protected void run(string analyzerExePath, string arguments, OutputWindowPane outputPane)
 		{
 			_outputPane = outputPane;
 
 			abortThreadIfAny();
 			MainToolWindow.Instance.show();
 			MainToolWindow.Instance.clear();
-			_thread = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath, arguments, bringOutputToFrontAfterAnalysis));
+			_thread = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath, arguments));
 			_thread.Name = "cppcheck";
 			_thread.Start();
 		}
@@ -67,7 +67,7 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		private void analyzerThreadFunc(string analyzerExePath, string arguments, bool bringOutputToFrontAfterAnalysis)
+		private void analyzerThreadFunc(string analyzerExePath, string arguments)
 		{
 			System.Diagnostics.Process process = null;
 			_terminateThread = false;
@@ -119,13 +119,6 @@ namespace VSPackage.CPPCheckPlugin
 					_outputPane.OutputString("Analysis completed in " + timeElapsed.ToString() + " seconds\n");
 				}
 				process.Close();
-				process = null;
-				if (bringOutputToFrontAfterAnalysis)
-				{
-					Window outputWindow = _outputPane.DTE.GetOutputWindow();
-					outputWindow.Visible = true;
-					_outputPane.Activate();
-				}
 			}
 			catch (Exception ex)
 			{

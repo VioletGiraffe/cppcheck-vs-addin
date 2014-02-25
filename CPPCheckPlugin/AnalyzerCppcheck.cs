@@ -11,7 +11,7 @@ namespace VSPackage.CPPCheckPlugin
 	class AnalyzerCppcheck : ICodeAnalyzer
 	{
 		public override void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration,
-			bool isDebugConfiguration, bool bringOutputToFrontAfterAnalysis)
+			bool isDebugConfiguration)
 		{
 			if (filesToAnalyze.Count == 0)
 				return;
@@ -165,7 +165,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			Properties.Settings.Default["CPPcheckPath"] = analyzerPath;
 			Properties.Settings.Default.Save();
-			run(analyzerPath, cppheckargs, outputWindow, bringOutputToFrontAfterAnalysis);
+			run(analyzerPath, cppheckargs, outputWindow);
 		}
 
 		public override void suppressProblem(Problem p, SuppressionScope scope)

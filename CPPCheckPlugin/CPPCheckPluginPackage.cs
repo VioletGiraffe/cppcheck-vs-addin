@@ -60,8 +60,6 @@ namespace VSPackage.CPPCheckPlugin
 				mcs.AddCommand(menuSettings);
 			}
 
-			_settings = new CppcheckSettings();
-
 			// Creating the tool window
 			FindToolWindow(typeof(MainToolWindow), 0, true);
 		}
@@ -98,7 +96,8 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void onSettingsWindowRequested(object sender, EventArgs e)
 		{
-			_settings.Show();
+			var settings = new CppcheckSettings();
+			settings.Show();
 		}
 
 		private void documentSaved(Document document)
@@ -124,7 +123,7 @@ namespace VSPackage.CPPCheckPlugin
 				if (sourceForAnalysis == null)
 					return;
 
-				runAnalysis(sourceForAnalysis, currentConfig, false, _fileAnalysisOutputPane);
+				runAnalysis(sourceForAnalysis, currentConfig, _fileAnalysisOutputPane);
 			}
 			catch (System.Exception ex)
 			{
@@ -188,17 +187,17 @@ namespace VSPackage.CPPCheckPlugin
 				_projectAnalysisOutputPane = _dte.AddOutputWindowPane("[cppcheck] Project analysis output");
 			}
 
-			runAnalysis(files, currentConfig, true, _projectAnalysisOutputPane);
+			runAnalysis(files, currentConfig, _projectAnalysisOutputPane);
 		}
 
-		private void runAnalysis(SourceFile file, Configuration currentConfig, bool bringOutputToFrontAfterAnalysis, OutputWindowPane outputPane)
+		private void runAnalysis(SourceFile file, Configuration currentConfig, OutputWindowPane outputPane)
 		{
 			var list = new List<SourceFile>();
 			list.Add(file);
-			runAnalysis(list, currentConfig, bringOutputToFrontAfterAnalysis, outputPane);
+			runAnalysis(list, currentConfig, outputPane);
 		}
 
-		private void runAnalysis(List<SourceFile> files, Configuration currentConfig, bool bringOutputToFrontAfterAnalysis, OutputWindowPane outputPane)
+		private void runAnalysis(List<SourceFile> files, Configuration currentConfig, OutputWindowPane outputPane)
 		{
 			Debug.Assert(outputPane != null);
 			Debug.Assert(currentConfig != null);
@@ -206,7 +205,7 @@ namespace VSPackage.CPPCheckPlugin
 			var currentConfigName = currentConfig.ConfigurationName;
 			foreach (var analyzer in _analyzers)
 			{
-				analyzer.analyze(files, outputPane, currentConfigName.Contains("64"), currentConfigName.ToLower().Contains("debug"), bringOutputToFrontAfterAnalysis);
+				analyzer.analyze(files, outputPane, currentConfigName.Contains("64"), currentConfigName.ToLower().Contains("debug"));
 			}
 		}
 
@@ -268,7 +267,5 @@ namespace VSPackage.CPPCheckPlugin
 		private List<ICodeAnalyzer> _analyzers = new List<ICodeAnalyzer>();
 
 		private static OutputWindowPane _fileAnalysisOutputPane = null, _projectAnalysisOutputPane = null;
-
-		private CppcheckSettings _settings = null;
 	}
 }
