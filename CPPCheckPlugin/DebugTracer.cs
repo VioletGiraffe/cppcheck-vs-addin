@@ -10,7 +10,6 @@ namespace VSPackage.CPPCheckPlugin
 		public static void Trace(Exception ex)
 		{
 			Debug.WriteLine("Exception occurred in cppcheck add-in: " + ex.ToString());
-			MessageBox.Show("Exception occurred in cppcheck add-in", ex.ToString());
 		}
 	}
 }
