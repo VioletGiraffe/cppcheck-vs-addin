@@ -22,8 +22,8 @@ namespace VSPackage.CPPCheckPlugin
 	/// </summary>
 	public partial class MainToolWindowUI : UserControl
 	{
-		public delegate void suppresssionRequestedHandler(Problem problemToSuppress, ICodeAnalyzer.SuppressionScope scope);
-		public delegate void openProblemInEditor(Problem problem);
+		public delegate void suppresssionRequestedHandler(object sender, Problem problemToSuppress, ICodeAnalyzer.SuppressionScope scope);
+		public delegate void openProblemInEditor(object sender, Problem problem);
 
 		public event suppresssionRequestedHandler SuppressionRequested;
 		public event openProblemInEditor EditorRequestedForProblem;
@@ -38,7 +38,7 @@ namespace VSPackage.CPPCheckPlugin
 			foreach (ProblemsListItem item in listView.SelectedItems)
 			{
 				if (item != null)
-					SuppressionRequested(item.Problem, ICodeAnalyzer.SuppressionScope.suppressThisMessageGlobally);
+					SuppressionRequested(this, item.Problem, ICodeAnalyzer.SuppressionScope.suppressThisMessageGlobally);
 			}
 		}
 
@@ -70,7 +70,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			ProblemsListItem item = listView.ItemContainerGenerator.ItemFromContainer(objectClicked) as ProblemsListItem;
 			if (item != null)
-				EditorRequestedForProblem(item.Problem);
+				EditorRequestedForProblem(this, item.Problem);
 		}
 
 		public static TParent FindVisualParent<TParent, TLimit>(DependencyObject obj) where TParent : DependencyObject

@@ -76,7 +76,7 @@ namespace VSPackage.CPPCheckPlugin
 				Debug.Assert(!String.IsNullOrEmpty(analyzerExePath));
 				Debug.Assert(!String.IsNullOrEmpty(arguments));
 				Debug.Assert(_outputPane != null);
-				process = new System.Diagnostics.Process();
+
 				process.StartInfo.FileName = analyzerExePath;
 				process.StartInfo.Arguments = arguments;
 				process.StartInfo.CreateNoWindow = true;
@@ -137,10 +137,9 @@ namespace VSPackage.CPPCheckPlugin
 					{
 						DebugTracer.Trace(ex);
 					}
-				}
 
-				if (process != null)
 					process.Dispose();
+				}
 			}
 		}
 

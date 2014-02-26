@@ -52,7 +52,7 @@ namespace VSPackage.CPPCheckPlugin
 			Application.Current.Dispatcher.BeginInvoke(new Action(()=>_listView.Items.Add(new MainToolWindowUI.ProblemsListItem(problem))));
 		}
 
-		private void openProblemInEditor(Problem problem)
+		private void openProblemInEditor(object sender, Problem problem)
 		{
 			IVsUIShellOpenDocument shellOpenDocument = (IVsUIShellOpenDocument)GetService(typeof(IVsUIShellOpenDocument));
 			Debug.Assert(shellOpenDocument != null);
@@ -78,7 +78,7 @@ namespace VSPackage.CPPCheckPlugin
 			selection.GotoLine(problem.Line);
 		}
 
-		private void suppressProblem(Problem problem, ICodeAnalyzer.SuppressionScope scope)
+		private void suppressProblem(object sender, Problem problem, ICodeAnalyzer.SuppressionScope scope)
 		{
 			
 		}
