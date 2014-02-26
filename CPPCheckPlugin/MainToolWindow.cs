@@ -63,8 +63,9 @@ namespace VSPackage.CPPCheckPlugin
 			set;
 		}
 
-		private void openProblemInEditor(object sender, Problem problem)
+		private void openProblemInEditor(object sender, MainToolWindowUI.OpenProblemInEditorEventArgs e)
 		{
+			Problem problem = e.Problem;
 			IVsUIShellOpenDocument shellOpenDocument = (IVsUIShellOpenDocument)GetService(typeof(IVsUIShellOpenDocument));
 			Debug.Assert(shellOpenDocument != null);
 			Guid guidCodeView = VSConstants.LOGVIEWID.Code_guid;
@@ -89,10 +90,10 @@ namespace VSPackage.CPPCheckPlugin
 			selection.GotoLine(problem.Line);
 		}
 
-		private void suppressProblem(object sender, Problem problem, ICodeAnalyzer.SuppressionScope scope)
+		private void suppressProblem(object sender, MainToolWindowUI.SuppresssionRequestedEventArgs e)
 		{
-			if (problem != null)
-				problem.Analyzer.suppressProblem(problem, scope);
+			if (e.Problem != null)
+				e.Problem.Analyzer.suppressProblem(e.Problem, e.Scope);
 		}
 
 		private MainToolWindowUI _ui = new MainToolWindowUI();

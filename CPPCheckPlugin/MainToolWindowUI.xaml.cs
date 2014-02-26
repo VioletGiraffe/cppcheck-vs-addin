@@ -22,8 +22,21 @@ namespace VSPackage.CPPCheckPlugin
 	/// </summary>
 	public partial class MainToolWindowUI : UserControl
 	{
-		public delegate void suppresssionRequestedHandler(object sender, Problem problemToSuppress, ICodeAnalyzer.SuppressionScope scope);
-		public delegate void openProblemInEditor(object sender, Problem problem);
+		public class SuppresssionRequestedEventArgs : EventArgs
+		{
+			public SuppresssionRequestedEventArgs(Problem p, ICodeAnalyzer.SuppressionScope scope) { Problem = p; Scope = scope; }
+			public Problem Problem { get; set; }
+			public ICodeAnalyzer.SuppressionScope Scope { get; set; }
+		}
+
+		public class OpenProblemInEditorEventArgs : EventArgs
+		{
+			public OpenProblemInEditorEventArgs(Problem p) { Problem = p; }
+			public Problem Problem { get; set; }
+		}
+
+		public delegate void suppresssionRequestedHandler(object sender, SuppresssionRequestedEventArgs e);
+		public delegate void openProblemInEditor(object sender, OpenProblemInEditorEventArgs e);
 
 		public event suppresssionRequestedHandler SuppressionRequested;
 		public event openProblemInEditor EditorRequestedForProblem;
@@ -38,7 +51,7 @@ namespace VSPackage.CPPCheckPlugin
 			foreach (ProblemsListItem item in listView.SelectedItems)
 			{
 				if (item != null)
-					SuppressionRequested(this, item.Problem, ICodeAnalyzer.SuppressionScope.suppressThisMessageGlobally);
+					SuppressionRequested(this, new SuppresssionRequestedEventArgs(item.Problem, ICodeAnalyzer.SuppressionScope.suppressThisMessageGlobally));
 			}
 		}
 
@@ -47,7 +60,7 @@ namespace VSPackage.CPPCheckPlugin
 			foreach (ProblemsListItem item in listView.SelectedItems)
 			{
 				if (item != null)
-					SuppressionRequested(this, item.Problem, ICodeAnalyzer.SuppressionScope.suppressThisMessageProjectOnly);
+					SuppressionRequested(this, new SuppresssionRequestedEventArgs(item.Problem, ICodeAnalyzer.SuppressionScope.suppressThisMessageProjectOnly));
 			}
 		}
 
@@ -56,7 +69,7 @@ namespace VSPackage.CPPCheckPlugin
 			foreach (ProblemsListItem item in listView.SelectedItems)
 			{
 				if (item != null)
-					SuppressionRequested(this, item.Problem, ICodeAnalyzer.SuppressionScope.suppressThisMessageFileOnly);
+					SuppressionRequested(this, new SuppresssionRequestedEventArgs(item.Problem, ICodeAnalyzer.SuppressionScope.suppressThisMessageFileOnly));
 			}
 		}
 
@@ -65,7 +78,7 @@ namespace VSPackage.CPPCheckPlugin
 			foreach (ProblemsListItem item in listView.SelectedItems)
 			{
 				if (item != null)
-					SuppressionRequested(this, item.Problem, ICodeAnalyzer.SuppressionScope.suppressThisMessageFileLine);
+					SuppressionRequested(this, new SuppresssionRequestedEventArgs(item.Problem, ICodeAnalyzer.SuppressionScope.suppressThisMessageFileLine));
 			}
 		}
 
@@ -74,7 +87,7 @@ namespace VSPackage.CPPCheckPlugin
 			foreach (ProblemsListItem item in listView.SelectedItems)
 			{
 				if (item != null)
-					SuppressionRequested(this, item.Problem, ICodeAnalyzer.SuppressionScope.suppressAllMessagesThisFile);
+					SuppressionRequested(this, new SuppresssionRequestedEventArgs(item.Problem, ICodeAnalyzer.SuppressionScope.suppressAllMessagesThisFile));
 			}
 		}
 
@@ -86,7 +99,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			ProblemsListItem item = listView.ItemContainerGenerator.ItemFromContainer(objectClicked) as ProblemsListItem;
 			if (item != null)
-				EditorRequestedForProblem(this, item.Problem);
+				EditorRequestedForProblem(this, new OpenProblemInEditorEventArgs(item.Problem));
 		}
 
 		public static TParent FindVisualParent<TParent, TLimit>(DependencyObject obj) where TParent : DependencyObject
