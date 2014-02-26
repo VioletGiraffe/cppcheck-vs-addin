@@ -10,14 +10,20 @@ namespace VSPackage.CPPCheckPlugin
 	{
 		public enum SeverityLevel { info, warning, error };
 
-		public Problem(SeverityLevel severity, String messageId, String message, String file, int line, String baseProjectPath)
+		public Problem(ICodeAnalyzer analyzer, SeverityLevel severity, String messageId, String message, String file, int line, String baseProjectPath)
 		{
+			_analyzer  = analyzer;
 			_severity  = severity;
 			_messageId = messageId;
 			_message   = message;
 			_file      = file;
 			_line      = line;
 			_baseProjectPath = baseProjectPath;
+		}
+
+		public ICodeAnalyzer Analyzer
+		{
+			get { return _analyzer; }
 		}
 
 		public SeverityLevel Severity
@@ -33,6 +39,12 @@ namespace VSPackage.CPPCheckPlugin
 		public String Message
 		{
 			get { return _message; }
+		}
+
+		// This should be file path relative to project root
+		public String FileName
+		{
+			get {  return _file; }
 		}
 
 		public String FilePath
@@ -62,6 +74,7 @@ namespace VSPackage.CPPCheckPlugin
 			get { return _baseProjectPath; }
 		}
 
+		private ICodeAnalyzer _analyzer;
 		private SeverityLevel _severity;
 		private String        _messageId;
 		private String        _message;

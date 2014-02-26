@@ -91,7 +91,8 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void suppressProblem(object sender, Problem problem, ICodeAnalyzer.SuppressionScope scope)
 		{
-			
+			if (problem != null)
+				problem.Analyzer.suppressProblem(problem, scope);
 		}
 
 		private MainToolWindowUI _ui = new MainToolWindowUI();

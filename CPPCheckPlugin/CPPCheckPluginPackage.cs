@@ -185,7 +185,6 @@ namespace VSPackage.CPPCheckPlugin
 								files.Add(f);
 						}
 					}
-					
 				}
 				break; // Only checking one project at a time for now
 			}

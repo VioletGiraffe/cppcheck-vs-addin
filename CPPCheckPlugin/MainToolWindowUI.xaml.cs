@@ -44,22 +44,38 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void menuItem_suppressThisMessageProjectOnly(object sender, RoutedEventArgs e)
 		{
-
+			foreach (ProblemsListItem item in listView.SelectedItems)
+			{
+				if (item != null)
+					SuppressionRequested(this, item.Problem, ICodeAnalyzer.SuppressionScope.suppressThisMessageProjectOnly);
+			}
 		}
 
 		private void menuItem_suppressThisMessageFileOnly(object sender, RoutedEventArgs e)
 		{
-
+			foreach (ProblemsListItem item in listView.SelectedItems)
+			{
+				if (item != null)
+					SuppressionRequested(this, item.Problem, ICodeAnalyzer.SuppressionScope.suppressThisMessageFileOnly);
+			}
 		}
 
 		private void menuItem_suppressThisMessageFileLine(object sender, RoutedEventArgs e)
 		{
-
+			foreach (ProblemsListItem item in listView.SelectedItems)
+			{
+				if (item != null)
+					SuppressionRequested(this, item.Problem, ICodeAnalyzer.SuppressionScope.suppressThisMessageFileLine);
+			}
 		}
 
 		private void menuItem_suppressAllMessagesThisFile(object sender, RoutedEventArgs e)
 		{
-
+			foreach (ProblemsListItem item in listView.SelectedItems)
+			{
+				if (item != null)
+					SuppressionRequested(this, item.Problem, ICodeAnalyzer.SuppressionScope.suppressAllMessagesThisFile);
+			}
 		}
 
 		private void onProblemDoubleClick(object sender, MouseButtonEventArgs e)

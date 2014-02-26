@@ -12,25 +12,25 @@
             </DataTemplate>
 
             <ContextMenu x:Key="ItemContextMenu">
-                <MenuItem x:Name="menuItem_suppressThisMessageGlobally"
-                    Click="menuItem_suppressThisMessageGlobally"
-                    Header="Suppress this message globally">
-                </MenuItem>
-                <MenuItem x:Name="menuItem_suppressThisMessageProjectOnly"
-                    Click="menuItem_suppressThisMessageProjectOnly"
-                    Header="Suppress in this project only">
-                </MenuItem>
-                <MenuItem x:Name="menuItem_suppressThisMessageFileOnly"
-                    Click="menuItem_suppressThisMessageFileOnly"
-                    Header="Suppress in this project only">
-                </MenuItem>
                 <MenuItem x:Name="menuItem_suppressThisMessageFileLine"
                     Click="menuItem_suppressThisMessageFileLine"
                     Header="Suppress this specific message (at this file and line)">
                 </MenuItem>
+                <MenuItem x:Name="menuItem_suppressThisMessageFileOnly"
+                    Click="menuItem_suppressThisMessageFileOnly"
+                    Header="Suppress this message in this file only">
+                </MenuItem>
+                <MenuItem x:Name="menuItem_suppressThisMessageProjectOnly"
+                    Click="menuItem_suppressThisMessageProjectOnly"
+                    Header="Suppress this message in this project only">
+                </MenuItem>
                 <MenuItem x:Name="menuItem_suppressAllMessagesThisFile"
                     Click="menuItem_suppressAllMessagesThisFile"
                     Header="Suppress all messages in this file">
+                </MenuItem>
+                <MenuItem x:Name="menuItem_suppressThisMessageGlobally"
+                    Click="menuItem_suppressThisMessageGlobally"
+                    Header="Suppress this message globally">
                 </MenuItem>
             </ContextMenu>
         </ListView.Resources>

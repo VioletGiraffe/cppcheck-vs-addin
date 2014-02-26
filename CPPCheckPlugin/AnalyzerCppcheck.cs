@@ -170,16 +170,65 @@ namespace VSPackage.CPPCheckPlugin
 
 		public override void suppressProblem(Problem p, SuppressionScope scope)
 		{
+			if (p == null)
+				return;
+			if (!Directory.Exists(p.BaseProjectPath))
+			{
+				Debug.WriteLine("Error: directory " + p.BaseProjectPath + " doesn't exist, can't add suppression");
+				return;
+			}
 
+			String suppressionLine = null;
+			switch (scope)
+			{
+			case ICodeAnalyzer.SuppressionScope.suppressAllMessagesThisFile:
+				suppressionLine = "*:" + p.FileName;
+				break;
+			case ICodeAnalyzer.SuppressionScope.suppressThisMessageFileLine:
+				suppressionLine = p.MessageId + ":" + p.FileName + ":" + p.Line;
+				break;
+			case ICodeAnalyzer.SuppressionScope.suppressThisMessageFileOnly:
+				suppressionLine = p.MessageId + ":" + p.FileName;
+				break;
+			case ICodeAnalyzer.SuppressionScope.suppressThisMessageGlobally:
+				suppressionLine = p.MessageId; // TODO:
+				break;
+			case ICodeAnalyzer.SuppressionScope.suppressThisMessageProjectOnly:
+				suppressionLine = p.MessageId;
+				break;
+			}
+
+			String suppresionsFilePath = p.BaseProjectPath + "\\suppressions.cfg";
+			List<String> contentsLines = new List<String>();
+			if (File.Exists(suppresionsFilePath))
+				contentsLines = File.ReadAllLines(suppresionsFilePath).ToList();
+
+			int lineToInsertAfter = -1;
+			for (int i = 0; i < contentsLines.Count; ++i)
+			{
+				if (!String.IsNullOrWhiteSpace(contentsLines[i]) && contentsLines[i].Contains("[cppcheck]"))
+				{
+					lineToInsertAfter = i;
+					break;
+				}
+			}
+			if (lineToInsertAfter == -1)
+			{
+				contentsLines.Add("[cppcheck]");
+				lineToInsertAfter = 0;
+			}
+
+			contentsLines.Insert(lineToInsertAfter+1, suppressionLine);
+			File.WriteAllLines(suppresionsFilePath, contentsLines);
 		}
 
 		protected override HashSet<string> readSuppressions(string projectBasePath)
 		{
-			string settingsFilePath = projectBasePath + "\\suppressions.cfg";
+			string suppresionsFilePath = projectBasePath + "\\suppressions.cfg";
 			HashSet<string> suppressions = new HashSet<string>();
-			if (File.Exists(settingsFilePath))
+			if (File.Exists(suppresionsFilePath))
 			{
-				using( StreamReader stream = File.OpenText(settingsFilePath) )
+				using( StreamReader stream = File.OpenText(suppresionsFilePath) )
 				{
 					string currentGroup = "";
 					while (true)
@@ -234,7 +283,7 @@ namespace VSPackage.CPPCheckPlugin
 			else if (parsed[2] == "warning")
 				severity = Problem.SeverityLevel.warning;
 
-			list.Add(new Problem(severity, parsed[3], parsed[4], parsed[0], String.IsNullOrWhiteSpace(parsed[1]) ? 0 : Int32.Parse(parsed[1]), _projectBasePath));
+			list.Add(new Problem(this, severity, parsed[3], parsed[4], parsed[0], String.IsNullOrWhiteSpace(parsed[1]) ? 0 : Int32.Parse(parsed[1]), _projectBasePath));
 			return list;
 		}
 	}
