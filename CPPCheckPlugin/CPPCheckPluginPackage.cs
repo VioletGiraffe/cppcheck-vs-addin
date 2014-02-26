@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.Shell;
 using EnvDTE;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -39,7 +40,7 @@ namespace VSPackage.CPPCheckPlugin
 			_eventsHandlers = _dte.Events.DocumentEvents;
 			_eventsHandlers.DocumentSaved += documentSaved;
 
-			_fileAnalysisOutputPane = _dte.AddOutputWindowPane("[cppcheck] File analysis output");
+			_outputPane = _dte.AddOutputWindowPane("cppcheck analysis output");
 
 			_analyzers.Add(new AnalyzerCppcheck());
 
@@ -110,7 +111,6 @@ namespace VSPackage.CPPCheckPlugin
 				// then trying to obtain document.ProjectItem yields an exception. Will just skip this.
 				return;
 			}
-
 			try
 			{
 				dynamic project = document.ProjectItem.ContainingProject.Object;
@@ -123,14 +123,22 @@ namespace VSPackage.CPPCheckPlugin
 				if (sourceForAnalysis == null)
 					return;
 
-				runAnalysis(sourceForAnalysis, currentConfig, _fileAnalysisOutputPane);
+				if (MainToolWindow.Instance.ContentsType == ICodeAnalyzer.AnalysisType.ProjectAnalysis && !MainToolWindow.Instance.isEmpty())
+				{
+					DialogResult reply = MessageBox.Show("New analysis is about to be launched, it will clear previous analysis results. Perform analysis?", "Cppcheck: clear analysis results?", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+					if (reply == DialogResult.No)
+						return;
+				}
+				
+				MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.DocumentSavedAnalysis;
+				runAnalysis(sourceForAnalysis, currentConfig, _outputPane);
 			}
 			catch (System.Exception ex)
 			{
-				if (_fileAnalysisOutputPane != null)
+				if (_outputPane != null)
 				{
-					_fileAnalysisOutputPane.Clear();
-					_fileAnalysisOutputPane.OutputString("Exception occurred in cppcheck add-in: " + ex.Message);
+					_outputPane.Clear();
+					_outputPane.OutputString("Exception occurred in cppcheck add-in: " + ex.Message);
 				}
 				DebugTracer.Trace(ex);
 			}
@@ -182,12 +190,8 @@ namespace VSPackage.CPPCheckPlugin
 				break; // Only checking one project at a time for now
 			}
 
-			if (_projectAnalysisOutputPane == null)
-			{
-				_projectAnalysisOutputPane = _dte.AddOutputWindowPane("[cppcheck] Project analysis output");
-			}
-
-			runAnalysis(files, currentConfig, _projectAnalysisOutputPane);
+			MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.ProjectAnalysis;
+			runAnalysis(files, currentConfig, _outputPane);
 		}
 
 		private void runAnalysis(SourceFile file, Configuration currentConfig, OutputWindowPane outputPane)
@@ -266,6 +270,6 @@ namespace VSPackage.CPPCheckPlugin
 		private DocumentEvents _eventsHandlers = null;
 		private List<ICodeAnalyzer> _analyzers = new List<ICodeAnalyzer>();
 
-		private static OutputWindowPane _fileAnalysisOutputPane = null, _projectAnalysisOutputPane = null;
+		private static OutputWindowPane _outputPane = null;
 	}
 }

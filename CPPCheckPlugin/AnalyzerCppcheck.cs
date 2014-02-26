@@ -217,10 +217,17 @@ namespace VSPackage.CPPCheckPlugin
 
 		protected override List<Problem> parseOutput(String output)
 		{
-			List<Problem> list = new List<Problem>();
-			String[] parsed = output.Split('|');
 			// template={file}|{line}|{severity}|{id}|{message}
-			Debug.Assert(parsed.Length == 5);
+
+			List<Problem> list = new List<Problem>();
+
+			if (String.IsNullOrWhiteSpace(output) || !output.Contains("|"))
+				return list;
+
+			String[] parsed = output.Split('|');
+			if (parsed.Length != 5)
+				return list;
+
 			Problem.SeverityLevel severity = Problem.SeverityLevel.info;
 			if (parsed[2] == "error")
 				severity = Problem.SeverityLevel.error;

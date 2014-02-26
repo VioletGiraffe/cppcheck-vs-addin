@@ -47,9 +47,20 @@ namespace VSPackage.CPPCheckPlugin
 			_listView.Items.Clear();
 		}
 
+		public bool isEmpty()
+		{
+			return _listView.Items.Count == 0;
+		}
+
 		public void displayProblem(Problem problem)
 		{
 			Application.Current.Dispatcher.BeginInvoke(new Action(()=>_listView.Items.Add(new MainToolWindowUI.ProblemsListItem(problem))));
+		}
+
+		public ICodeAnalyzer.AnalysisType ContentsType
+		{
+			get;
+			set;
 		}
 
 		private void openProblemInEditor(object sender, Problem problem)
