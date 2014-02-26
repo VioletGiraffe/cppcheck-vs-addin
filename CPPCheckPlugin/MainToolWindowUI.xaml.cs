@@ -64,7 +64,11 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void onProblemDoubleClick(object sender, MouseButtonEventArgs e)
 		{
-			ProblemsListItem item = listView.ItemContainerGenerator.ItemFromContainer(FindVisualParent<ListViewItem, ListView>(e.OriginalSource as DependencyObject)) as ProblemsListItem;
+			var objectClicked = FindVisualParent<ListViewItem, ListView>(e.OriginalSource as DependencyObject);
+			if (objectClicked == null)
+				return;
+
+			ProblemsListItem item = listView.ItemContainerGenerator.ItemFromContainer(objectClicked) as ProblemsListItem;
 			if (item != null)
 				EditorRequestedForProblem(item.Problem);
 		}

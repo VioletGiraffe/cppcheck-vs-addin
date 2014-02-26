@@ -97,6 +97,7 @@ namespace VSPackage.CPPCheckPlugin
 				var timer = Stopwatch.StartNew();
 				// Start the process.
 				process.Start();
+				process.PriorityClass = ProcessPriorityClass.Idle;
 
 				// Start the asynchronous read of the sort output stream.
 				process.BeginOutputReadLine();
@@ -126,7 +127,7 @@ namespace VSPackage.CPPCheckPlugin
 			}
 			finally
 			{
-				if (process != null && !process.HasExited)
+				if (process != null)
 				{
 					try
 					{
