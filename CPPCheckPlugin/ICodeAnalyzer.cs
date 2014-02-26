@@ -77,6 +77,7 @@ namespace VSPackage.CPPCheckPlugin
 				Debug.Assert(!String.IsNullOrEmpty(arguments));
 				Debug.Assert(_outputPane != null);
 
+				process = new System.Diagnostics.Process();
 				process.StartInfo.FileName = analyzerExePath;
 				process.StartInfo.Arguments = arguments;
 				process.StartInfo.CreateNoWindow = true;
