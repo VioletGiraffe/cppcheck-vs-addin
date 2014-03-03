@@ -59,6 +59,8 @@ namespace VSPackage.CPPCheckPlugin
 				includePaths.UnionWith(file.IncludePaths);
 			}
 
+			includePaths.Add(filesToAnalyze[0].BaseProjectPath); // Fix for #60
+
 			foreach (string path in includePaths)
 			{
 				if (!path.ToLower().Contains("qt")) // TODO: make ignore include path setting
