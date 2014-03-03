@@ -34,7 +34,6 @@ namespace VSPackage.CPPCheckPlugin
 			_outputPane = outputPane;
 
 			abortThreadIfAny();
-			MainToolWindow.Instance.show();
 			MainToolWindow.Instance.clear();
 			_thread = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath, arguments));
 			_thread.Name = "cppcheck";
@@ -48,7 +47,6 @@ namespace VSPackage.CPPCheckPlugin
 			
 			foreach(var problem in problems)
 				MainToolWindow.Instance.displayProblem(problem);
-			MainToolWindow.Instance.show();
 		}
 
 		private void abortThreadIfAny()

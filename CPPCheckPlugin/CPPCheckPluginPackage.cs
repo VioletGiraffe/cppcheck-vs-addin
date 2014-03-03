@@ -129,7 +129,8 @@ namespace VSPackage.CPPCheckPlugin
 					if (reply == DialogResult.No)
 						return;
 				}
-				
+
+				MainToolWindow.Instance.showIfWindowNotCreated();
 				MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.DocumentSavedAnalysis;
 				runAnalysis(sourceForAnalysis, currentConfig, _outputPane);
 			}
@@ -190,6 +191,7 @@ namespace VSPackage.CPPCheckPlugin
 			}
 
 			MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.ProjectAnalysis;
+			MainToolWindow.Instance.showIfWindowNotCreated();
 			runAnalysis(files, currentConfig, _outputPane);
 		}
 
@@ -257,12 +259,6 @@ namespace VSPackage.CPPCheckPlugin
 			Type projectObjectType = project.GetType();
 			var projectInterface = projectObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCProject");
 			return projectInterface != null;
-		}
-
-		private void showToolWindow()
-		{
-			if (MainToolWindow.Instance != null)
-				MainToolWindow.Instance.show();
 		}
 
 		private DTE _dte = null;

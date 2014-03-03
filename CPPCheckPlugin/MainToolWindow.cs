@@ -35,10 +35,17 @@ namespace VSPackage.CPPCheckPlugin
 			get{return _instance;}
 		}
 
-		public void show()
+		public void bringToFront()
 		{
 			IVsWindowFrame frame = Frame as IVsWindowFrame;
 			if (frame != null)
+				frame.Show();
+		}
+
+		public void showIfWindowNotCreated()
+		{
+			IVsWindowFrame frame = Frame as IVsWindowFrame;
+			if (frame != null && frame.IsVisible() != VSConstants.S_OK)
 				frame.Show();
 		}
 
@@ -79,8 +86,7 @@ namespace VSPackage.CPPCheckPlugin
 				return;
 			}
 
-			if (windowFrame != null)
-				windowFrame.Show();
+			
 
 			EnvDTE.DTE dte = (EnvDTE.DTE)GetService(typeof(SDTE));
 			Debug.Assert(dte != null);
