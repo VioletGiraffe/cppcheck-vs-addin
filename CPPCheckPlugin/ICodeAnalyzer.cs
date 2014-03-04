@@ -7,7 +7,14 @@ namespace VSPackage.CPPCheckPlugin
 {
 	public abstract class ICodeAnalyzer : IDisposable
 	{
-		public enum SuppressionScope { suppressThisMessageGlobally, suppressThisMessageProjectOnly, suppressThisMessageFileOnly, suppressThisMessageFileLine, suppressAllMessagesThisFile };
+		public enum SuppressionScope
+		{
+			suppressThisMessageGlobally,
+			suppressThisMessageProjectOnly,
+			suppressThisMessageFileOnly,
+			suppressThisMessageFileLine,
+			suppressAllMessagesThisFile
+		};
 		public enum AnalysisType { DocumentSavedAnalysis, ProjectAnalysis };
 
 		protected ICodeAnalyzer()

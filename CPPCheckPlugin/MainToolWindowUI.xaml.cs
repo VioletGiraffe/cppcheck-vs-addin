@@ -144,8 +144,7 @@ namespace VSPackage.CPPCheckPlugin
 							bitmap = new System.Drawing.Icon(SystemIcons.Error, SystemIcons.Error.Height, SystemIcons.Error.Width).ToBitmap();
 							break;
 						default:
-							bitmap = new System.Drawing.Icon(SystemIcons.Information, SystemIcons.Information.Height, SystemIcons.Information.Width).ToBitmap();
-							break;
+							throw new InvalidOperationException("Unsupported value: " + _problem.Severity.ToString());
 					}
 					ImageSource imgSource = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(), IntPtr.Zero, System.Windows.Int32Rect.Empty, BitmapSizeOptions.FromWidthAndHeight(bitmap.Width, bitmap.Height));
 					return imgSource;

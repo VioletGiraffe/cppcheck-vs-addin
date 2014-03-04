@@ -8,7 +8,12 @@ namespace VSPackage.CPPCheckPlugin
 {
 	public class Problem
 	{
-		public enum SeverityLevel { info, warning, error };
+		public enum SeverityLevel
+		{
+			info,
+			warning,
+			error
+		};
 
 		public Problem(ICodeAnalyzer analyzer, SeverityLevel severity, String messageId, String message, String file, int line, String baseProjectPath)
 		{
