@@ -86,7 +86,8 @@ namespace VSPackage.CPPCheckPlugin
 				return;
 			}
 
-			
+			Debug.Assert(windowFrame != null);
+			windowFrame.Show();
 
 			EnvDTE.DTE dte = (EnvDTE.DTE)GetService(typeof(SDTE));
 			Debug.Assert(dte != null);
