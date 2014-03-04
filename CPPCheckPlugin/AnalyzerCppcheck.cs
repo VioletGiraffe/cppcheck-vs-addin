@@ -180,17 +180,21 @@ namespace VSPackage.CPPCheckPlugin
 				return;
 			}
 
+			String simpleFileName = p.FileName;
+			if (!String.IsNullOrWhiteSpace(simpleFileName) && simpleFileName.Contains(":")) // Absolute file path, replacing with just the file name
+				simpleFileName = Path.GetFileName(simpleFileName);
+
 			String suppressionLine = null;
 			switch (scope)
 			{
 			case ICodeAnalyzer.SuppressionScope.suppressAllMessagesThisFile:
-				suppressionLine = "*:" + p.FileName;
+					suppressionLine = "*:" + simpleFileName;
 				break;
 			case ICodeAnalyzer.SuppressionScope.suppressThisMessageFileLine:
-				suppressionLine = p.MessageId + ":" + p.FileName + ":" + p.Line;
+				suppressionLine = p.MessageId + ":" + simpleFileName + ":" + p.Line;
 				break;
 			case ICodeAnalyzer.SuppressionScope.suppressThisMessageFileOnly:
-				suppressionLine = p.MessageId + ":" + p.FileName;
+				suppressionLine = p.MessageId + ":" + simpleFileName;
 				break;
 			case ICodeAnalyzer.SuppressionScope.suppressThisMessageGlobally:
 				suppressionLine = p.MessageId; // TODO:
