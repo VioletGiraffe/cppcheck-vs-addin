@@ -181,8 +181,6 @@ namespace VSPackage.CPPCheckPlugin
 			}
 
 			String simpleFileName = p.FileName;
-			if (!String.IsNullOrWhiteSpace(simpleFileName) && simpleFileName.Contains(":")) // Absolute file path, replacing with just the file name
-				simpleFileName = Path.GetFileName(simpleFileName);
 
 			String suppressionLine = null;
 			switch (scope)

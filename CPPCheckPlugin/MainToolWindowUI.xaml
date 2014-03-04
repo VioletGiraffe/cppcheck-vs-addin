@@ -44,6 +44,8 @@
                 <GridView>
                     <GridViewColumn x:Name="SeverityColumn" Header="Severity" CellTemplate="{StaticResource Template}"/>
                     <GridViewColumn x:Name="MessageColumn" Header="Message" DisplayMemberBinding="{Binding Message}" Width="{Binding ElementName=helperField, Path=ActualWidth}"/>
+                    <GridViewColumn x:Name="FileNameColumn" Header="File" DisplayMemberBinding="{Binding FileName}" Width="Auto"/>
+                    <GridViewColumn x:Name="LineColumn" Header="Line" DisplayMemberBinding="{Binding Line}" Width="Auto"/>
                 </GridView>
             </ListView.View>
         </ListView>

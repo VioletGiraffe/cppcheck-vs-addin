@@ -127,6 +127,16 @@ namespace VSPackage.CPPCheckPlugin
 				get { return _problem.Message; }
 			}
 
+			public String FileName
+			{
+				get { return _problem.FileName; }
+			}
+
+			public int Line
+			{
+				get { return _problem.Line; }
+			}
+
 			public ImageSource Icon
 			{
 				get

@@ -42,9 +42,21 @@ namespace VSPackage.CPPCheckPlugin
 		}
 
 		// This should be file path relative to project root
-		public String FileName
+		public String FullFileName
 		{
 			get {  return _file; }
+		}
+
+		// file name only without path
+		public String FileName
+		{
+			get
+			{
+				if (!String.IsNullOrWhiteSpace(_file) && _file.Contains(":")) // Absolute file path, replacing with just the file name
+					return System.IO.Path.GetFileName(_file);
+				else
+					return _file;
+			}
 		}
 
 		public String FilePath
