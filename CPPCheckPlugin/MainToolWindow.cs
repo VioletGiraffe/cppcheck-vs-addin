@@ -92,7 +92,7 @@ namespace VSPackage.CPPCheckPlugin
 			EnvDTE.DTE dte = (EnvDTE.DTE)GetService(typeof(SDTE));
 			Debug.Assert(dte != null);
 			Debug.Assert(dte.ActiveDocument != null);
-			EnvDTE.TextSelection selection = dte.ActiveDocument.Selection as EnvDTE.TextSelection;
+			var selection = (EnvDTE.TextSelection)dte.ActiveDocument.Selection;
 			Debug.Assert(selection != null);
 			selection.GotoLine(problem.Line);
 		}
