@@ -213,7 +213,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void Severity_Changed(object sender, System.Windows.RoutedEventArgs e)
 		{
-			var box = sender as CheckBox;
+			var box = (CheckBox)sender;
 			if (mChecks.ContainsKey(box.Name))
 			{
 				mChecks[box.Name].scrollView.IsEnabled = box.IsChecked == true;
