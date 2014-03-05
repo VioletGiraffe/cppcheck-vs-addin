@@ -185,21 +185,23 @@ namespace VSPackage.CPPCheckPlugin
 			String suppressionLine = null;
 			switch (scope)
 			{
-			case ICodeAnalyzer.SuppressionScope.suppressAllMessagesThisFile:
+				case ICodeAnalyzer.SuppressionScope.suppressAllMessagesThisFile:
 					suppressionLine = "*:" + simpleFileName;
-				break;
-			case ICodeAnalyzer.SuppressionScope.suppressThisMessageFileLine:
-				suppressionLine = p.MessageId + ":" + simpleFileName + ":" + p.Line;
-				break;
-			case ICodeAnalyzer.SuppressionScope.suppressThisMessageFileOnly:
-				suppressionLine = p.MessageId + ":" + simpleFileName;
-				break;
-			case ICodeAnalyzer.SuppressionScope.suppressThisMessageGlobally:
-				suppressionLine = p.MessageId; // TODO:
-				break;
-			case ICodeAnalyzer.SuppressionScope.suppressThisMessageProjectOnly:
-				suppressionLine = p.MessageId;
-				break;
+					break;
+				case ICodeAnalyzer.SuppressionScope.suppressThisMessageFileLine:
+					suppressionLine = p.MessageId + ":" + simpleFileName + ":" + p.Line;
+					break;
+				case ICodeAnalyzer.SuppressionScope.suppressThisMessageFileOnly:
+					suppressionLine = p.MessageId + ":" + simpleFileName;
+					break;
+				case ICodeAnalyzer.SuppressionScope.suppressThisMessageGlobally:
+					suppressionLine = p.MessageId; // TODO:
+					break;
+				case ICodeAnalyzer.SuppressionScope.suppressThisMessageProjectOnly:
+					suppressionLine = p.MessageId;
+					break;
+				default:
+					throw new InvalidOperationException("Unsupported value: " + scope.ToString());
 			}
 
 			String suppresionsFilePath = p.BaseProjectPath + "\\suppressions.cfg";

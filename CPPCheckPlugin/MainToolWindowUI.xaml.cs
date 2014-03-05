@@ -48,46 +48,36 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void menuItem_suppressThisMessageGlobally(object sender, RoutedEventArgs e)
 		{
-			foreach (ProblemsListItem item in listView.SelectedItems)
-			{
-				if (item != null)
-					SuppressionRequested(this, new SuppresssionRequestedEventArgs(item.Problem, ICodeAnalyzer.SuppressionScope.suppressThisMessageGlobally));
-			}
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisMessageGlobally);
 		}
 
 		private void menuItem_suppressThisMessageProjectOnly(object sender, RoutedEventArgs e)
 		{
-			foreach (ProblemsListItem item in listView.SelectedItems)
-			{
-				if (item != null)
-					SuppressionRequested(this, new SuppresssionRequestedEventArgs(item.Problem, ICodeAnalyzer.SuppressionScope.suppressThisMessageProjectOnly));
-			}
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisMessageProjectOnly);
 		}
 
 		private void menuItem_suppressThisMessageFileOnly(object sender, RoutedEventArgs e)
 		{
-			foreach (ProblemsListItem item in listView.SelectedItems)
-			{
-				if (item != null)
-					SuppressionRequested(this, new SuppresssionRequestedEventArgs(item.Problem, ICodeAnalyzer.SuppressionScope.suppressThisMessageFileOnly));
-			}
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisMessageFileOnly);
 		}
 
 		private void menuItem_suppressThisMessageFileLine(object sender, RoutedEventArgs e)
 		{
-			foreach (ProblemsListItem item in listView.SelectedItems)
-			{
-				if (item != null)
-					SuppressionRequested(this, new SuppresssionRequestedEventArgs(item.Problem, ICodeAnalyzer.SuppressionScope.suppressThisMessageFileLine));
-			}
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisMessageFileLine);
 		}
 
 		private void menuItem_suppressAllMessagesThisFile(object sender, RoutedEventArgs e)
 		{
-			foreach (ProblemsListItem item in listView.SelectedItems)
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressAllMessagesThisFile);
+		}
+
+		private void menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope scope)
+		{
+			var selectedItems = listView.SelectedItems;
+			foreach (ProblemsListItem item in selectedItems)
 			{
 				if (item != null)
-					SuppressionRequested(this, new SuppresssionRequestedEventArgs(item.Problem, ICodeAnalyzer.SuppressionScope.suppressAllMessagesThisFile));
+					SuppressionRequested(this, new SuppresssionRequestedEventArgs(item.Problem, scope));
 			}
 		}
 
@@ -154,8 +144,7 @@ namespace VSPackage.CPPCheckPlugin
 							bitmap = new System.Drawing.Icon(SystemIcons.Error, SystemIcons.Error.Height, SystemIcons.Error.Width).ToBitmap();
 							break;
 						default:
-							bitmap = new System.Drawing.Icon(SystemIcons.Information, SystemIcons.Information.Height, SystemIcons.Information.Width).ToBitmap();
-							break;
+							throw new InvalidOperationException("Unsupported value: " + _problem.Severity.ToString());
 					}
 					ImageSource imgSource = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(), IntPtr.Zero, System.Windows.Int32Rect.Empty, BitmapSizeOptions.FromWidthAndHeight(bitmap.Width, bitmap.Height));
 					return imgSource;
