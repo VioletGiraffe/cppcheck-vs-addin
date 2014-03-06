@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Diagnostics;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.IO;
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -121,7 +122,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			public String FileName
 			{
-				get { return _problem.FileName; }
+				get { return System.IO.Path.GetFileName(_problem.FilePath); }
 			}
 
 			public int Line
