@@ -98,6 +98,7 @@ namespace VSPackage.CPPCheckPlugin
 		private void onSettingsWindowRequested(object sender, EventArgs e)
 		{
 			var settings = new CppcheckSettings();
+			System.Windows.Forms.Integration.ElementHost.EnableModelessKeyboardInterop(settings);
 			settings.Show();
 		}
 
