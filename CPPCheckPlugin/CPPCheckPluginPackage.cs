@@ -29,6 +29,16 @@ namespace VSPackage.CPPCheckPlugin
 		{
 		}
 
+		public static String solutionName()
+		{
+			return System.IO.Path.GetFileNameWithoutExtension(_dte.Solution.FullName);
+		}
+
+		public static String solutionPath()
+		{
+			return System.IO.Path.GetDirectoryName(_dte.Solution.FullName);
+		}
+
 		#region Package Members
 
 		protected override void Initialize()
@@ -223,7 +233,7 @@ namespace VSPackage.CPPCheckPlugin
 				String toolSetName = config.PlatformToolsetShortName;
 				if (String.IsNullOrEmpty(toolSetName))
 					toolSetName = config.PlatformToolsetFriendlyName;
-				SourceFile sourceForAnalysis = new SourceFile(filePath, project.ProjectDirectory.Replace("\"", ""), toolSetName);
+				SourceFile sourceForAnalysis = new SourceFile(filePath, project.ProjectDirectory.Replace("\"", ""), project.Name, toolSetName);
 				dynamic toolsCollection = config.Tools;
 				foreach (var tool in toolsCollection)
 				{
@@ -261,7 +271,7 @@ namespace VSPackage.CPPCheckPlugin
 			return projectInterface != null;
 		}
 
-		private DTE _dte = null;
+		private static DTE _dte = null;
 		private DocumentEvents _eventsHandlers = null;
 		private List<ICodeAnalyzer> _analyzers = new List<ICodeAnalyzer>();
 

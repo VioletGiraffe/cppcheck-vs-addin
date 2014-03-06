@@ -25,6 +25,9 @@ namespace VSPackage.CPPCheckPlugin
 			HashSet<string> suppressions = new HashSet<string>(Properties.Settings.Default.SuppressionsString.Split(','));
 			suppressions.Add("unmatchedSuppression");
 
+			suppressions.UnionWith(readSuppressions(ICodeAnalyzer.SuppressionStorage.Global));
+			suppressions.UnionWith(readSuppressions(ICodeAnalyzer.SuppressionStorage.Solution));
+
 			// Creating the list of all different project locations (no duplicates)
 			HashSet<string> projectPaths = new HashSet<string>(); // enforce uniqueness on the list of project paths
 			foreach (var file in filesToAnalyze)
@@ -34,11 +37,12 @@ namespace VSPackage.CPPCheckPlugin
 
 			Debug.Assert(projectPaths.Count == 1);
 			_projectBasePath = projectPaths.First();
+			_projectName = filesToAnalyze[0].ProjectName;
 
 			// Creating the list of all different suppressions (no duplicates)
 			foreach (var path in projectPaths)
 			{
-				suppressions.UnionWith(readSuppressions(path));
+				suppressions.UnionWith(readSuppressions(SuppressionStorage.Project, path, filesToAnalyze[0].ProjectName));
 			}
 
 			cppheckargs += (" --relative-paths=\"" + filesToAnalyze[0].BaseProjectPath + "\"");
@@ -200,11 +204,21 @@ namespace VSPackage.CPPCheckPlugin
 				case ICodeAnalyzer.SuppressionScope.suppressThisMessageProjectOnly:
 					suppressionLine = p.MessageId;
 					break;
+				case ICodeAnalyzer.SuppressionScope.suppressThisMessageSolutionWide:
+					suppressionLine = p.MessageId;
+					break;
 				default:
 					throw new InvalidOperationException("Unsupported value: " + scope.ToString());
 			}
 
-			String suppresionsFilePath = p.BaseProjectPath + "\\suppressions.cfg";
+			String suppresionsFilePath = null;
+			if (scope == ICodeAnalyzer.SuppressionScope.suppressThisMessageSolutionWide)
+				suppresionsFilePath = solutionSuppressionsFilePath();
+			else if (scope != ICodeAnalyzer.SuppressionScope.suppressThisMessageGlobally)
+				simpleFileName = projectSuppressionsFilePath(p.BaseProjectPath, p.ProjectName);
+
+			Debug.Assert(suppresionsFilePath != null);
+
 			List<String> contentsLines = new List<String>();
 			if (File.Exists(suppresionsFilePath))
 				contentsLines = File.ReadAllLines(suppresionsFilePath).ToList();
@@ -228,16 +242,23 @@ namespace VSPackage.CPPCheckPlugin
 			File.WriteAllLines(suppresionsFilePath, contentsLines);
 		}
 
-		protected override HashSet<string> readSuppressions(string projectBasePath)
+		protected override HashSet<string> readSuppressions(SuppressionStorage storage, string projectBasePath = null, string projectName = null)
 		{
-			string suppresionsFilePath = projectBasePath + "\\suppressions.cfg";
 			HashSet<string> suppressions = new HashSet<string>();
+			if (storage == ICodeAnalyzer.SuppressionStorage.Global)
+			{
+				return suppressions;
+			}
+
+			Debug.Assert(storage == ICodeAnalyzer.SuppressionStorage.Project || storage == ICodeAnalyzer.SuppressionStorage.Solution);
+
+			string suppresionsFilePath = storage == SuppressionStorage.Project ? projectSuppressionsFilePath(projectBasePath, projectName) : solutionSuppressionsFilePath();
 			if (File.Exists(suppresionsFilePath))
 			{
 				using( StreamReader stream = File.OpenText(suppresionsFilePath) )
 				{
 					string currentGroup = "";
-					while (true)
+					for(;;)
 					{
 						var line = stream.ReadLine();
 						if (line == null)
@@ -289,7 +310,7 @@ namespace VSPackage.CPPCheckPlugin
 			else if (parsed[2] == "warning")
 				severity = Problem.SeverityLevel.warning;
 
-			list.Add(new Problem(this, severity, parsed[3], parsed[4], parsed[0], String.IsNullOrWhiteSpace(parsed[1]) ? 0 : Int32.Parse(parsed[1]), _projectBasePath));
+			list.Add(new Problem(this, severity, parsed[3], parsed[4], parsed[0], String.IsNullOrWhiteSpace(parsed[1]) ? 0 : Int32.Parse(parsed[1]), _projectBasePath, _projectName));
 			return list;
 		}
 	}

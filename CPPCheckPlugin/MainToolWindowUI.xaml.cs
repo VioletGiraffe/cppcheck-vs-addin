@@ -74,6 +74,11 @@ namespace VSPackage.CPPCheckPlugin
 			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressAllMessagesThisFile);
 		}
 
+		private void menuItem_suppressThisMessageSolutionWide(object sender, RoutedEventArgs e)
+		{
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisMessageSolutionWide);
+		}
+
 		private void menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope scope)
 		{
 			var selectedItems = listView.SelectedItems;

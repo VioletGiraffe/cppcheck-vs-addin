@@ -29,6 +29,10 @@
                     Click="menuItem_suppressAllMessagesThisFile"
                     Header="Suppress all messages in this file">
                     </MenuItem>
+                    <MenuItem x:Name="menuItem_suppressThisMessageSolutionWide"
+                    Click="menuItem_suppressThisMessageSolutionWide"
+                    Header="Suppress this message solution-wide">
+                    </MenuItem>
                     <MenuItem x:Name="menuItem_suppressThisMessageGlobally"
                     Click="menuItem_suppressThisMessageGlobally"
                     Header="Suppress this message globally">

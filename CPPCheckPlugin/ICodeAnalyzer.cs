@@ -10,11 +10,19 @@ namespace VSPackage.CPPCheckPlugin
 		public enum SuppressionScope
 		{
 			suppressThisMessageGlobally,
+			suppressThisMessageSolutionWide,
 			suppressThisMessageProjectOnly,
 			suppressThisMessageFileOnly,
 			suppressThisMessageFileLine,
 			suppressAllMessagesThisFile
 		};
+
+		public enum SuppressionStorage
+		{
+			Project,
+			Solution,
+			Global
+		}
 
 		public enum AnalysisType { DocumentSavedAnalysis, ProjectAnalysis };
 
@@ -33,9 +41,20 @@ namespace VSPackage.CPPCheckPlugin
 
 		public abstract void suppressProblem(Problem p, SuppressionScope scope);
 
-		protected abstract HashSet<string> readSuppressions(string projectBasePath);
+		protected abstract HashSet<string> readSuppressions(SuppressionStorage storage, string projectBasePath = null, string projectName = null);
 
 		protected abstract List<Problem> parseOutput(String output);
+
+		protected string solutionSuppressionsFilePath()
+		{
+			return CPPCheckPluginPackage.solutionPath() + "\\" + CPPCheckPluginPackage.solutionName() + "_solution_suppressions.cfg";
+		}
+
+		protected string projectSuppressionsFilePath(string projectBasePath, string projectName)
+		{
+			Debug.Assert(!String.IsNullOrWhiteSpace(projectBasePath) && !String.IsNullOrWhiteSpace(projectName));
+			return projectBasePath + "\\" + projectName + "_project_suppressions.cfg";
+		}
 
 		protected void run(string analyzerExePath, string arguments, OutputWindowPane outputPane)
 		{
@@ -178,6 +197,7 @@ namespace VSPackage.CPPCheckPlugin
 		}
 
 		protected String _projectBasePath = null; // Base path for a project currently being checked
+		protected String _projectName     = null; // Name of a project currently being checked
 
 		private OutputWindowPane _outputPane = null;
 		protected int _numCores;

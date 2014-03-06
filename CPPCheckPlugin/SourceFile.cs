@@ -10,10 +10,11 @@ namespace VSPackage.CPPCheckPlugin
 	{
 		public enum VCCompilerVersion { vc2003, vc2005, vc2008, vc2010, vc2012, vc2013, vcFuture };
 
-		public SourceFile(string fullPath, string projectBasePath, string vcCompilerName)
+		public SourceFile(string fullPath, string projectBasePath, string projectName, string vcCompilerName)
 		{
 			_fullPath = cleanPath(fullPath);
 			_projectBasePath = cleanPath(projectBasePath);
+			_projectName = projectName;
 
 			// Parsing the number
 			String vcToolsNumberString = Regex.Match(vcCompilerName, @"\d+").Value;
@@ -62,7 +63,6 @@ namespace VSPackage.CPPCheckPlugin
 				return;
 			if (String.IsNullOrEmpty(path)|| path.Equals(".") || path.Equals("\\\".\\\""))
 				return;
-			Debug.WriteLine("Processing path: " + path);				
 			if (path.Contains("\\:")) // absolute path
 				_includePaths.Add(cleanPath(path));
 			else
@@ -123,6 +123,11 @@ namespace VSPackage.CPPCheckPlugin
 			get { return cleanPath(_fullPath.Replace(_projectBasePath, "")); }
 		}
 
+		public string ProjectName
+		{
+			get { return _projectName; }
+		}
+
 		public string BaseProjectPath
 		{
 			set
@@ -164,8 +169,9 @@ namespace VSPackage.CPPCheckPlugin
 			return result;
 		}
 
-		private string _fullPath = null;
+		private string _fullPath        = null;
 		private string _projectBasePath = null;
+		private string _projectName     = null;
 		private List<string> _includePaths = new List<string>();
 		private List<string> _activeMacros = new List<string>();
 		private List<string> _macrosToUndefine = new List<string>();
