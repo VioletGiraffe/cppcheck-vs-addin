@@ -215,7 +215,7 @@ namespace VSPackage.CPPCheckPlugin
 			if (scope == ICodeAnalyzer.SuppressionScope.suppressThisMessageSolutionWide)
 				suppresionsFilePath = solutionSuppressionsFilePath();
 			else if (scope != ICodeAnalyzer.SuppressionScope.suppressThisMessageGlobally)
-				simpleFileName = projectSuppressionsFilePath(p.BaseProjectPath, p.ProjectName);
+				suppresionsFilePath = projectSuppressionsFilePath(p.BaseProjectPath, p.ProjectName);
 
 			Debug.Assert(suppresionsFilePath != null);
 
