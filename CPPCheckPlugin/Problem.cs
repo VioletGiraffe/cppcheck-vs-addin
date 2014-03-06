@@ -53,10 +53,7 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			get
 			{
-				if (!String.IsNullOrWhiteSpace(_file) && _file.Contains(":")) // Absolute file path, replacing with just the file name
-					return System.IO.Path.GetFileName(_file);
-				else
-					return _file;
+				return System.IO.Path.GetFileName(_file);
 			}
 		}
 

@@ -1,20 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Diagnostics;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.IO;
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -127,7 +118,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			public String FileName
 			{
-				get { return System.IO.Path.GetFileName(_problem.FilePath); }
+				get { return _problem.FileName; }
 			}
 
 			public int Line
