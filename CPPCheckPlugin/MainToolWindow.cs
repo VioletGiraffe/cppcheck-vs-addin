@@ -15,7 +15,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 namespace VSPackage.CPPCheckPlugin
 {
 	[Guid("98C5C8D0-34D9-406F-AA2E-C85B47C9F268")]
-	public class MainToolWindow : ToolWindowPane
+	public sealed class MainToolWindow : ToolWindowPane
 	{
 		public MainToolWindow() : base(null)
 		{
