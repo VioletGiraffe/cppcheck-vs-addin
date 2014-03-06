@@ -9,7 +9,7 @@
         <ListView Margin="0" Name="listView" MouseDoubleClick="onProblemDoubleClick">
             <ListView.Resources>
                 <DataTemplate x:Key="Template">
-                    <Image Source="{Binding Path=Icon}" Width="24" Height="24"/>
+                    <Image Source="{Binding Path=Icon}"/>
                 </DataTemplate>
 
                 <ContextMenu x:Key="ItemContextMenu">
@@ -42,10 +42,10 @@
             </ListView.ItemContainerStyle>
             <ListView.View>
                 <GridView>
-                    <GridViewColumn x:Name="SeverityColumn" Header="Severity" CellTemplate="{StaticResource Template}"/>
-                    <GridViewColumn x:Name="MessageColumn" Header="Message" DisplayMemberBinding="{Binding Message}" Width="{Binding ElementName=helperField, Path=ActualWidth}"/>
+                    <GridViewColumn x:Name="SeverityColumn" Header="" CellTemplate="{StaticResource Template}" Width ="Auto"/>
                     <GridViewColumn x:Name="FileNameColumn" Header="File" DisplayMemberBinding="{Binding FileName}" Width="Auto"/>
                     <GridViewColumn x:Name="LineColumn" Header="Line" DisplayMemberBinding="{Binding Line}" Width="Auto"/>
+                    <GridViewColumn x:Name="MessageColumn" Header="Message" DisplayMemberBinding="{Binding Message}" Width="{Binding ElementName=helperField, Path=ActualWidth}"/>
                 </GridView>
             </ListView.View>
         </ListView>

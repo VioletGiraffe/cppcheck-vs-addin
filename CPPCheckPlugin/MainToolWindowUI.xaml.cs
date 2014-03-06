@@ -41,6 +41,8 @@ namespace VSPackage.CPPCheckPlugin
 		public event suppresssionRequestedHandler SuppressionRequested;
 		public event openProblemInEditor EditorRequestedForProblem;
 
+		private static int iconSize = 20;
+
 		public MainToolWindowUI()
 		{
 			InitializeComponent();
@@ -135,13 +137,13 @@ namespace VSPackage.CPPCheckPlugin
 					switch (_problem.Severity)
 					{
 						case Problem.SeverityLevel.info:
-							bitmap = new System.Drawing.Icon(SystemIcons.Information, SystemIcons.Information.Height, SystemIcons.Information.Width).ToBitmap();
+							bitmap = resizeBitmap(new System.Drawing.Icon(SystemIcons.Information, SystemIcons.Information.Height, SystemIcons.Information.Width).ToBitmap(), iconSize, iconSize);
 							break;
 						case Problem.SeverityLevel.warning:
-							bitmap = new System.Drawing.Icon(SystemIcons.Warning, SystemIcons.Warning.Height, SystemIcons.Warning.Width).ToBitmap();
+							bitmap = resizeBitmap(new System.Drawing.Icon(SystemIcons.Warning, SystemIcons.Warning.Height, SystemIcons.Warning.Width).ToBitmap(), iconSize, iconSize);
 							break;
 						case Problem.SeverityLevel.error:
-							bitmap = new System.Drawing.Icon(SystemIcons.Error, SystemIcons.Error.Height, SystemIcons.Error.Width).ToBitmap();
+							bitmap = resizeBitmap(new System.Drawing.Icon(SystemIcons.Error, SystemIcons.Error.Height, SystemIcons.Error.Width).ToBitmap(), iconSize, iconSize);
 							break;
 						default:
 							throw new InvalidOperationException("Unsupported value: " + _problem.Severity.ToString());
@@ -154,6 +156,17 @@ namespace VSPackage.CPPCheckPlugin
 			public Problem Problem
 			{
 				get { return _problem; }
+			}
+
+			private static Bitmap resizeBitmap(Bitmap src, int destWidth, int destHeight)
+			{
+				Bitmap dest = new Bitmap(destWidth, destHeight);
+				using (Graphics g = Graphics.FromImage((System.Drawing.Image)dest))
+				{
+					g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+					g.DrawImage(src, 0, 0, destWidth, destHeight);
+				}
+				return dest;
 			}
 
 			Problem _problem;

@@ -59,9 +59,33 @@ namespace VSPackage.CPPCheckPlugin
 			return _listView.Items.Count == 0;
 		}
 
+		private void AutoSizeColumns()
+		{
+			// As per http://stackoverflow.com/questions/845269/force-resize-of-gridview-columns-inside-listview
+			GridView gv = _listView.View as GridView;
+			if (gv != null)
+			{
+				for (int i = 0; i < gv.Columns.Count - 1; ++i) // The last column is message,  which should fit the rest of the window
+				{
+					var c = gv.Columns[i];
+					// Code below was found in GridViewColumnHeader.OnGripperDoubleClicked() event handler (using Reflector)
+					// i.e. it is the same code that is executed when the gripper is double clicked
+					if (double.IsNaN(c.Width))
+					{
+						c.Width = c.ActualWidth;
+					}
+					c.Width = double.NaN;
+				}
+			}
+		}
+
 		public void displayProblem(Problem problem)
 		{
-			Application.Current.Dispatcher.BeginInvoke(new Action(()=>_listView.Items.Add(new MainToolWindowUI.ProblemsListItem(problem))));
+			Application.Current.Dispatcher.BeginInvoke(new Action(()=> 
+			{
+				_listView.Items.Add(new MainToolWindowUI.ProblemsListItem(problem)); 
+				AutoSizeColumns();
+			}));
 		}
 
 		public ICodeAnalyzer.AnalysisType ContentsType
