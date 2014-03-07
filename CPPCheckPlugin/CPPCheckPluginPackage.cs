@@ -242,7 +242,7 @@ namespace VSPackage.CPPCheckPlugin
 					var compilerToolInterface = toolType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool");
 					if (compilerToolInterface != null)
 					{
-						String includes = tool.AdditionalIncludeDirectories;
+						String includes = tool.FullIncludePath;
 						String definitions = tool.PreprocessorDefinitions;
 						String macrosToUndefine = tool.UndefinePreprocessorDefinitions;
 						String[] includePaths = includes.Split(';');
