@@ -9,13 +9,16 @@ namespace VSPackage.CPPCheckPlugin
 	{
 		public enum SuppressionScope
 		{
-			suppressThisTypeOfMessagesGlobally,
-			suppressThisTypeOfMessagesSolutionWide,
+			suppressThisMessage,
 			suppressThisMessageSolutionWide,
-			suppressThisMessageProjectOnly,
-			suppressThisMessageFileOnly,
-			suppressThisMessageFileLine,
-			suppressAllMessagesThisFile
+			suppressThisMessageGlobally,
+			suppressThisTypeOfMessageFileWide,
+			suppressThisTypeOfMessageProjectWide,
+			suppressThisTypeOfMessagesSolutionWide,
+			suppressThisTypeOfMessagesGlobally,
+			suppressAllMessagesThisFileProjectWide,
+			suppressAllMessagesThisFileSolutionWide,
+			suppressAllMessagesThisFileGlobally
 		};
 
 		public enum SuppressionStorage
@@ -46,17 +49,6 @@ namespace VSPackage.CPPCheckPlugin
 
 		protected abstract List<Problem> parseOutput(String output);
 
-		protected string solutionSuppressionsFilePath()
-		{
-			return CPPCheckPluginPackage.solutionPath() + "\\" + CPPCheckPluginPackage.solutionName() + "_solution_suppressions.cfg";
-		}
-
-		protected string projectSuppressionsFilePath(string projectBasePath, string projectName)
-		{
-			Debug.Assert(!String.IsNullOrWhiteSpace(projectBasePath) && !String.IsNullOrWhiteSpace(projectName));
-			return projectBasePath + "\\" + projectName + "_project_suppressions.cfg";
-		}
-
 		protected void run(string analyzerExePath, string arguments, OutputWindowPane outputPane)
 		{
 			_outputPane = outputPane;
@@ -75,6 +67,32 @@ namespace VSPackage.CPPCheckPlugin
 			
 			foreach(var problem in problems)
 				MainToolWindow.Instance.displayProblem(problem);
+		}
+
+		protected string suppressionsFilePathByStorage(SuppressionStorage storage, string projectBasePath = null, string projectName = null)
+		{
+			switch (storage)
+			{
+				case SuppressionStorage.Global:
+					return globalSuppressionsFilePath();
+				case SuppressionStorage.Solution:
+					return solutionSuppressionsFilePath();
+				case SuppressionStorage.Project:
+					Debug.Assert(!String.IsNullOrWhiteSpace(projectBasePath) && !String.IsNullOrWhiteSpace(projectName));
+					return projectSuppressionsFilePath(projectBasePath, projectName);
+				default:
+					throw new InvalidOperationException("Unsupported enum value: " + storage.ToString());
+			}
+		}
+
+		protected string suppressionsFilePathByScope(SuppressionScope scope, string projectBasePath = null, string projectName = null)
+		{
+			if (scope == SuppressionScope.suppressThisTypeOfMessagesGlobally || scope == SuppressionScope.suppressAllMessagesThisFileGlobally || scope == SuppressionScope.suppressThisMessageGlobally)
+				return globalSuppressionsFilePath();
+			if (scope == SuppressionScope.suppressThisMessageSolutionWide || scope == SuppressionScope.suppressThisTypeOfMessagesSolutionWide || scope == SuppressionScope.suppressAllMessagesThisFileSolutionWide)
+				return solutionSuppressionsFilePath();
+			else
+				return projectSuppressionsFilePath(projectBasePath, projectName);
 		}
 
 		private void abortThreadIfAny()
@@ -185,6 +203,22 @@ namespace VSPackage.CPPCheckPlugin
 				addProblemsToToolwindow(parseOutput(output));
 				_outputPane.OutputString(output + "\n");
 			}
+		}
+
+		private string solutionSuppressionsFilePath()
+		{
+			return CPPCheckPluginPackage.solutionPath() + "\\" + CPPCheckPluginPackage.solutionName() + "_solution_suppressions.cfg";
+		}
+
+		private string projectSuppressionsFilePath(string projectBasePath, string projectName)
+		{
+			Debug.Assert(!String.IsNullOrWhiteSpace(projectBasePath) && !String.IsNullOrWhiteSpace(projectName));
+			return projectBasePath + "\\" + projectName + "_project_suppressions.cfg";
+		}
+
+		private string globalSuppressionsFilePath()
+		{
+			return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\CppcheckVisualStudioAddIn\\suppressions.cfg";
 		}
 
 		public void Dispose()

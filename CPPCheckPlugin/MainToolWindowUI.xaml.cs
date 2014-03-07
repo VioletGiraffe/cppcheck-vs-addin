@@ -40,29 +40,9 @@ namespace VSPackage.CPPCheckPlugin
 			InitializeComponent();
 		}
 
-		private void menuItem_suppressThisMessageGlobally(object sender, RoutedEventArgs e)
+		private void menuItem_suppressThisMessageProjectWide(object sender, RoutedEventArgs e)
 		{
-			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisTypeOfMessagesGlobally);
-		}
-
-		private void menuItem_suppressThisMessageProjectOnly(object sender, RoutedEventArgs e)
-		{
-			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisMessageProjectOnly);
-		}
-
-		private void menuItem_suppressThisMessageFileOnly(object sender, RoutedEventArgs e)
-		{
-			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisMessageFileOnly);
-		}
-
-		private void menuItem_suppressThisMessageFileLine(object sender, RoutedEventArgs e)
-		{
-			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisMessageFileLine);
-		}
-
-		private void menuItem_suppressAllMessagesThisFile(object sender, RoutedEventArgs e)
-		{
-			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressAllMessagesThisFile);
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisMessage);
 		}
 
 		private void menuItem_suppressThisMessageSolutionWide(object sender, RoutedEventArgs e)
@@ -70,9 +50,43 @@ namespace VSPackage.CPPCheckPlugin
 			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisMessageSolutionWide);
 		}
 
+		private void menuItem_suppressThisMessageGlobally(object sender, RoutedEventArgs e)
+		{
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisMessageGlobally);
+		}
+
+		private void menuItem_suppressThisTypeOfMessageGlobally(object sender, RoutedEventArgs e)
+		{
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisTypeOfMessagesGlobally);
+		}
+		private void menuItem_suppressThisTypeOfMessageFileWide(object sender, RoutedEventArgs e)
+		{
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisTypeOfMessageFileWide);
+		}
+
+		private void menuItem_suppressThisTypeOfMessageProjectWide(object sender, RoutedEventArgs e)
+		{
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisTypeOfMessageProjectWide);
+		}
+
 		private void menuItem_suppressThisTypeOfMessageSolutionWide(object sender, RoutedEventArgs e)
 		{
 			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisTypeOfMessagesSolutionWide);
+		}
+
+		private void menuItem_suppressAllMessagesThisFileProjectWide(object sender, RoutedEventArgs e)
+		{
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressAllMessagesThisFileProjectWide);
+		}
+
+		private void menuItem_suppressAllMessagesThisFileSolutionWide(object sender, RoutedEventArgs e)
+		{
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressAllMessagesThisFileSolutionWide);
+		}
+
+		private void menuItem_suppressAllMessagesThisFileGlobally(object sender, RoutedEventArgs e)
+		{
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressAllMessagesThisFileGlobally);
 		}
 
 		private void menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope scope)

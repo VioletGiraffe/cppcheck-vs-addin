@@ -189,22 +189,31 @@ namespace VSPackage.CPPCheckPlugin
 			String suppressionLine = null;
 			switch (scope)
 			{
-				case SuppressionScope.suppressAllMessagesThisFile:
+				case SuppressionScope.suppressAllMessagesThisFileGlobally:
 					suppressionLine = "*:" + simpleFileName;
 					break;
-				case SuppressionScope.suppressThisMessageFileLine:
+				case SuppressionScope.suppressAllMessagesThisFileSolutionWide:
+					suppressionLine = "*:" + simpleFileName;
+					break;
+				case SuppressionScope.suppressAllMessagesThisFileProjectWide:
+					suppressionLine = "*:" + simpleFileName;
+					break;
+				case SuppressionScope.suppressThisMessage:
 					suppressionLine = p.MessageId + ":" + simpleFileName + ":" + p.Line;
 					break;
-				case SuppressionScope.suppressThisMessageFileOnly:
+				case SuppressionScope.suppressThisTypeOfMessageFileWide:
 					suppressionLine = p.MessageId + ":" + simpleFileName;
 					break;
 				case SuppressionScope.suppressThisTypeOfMessagesGlobally:
-					suppressionLine = p.MessageId; // TODO:
+					suppressionLine = p.MessageId;
 					break;
-				case SuppressionScope.suppressThisMessageProjectOnly:
+				case SuppressionScope.suppressThisTypeOfMessageProjectWide:
 					suppressionLine = p.MessageId;
 					break;
 				case SuppressionScope.suppressThisMessageSolutionWide:
+					suppressionLine = p.MessageId + ":" + simpleFileName + ":" + p.Line;
+					break;
+				case SuppressionScope.suppressThisMessageGlobally:
 					suppressionLine = p.MessageId + ":" + simpleFileName + ":" + p.Line;
 					break;
 				case SuppressionScope.suppressThisTypeOfMessagesSolutionWide:
@@ -214,12 +223,7 @@ namespace VSPackage.CPPCheckPlugin
 					throw new InvalidOperationException("Unsupported value: " + scope.ToString());
 			}
 
-			String suppresionsFilePath = null;
-			if (scope == SuppressionScope.suppressThisTypeOfMessagesSolutionWide || scope == SuppressionScope.suppressThisMessageSolutionWide)
-				suppresionsFilePath = solutionSuppressionsFilePath();
-			else if (scope != SuppressionScope.suppressThisTypeOfMessagesGlobally)
-				suppresionsFilePath = projectSuppressionsFilePath(p.BaseProjectPath, p.ProjectName);
-
+			String suppresionsFilePath = suppressionsFilePathByScope(scope, p.BaseProjectPath, p.ProjectName);
 			Debug.Assert(suppresionsFilePath != null);
 
 			List<String> contentsLines = new List<String>();
@@ -249,14 +253,9 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			HashSet<string> suppressions = new HashSet<string>();
 
-			if (storage == ICodeAnalyzer.SuppressionStorage.Global)
-			{
-				return suppressions;
-			}
+			String suppresionsFilePath = suppressionsFilePathByStorage(storage, projectBasePath, projectName);
+			Debug.Assert(suppresionsFilePath != null);
 
-			Debug.Assert(storage == ICodeAnalyzer.SuppressionStorage.Project || storage == ICodeAnalyzer.SuppressionStorage.Solution);
-
-			string suppresionsFilePath = storage == SuppressionStorage.Project ? projectSuppressionsFilePath(projectBasePath, projectName) : solutionSuppressionsFilePath();
 			if (File.Exists(suppresionsFilePath))
 			{
 				using( StreamReader stream = File.OpenText(suppresionsFilePath) )

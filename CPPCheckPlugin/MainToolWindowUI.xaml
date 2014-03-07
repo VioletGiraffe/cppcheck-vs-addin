@@ -13,33 +13,45 @@
                 </DataTemplate>
 
                 <ContextMenu x:Key="ItemContextMenu">
-                    <MenuItem x:Name="menuItem_suppressThisMessageFileLine"
-                    Click="menuItem_suppressThisMessageFileLine"
-                    Header="Suppress this specific message (at this file and line)">
-                    </MenuItem>
-                    <MenuItem x:Name="menuItem_suppressThisMessageFileOnly"
-                    Click="menuItem_suppressThisMessageFileOnly"
-                    Header="Suppress this message in this file only">
-                    </MenuItem>
-                    <MenuItem x:Name="menuItem_suppressThisMessageProjectOnly"
-                    Click="menuItem_suppressThisMessageProjectOnly"
-                    Header="Suppress this message in this project only">
-                    </MenuItem>
-                    <MenuItem x:Name="menuItem_suppressAllMessagesThisFile"
-                    Click="menuItem_suppressAllMessagesThisFile"
-                    Header="Suppress all messages in this file">
+                    <MenuItem x:Name="menuItem_suppressThisMessageProjectWide"
+                    Click="menuItem_suppressThisMessageProjectWide"
+                    Header="Suppress this specific message for the project">
                     </MenuItem>
                     <MenuItem x:Name="menuItem_suppressThisMessageSolutionWide"
                     Click="menuItem_suppressThisMessageSolutionWide"
-                    Header="Suppress this message solution-wide">
-                    </MenuItem>
-                    <MenuItem x:Name="menuItem_suppressThisTypeOfMessageSolutionWide"
-                    Click="menuItem_suppressThisTypeOfMessageSolutionWide"
-                    Header="Suppress this type of messages solution-wide">
+                    Header="Suppress this specific message for the whole solution">
                     </MenuItem>
                     <MenuItem x:Name="menuItem_suppressThisMessageGlobally"
                     Click="menuItem_suppressThisMessageGlobally"
-                    Header="Suppress this message globally">
+                    Header="Suppress this specific message globally">
+                    </MenuItem>
+                    <MenuItem x:Name="menuItem_suppressThisTypeOfMessageFileWide"
+                    Click="menuItem_suppressThisTypeOfMessageFileWide"
+                    Header="Suppress this type of message in the whole file">
+                    </MenuItem>
+                    <MenuItem x:Name="menuItem_suppressThisTypeOfMessageProjectWide"
+                    Click="menuItem_suppressThisTypeOfMessageProjectWide"
+                    Header="Suppress this message in the whole project">
+                    </MenuItem>
+                    <MenuItem x:Name="menuItem_suppressThisTypeOfMessageSolutionWide"
+                    Click="menuItem_suppressThisTypeOfMessageSolutionWide"
+                    Header="Suppress this type of messages in the whole solution">
+                    </MenuItem>
+                    <MenuItem x:Name="menuItem_suppressThisTypeOfMessageGlobally"
+                    Click="menuItem_suppressThisTypeOfMessageGlobally"
+                    Header="Suppress this type of messages globally">
+                    </MenuItem>
+                    <MenuItem x:Name="menuItem_suppressAllMessagesThisFileProjectWide"
+                    Click="menuItem_suppressAllMessagesThisFileProjectWide"
+                    Header="Suppress all messages from this file in the project">
+                    </MenuItem>
+                    <MenuItem x:Name="menuItem_suppressAllMessagesThisFileSolutionWide"
+                    Click="menuItem_suppressAllMessagesThisFileSolutionWide"
+                    Header="Suppress all messages from this file in the whole solution">
+                    </MenuItem>
+                    <MenuItem x:Name="menuItem_suppressAllMessagesThisFileGlobally"
+                    Click="menuItem_suppressAllMessagesThisFileGlobally"
+                    Header="Suppress all messages from this file globally">
                     </MenuItem>
                 </ContextMenu>
             </ListView.Resources>
