@@ -81,7 +81,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			if ((filesToAnalyze.Count == 1 && Properties.Settings.Default.FileOnlyCheckCurrentConfig) || (filesToAnalyze.Count > 1 && Properties.Settings.Default.ProjectOnlyCheckCurrentConfig)) // Only checking current macros configuration (for speed)
 			{
-				cppheckargs.Replace("--force", "");
+				cppheckargs = cppheckargs.Replace("--force", "");
 				// Creating the list of all different macros (no duplicates)
 				HashSet<string> macros = new HashSet<string>();
 				macros.Add("__cplusplus=199711L"); // At least in VS2012, this is still 199711L
