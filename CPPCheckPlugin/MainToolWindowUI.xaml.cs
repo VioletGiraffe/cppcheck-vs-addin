@@ -67,7 +67,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void menuItem_suppressThisMessageSolutionWide(object sender, RoutedEventArgs e)
 		{
-			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisTypeOfMessagesSolutionWide);
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisMessageSolutionWide);
 		}
 
 		private void menuItem_suppressThisTypeOfMessageSolutionWide(object sender, RoutedEventArgs e)
