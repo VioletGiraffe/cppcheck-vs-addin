@@ -42,7 +42,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void menuItem_suppressThisMessageGlobally(object sender, RoutedEventArgs e)
 		{
-			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisMessageGlobally);
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisTypeOfMessagesGlobally);
 		}
 
 		private void menuItem_suppressThisMessageProjectOnly(object sender, RoutedEventArgs e)
@@ -67,7 +67,12 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void menuItem_suppressThisMessageSolutionWide(object sender, RoutedEventArgs e)
 		{
-			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisMessageSolutionWide);
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisTypeOfMessagesSolutionWide);
+		}
+
+		private void menuItem_suppressThisTypeOfMessageSolutionWide(object sender, RoutedEventArgs e)
+		{
+			menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope.suppressThisTypeOfMessagesSolutionWide);
 		}
 
 		private void menuItem_SuppressSelected(ICodeAnalyzer.SuppressionScope scope)

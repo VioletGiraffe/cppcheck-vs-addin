@@ -189,22 +189,25 @@ namespace VSPackage.CPPCheckPlugin
 			String suppressionLine = null;
 			switch (scope)
 			{
-				case ICodeAnalyzer.SuppressionScope.suppressAllMessagesThisFile:
+				case SuppressionScope.suppressAllMessagesThisFile:
 					suppressionLine = "*:" + simpleFileName;
 					break;
-				case ICodeAnalyzer.SuppressionScope.suppressThisMessageFileLine:
+				case SuppressionScope.suppressThisMessageFileLine:
 					suppressionLine = p.MessageId + ":" + simpleFileName + ":" + p.Line;
 					break;
-				case ICodeAnalyzer.SuppressionScope.suppressThisMessageFileOnly:
+				case SuppressionScope.suppressThisMessageFileOnly:
 					suppressionLine = p.MessageId + ":" + simpleFileName;
 					break;
-				case ICodeAnalyzer.SuppressionScope.suppressThisMessageGlobally:
+				case SuppressionScope.suppressThisTypeOfMessagesGlobally:
 					suppressionLine = p.MessageId; // TODO:
 					break;
-				case ICodeAnalyzer.SuppressionScope.suppressThisMessageProjectOnly:
+				case SuppressionScope.suppressThisMessageProjectOnly:
 					suppressionLine = p.MessageId;
 					break;
-				case ICodeAnalyzer.SuppressionScope.suppressThisMessageSolutionWide:
+				case SuppressionScope.suppressThisMessageSolutionWide:
+					suppressionLine = p.MessageId + ":" + simpleFileName + ":" + p.Line;
+					break;
+				case SuppressionScope.suppressThisTypeOfMessagesSolutionWide:
 					suppressionLine = p.MessageId;
 					break;
 				default:
@@ -212,9 +215,9 @@ namespace VSPackage.CPPCheckPlugin
 			}
 
 			String suppresionsFilePath = null;
-			if (scope == ICodeAnalyzer.SuppressionScope.suppressThisMessageSolutionWide)
+			if (scope == SuppressionScope.suppressThisTypeOfMessagesSolutionWide || scope == SuppressionScope.suppressThisMessageSolutionWide)
 				suppresionsFilePath = solutionSuppressionsFilePath();
-			else if (scope != ICodeAnalyzer.SuppressionScope.suppressThisMessageGlobally)
+			else if (scope != SuppressionScope.suppressThisTypeOfMessagesGlobally)
 				suppresionsFilePath = projectSuppressionsFilePath(p.BaseProjectPath, p.ProjectName);
 
 			Debug.Assert(suppresionsFilePath != null);
@@ -245,6 +248,7 @@ namespace VSPackage.CPPCheckPlugin
 		protected override HashSet<string> readSuppressions(SuppressionStorage storage, string projectBasePath = null, string projectName = null)
 		{
 			HashSet<string> suppressions = new HashSet<string>();
+
 			if (storage == ICodeAnalyzer.SuppressionStorage.Global)
 			{
 				return suppressions;
@@ -273,7 +277,7 @@ namespace VSPackage.CPPCheckPlugin
 						if (currentGroup == "cppcheck")
 						{
 							var components = line.Split(':');
-							if (components.Length >= 2 && !components[1].StartsWith("*"))           // id and some path without "*"
+							if (components.Length >= 2 && !components[1].StartsWith("*")) // id and some path without "*"
 								components[1] = "*" + components[1]; // adding * in front
 
 							string suppression = components[0];

@@ -9,7 +9,8 @@ namespace VSPackage.CPPCheckPlugin
 	{
 		public enum SuppressionScope
 		{
-			suppressThisMessageGlobally,
+			suppressThisTypeOfMessagesGlobally,
+			suppressThisTypeOfMessagesSolutionWide,
 			suppressThisMessageSolutionWide,
 			suppressThisMessageProjectOnly,
 			suppressThisMessageFileOnly,

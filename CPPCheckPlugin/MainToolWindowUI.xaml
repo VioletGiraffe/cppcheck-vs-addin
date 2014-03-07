@@ -33,6 +33,10 @@
                     Click="menuItem_suppressThisMessageSolutionWide"
                     Header="Suppress this message solution-wide">
                     </MenuItem>
+                    <MenuItem x:Name="menuItem_suppressThisTypeOfMessageSolutionWide"
+                    Click="menuItem_suppressThisTypeOfMessageSolutionWide"
+                    Header="Suppress this type of messages solution-wide">
+                    </MenuItem>
                     <MenuItem x:Name="menuItem_suppressThisMessageGlobally"
                     Click="menuItem_suppressThisMessageGlobally"
                     Header="Suppress this message globally">
