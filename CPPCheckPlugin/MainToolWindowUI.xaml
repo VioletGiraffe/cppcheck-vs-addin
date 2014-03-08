@@ -15,43 +15,45 @@
                 <ContextMenu x:Key="ItemContextMenu">
                     <MenuItem x:Name="menuItem_suppressThisMessageProjectWide"
                     Click="menuItem_suppressThisMessageProjectWide"
-                    Header="Suppress this specific message for the project">
+                    Header="Suppress this specific message for the Project">
                     </MenuItem>
                     <MenuItem x:Name="menuItem_suppressThisMessageSolutionWide"
                     Click="menuItem_suppressThisMessageSolutionWide"
-                    Header="Suppress this specific message for the whole solution">
+                    Header="Suppress this specific message for the whole Solution">
                     </MenuItem>
                     <MenuItem x:Name="menuItem_suppressThisMessageGlobally"
                     Click="menuItem_suppressThisMessageGlobally"
-                    Header="Suppress this specific message globally">
+                    Header="Suppress this specific message Globally">
                     </MenuItem>
+                    <Separator/>
                     <MenuItem x:Name="menuItem_suppressThisTypeOfMessageFileWide"
                     Click="menuItem_suppressThisTypeOfMessageFileWide"
-                    Header="Suppress this type of message in the whole file">
+                    Header="Suppress this type of messages in the whole File">
                     </MenuItem>
                     <MenuItem x:Name="menuItem_suppressThisTypeOfMessageProjectWide"
                     Click="menuItem_suppressThisTypeOfMessageProjectWide"
-                    Header="Suppress this message in the whole project">
+                    Header="Suppress this type of messages in the whole Project">
                     </MenuItem>
                     <MenuItem x:Name="menuItem_suppressThisTypeOfMessageSolutionWide"
                     Click="menuItem_suppressThisTypeOfMessageSolutionWide"
-                    Header="Suppress this type of messages in the whole solution">
+                    Header="Suppress this type of messages in the whole Solution">
                     </MenuItem>
                     <MenuItem x:Name="menuItem_suppressThisTypeOfMessageGlobally"
                     Click="menuItem_suppressThisTypeOfMessageGlobally"
-                    Header="Suppress this type of messages globally">
+                    Header="Suppress this type of messages Globally">
                     </MenuItem>
+                    <Separator/>
                     <MenuItem x:Name="menuItem_suppressAllMessagesThisFileProjectWide"
                     Click="menuItem_suppressAllMessagesThisFileProjectWide"
-                    Header="Suppress all messages from this file in the project">
+                    Header="Suppress all messages from this file in the Project">
                     </MenuItem>
                     <MenuItem x:Name="menuItem_suppressAllMessagesThisFileSolutionWide"
                     Click="menuItem_suppressAllMessagesThisFileSolutionWide"
-                    Header="Suppress all messages from this file in the whole solution">
+                    Header="Suppress all messages from this file in the whole Solution">
                     </MenuItem>
                     <MenuItem x:Name="menuItem_suppressAllMessagesThisFileGlobally"
                     Click="menuItem_suppressAllMessagesThisFileGlobally"
-                    Header="Suppress all messages from this file globally">
+                    Header="Suppress all messages from this file Globally">
                     </MenuItem>
                 </ContextMenu>
             </ListView.Resources>
