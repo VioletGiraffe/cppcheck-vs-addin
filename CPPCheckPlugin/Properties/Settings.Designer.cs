@@ -106,5 +106,16 @@ namespace VSPackage.CPPCheckPlugin.Properties {
                 this["SuppressionsString"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public bool CheckSavedFiles {
+            get {
+                return ((bool)(this["CheckSavedFiles"]));
+            }
+            set {
+                this["CheckSavedFiles"] = value;
+            }
+        }
     }
 }

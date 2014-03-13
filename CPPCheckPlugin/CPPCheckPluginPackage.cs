@@ -115,6 +115,10 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			if (document == null || document.Language != "C/C++")
 				return;
+
+			if (Properties.Settings.Default["CheckSavedFiles"] != null && Properties.Settings.Default.CheckSavedFiles == false)
+				return;
+
 			if (document.ActiveWindow == null)
 			{
 				// We get here when new files are being created and added to the project and
@@ -133,9 +137,10 @@ namespace VSPackage.CPPCheckPlugin
 				if (sourceForAnalysis == null)
 					return;
 
-				if (MainToolWindow.Instance.ContentsType == ICodeAnalyzer.AnalysisType.ProjectAnalysis && !MainToolWindow.Instance.isEmpty())
+				if (Properties.Settings.Default["CheckSavedFiles"] == null)
 				{
-					DialogResult reply = MessageBox.Show("New analysis is about to be launched, it will clear previous analysis results. Perform analysis?", "Cppcheck: clear analysis results?", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+					DialogResult reply = MessageBox.Show("Do you want to start analysis any time file is saved? It will clear previous analysis results.\nYou can change this behavior in cppcheck settings.", "Cppcheck: start analysis when file is saved?", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+					Properties.Settings.Default.CheckSavedFiles = (reply == DialogResult.Yes);
 					if (reply == DialogResult.No)
 						return;
 				}

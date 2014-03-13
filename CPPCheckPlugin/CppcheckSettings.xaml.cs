@@ -44,6 +44,7 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			mChecksPanel.LoadSettings();
 			InconclusiveChecks.IsChecked = Properties.Settings.Default.InconclusiveChecksEnabled;
+			CheckSavedFiles.IsChecked = Properties.Settings.Default.CheckSavedFiles;
 			Project_OnlyCheckCurrentConfig.IsChecked = Properties.Settings.Default.ProjectOnlyCheckCurrentConfig;
 			File_OnlyCheckCurrentConfig.IsChecked = Properties.Settings.Default.FileOnlyCheckCurrentConfig;
 			ArgumentsEditor.Text = Properties.Settings.Default.DefaultArguments;
@@ -66,6 +67,19 @@ namespace VSPackage.CPPCheckPlugin
 			Properties.Settings.Default["InconclusiveChecksEnabled"] = true;
 			Properties.Settings.Default.Save();
 		}
+
+		private void checkSavedFiles_Unchecked(object sender, RoutedEventArgs e)
+		{
+			Properties.Settings.Default["CheckSavedFiles"] = false;
+			Properties.Settings.Default.Save();
+		}
+
+		private void checkSavedFiles_Checked(object sender, RoutedEventArgs e)
+		{
+			Properties.Settings.Default["CheckSavedFiles"] = true;
+			Properties.Settings.Default.Save();
+		}
+
 		private void onDefaultArguments(object sender, RoutedEventArgs e)
 		{
 			Properties.Settings.Default["DefaultArguments"] = DefaultArguments;
