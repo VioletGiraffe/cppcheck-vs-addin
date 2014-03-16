@@ -39,6 +39,46 @@ namespace VSPackage.CPPCheckPlugin
 			return System.IO.Path.GetDirectoryName(_dte.Solution.FullName);
 		}
 
+		public static String activeProjectName()
+		{
+			var project = activeProject();
+			if (project != null)
+				return project.Name;
+
+			return "";
+		}
+
+		public static String activeProjectPath()
+		{
+			var project = activeProject();
+			if (project != null)
+				return project.ProjectDirectory.Replace("\"", "");
+
+			return "";
+		}
+
+		private static dynamic activeProject()
+		{
+			Object[] activeProjects = (Object[])_dte.ActiveSolutionProjects;
+			if (!activeProjects.Any())
+			{
+				return null;
+			}
+
+			List<SourceFile> files = new List<SourceFile>();
+			foreach (dynamic o in activeProjects)
+			{
+				dynamic project = o.Object;
+				if (!isVisualCppProject(project))
+				{
+					return null;
+				}
+				return project;
+			}
+
+			return null;
+		}
+
 		#region Package Members
 
 		protected override void Initialize()

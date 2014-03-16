@@ -69,7 +69,7 @@ namespace VSPackage.CPPCheckPlugin
 				MainToolWindow.Instance.displayProblem(problem);
 		}
 
-		protected string suppressionsFilePathByStorage(SuppressionStorage storage, string projectBasePath = null, string projectName = null)
+		public static string suppressionsFilePathByStorage(SuppressionStorage storage, string projectBasePath = null, string projectName = null)
 		{
 			switch (storage)
 			{
@@ -205,18 +205,18 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		private string solutionSuppressionsFilePath()
+		private static string solutionSuppressionsFilePath()
 		{
 			return CPPCheckPluginPackage.solutionPath() + "\\" + CPPCheckPluginPackage.solutionName() + "_solution_suppressions.cfg";
 		}
 
-		private string projectSuppressionsFilePath(string projectBasePath, string projectName)
+		private static string projectSuppressionsFilePath(string projectBasePath, string projectName)
 		{
 			Debug.Assert(!String.IsNullOrWhiteSpace(projectBasePath) && !String.IsNullOrWhiteSpace(projectName));
 			return projectBasePath + "\\" + projectName + "_project_suppressions.cfg";
 		}
 
-		private string globalSuppressionsFilePath()
+		private static string globalSuppressionsFilePath()
 		{
 			return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\CppcheckVisualStudioAddIn\\suppressions.cfg";
 		}

@@ -1,0 +1,17 @@
+﻿<UserControl x:Class="VSPackage.CPPCheckPlugin.SuppressionsSettingsUI.ItemsListEditor"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      mc:Ignorable="d"
+      HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+    <Grid Margin="5,5,5,5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <Label Grid.Row="0" Content="Label" Name="HeaderLabel"/>
+        <TextBox Grid.Row="1" AcceptsReturn="True" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" TextWrapping="NoWrap" Text="" Name="ItemsListText"/>
+    </Grid>
+</UserControl>

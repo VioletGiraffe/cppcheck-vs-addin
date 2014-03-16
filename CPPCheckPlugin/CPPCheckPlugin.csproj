@@ -118,6 +118,12 @@
     <Compile Include="Settings.cs" />
     <Compile Include="SourceFile.cs" />
     <Compile Include="SuppressionsInfo.cs" />
+    <Compile Include="SuppressionsSettingsUI\ItemsListEditor.xaml.cs">
+      <DependentUpon>ItemsListEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SuppressionsSettingsUI\SuppressionsSettings.xaml.cs">
+      <DependentUpon>SuppressionsSettings.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources.resx">
@@ -167,6 +173,14 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="MainToolWindowUI.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SuppressionsSettingsUI\ItemsListEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SuppressionsSettingsUI\SuppressionsSettings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

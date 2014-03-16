@@ -110,5 +110,33 @@ namespace VSPackage.CPPCheckPlugin
 			Properties.Settings.Default["FileOnlyCheckCurrentConfig"] = true;
 			Properties.Settings.Default.Save();
 		}
+
+		private void EditGlobalSuppressions(object sender, RoutedEventArgs e)
+		{
+			var settings = new SuppressionSettingsUI.SuppressionsSettings(ICodeAnalyzer.SuppressionStorage.Global);
+			settings.ShowDialog();
+		}
+
+		private void EditSolutionSuppressions(object sender, RoutedEventArgs e)
+		{
+			var settings = new SuppressionSettingsUI.SuppressionsSettings(ICodeAnalyzer.SuppressionStorage.Solution);
+			settings.ShowDialog();
+		}
+
+		private void EditProjectSuppressions(object sender, RoutedEventArgs e)
+		{
+			var projectPath = CPPCheckPluginPackage.activeProjectPath();
+			var projectName = CPPCheckPluginPackage.activeProjectName();
+			if (projectPath != "" && projectName != "")
+			{
+				var settings = new SuppressionSettingsUI.SuppressionsSettings(
+					ICodeAnalyzer.SuppressionStorage.Project,
+					projectPath,
+					projectName);
+				settings.ShowDialog();
+			}
+			else
+				MessageBox.Show("No active C++ project.");
+		}
 	}
 }

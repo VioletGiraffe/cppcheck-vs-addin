@@ -14,7 +14,20 @@
             <Button Content="Reset arguments to default" Click="onDefaultArguments" DockPanel.Dock="Right" Margin="5,0,0,0"/>
             <TextBox TextWrapping="NoWrap" Name="ArgumentsEditor" ScrollViewer.CanContentScroll="True" />
         </DockPanel>
-        
+
+        <Grid HorizontalAlignment="Stretch" Margin="0,5,0,5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" Content="Edit Global suppressions" Click="EditGlobalSuppressions"/>
+            <Button Grid.Column="2" Content="Edit Solution suppressions" Click="EditSolutionSuppressions"/>
+            <Button Grid.Column="4" Content="Edit active Project suppressions" Click="EditProjectSuppressions"/>
+        </Grid>
         <Label Content="Checks"/>
         <StackPanel Orientation="Vertical" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Width="Auto" Name="Checks_Panel"/>
     </StackPanel>
