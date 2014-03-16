@@ -5,6 +5,7 @@ using EnvDTE;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -25,8 +26,11 @@ namespace VSPackage.CPPCheckPlugin
 			HashSet<string> suppressions = new HashSet<string>(Properties.Settings.Default.SuppressionsString.Split(','));
 			suppressions.Add("unmatchedSuppression");
 
-			suppressions.UnionWith(readSuppressions(ICodeAnalyzer.SuppressionStorage.Global));
-			suppressions.UnionWith(readSuppressions(ICodeAnalyzer.SuppressionStorage.Solution));
+			HashSet<string> skippedFilesMask = new HashSet<string>();
+			HashSet<string> skippedIncludeMask = new HashSet<string>();
+
+			SuppressionsInfo unitedSuppressionsInfo = readSuppressions(ICodeAnalyzer.SuppressionStorage.Global);
+			unitedSuppressionsInfo.UnionWith(readSuppressions(ICodeAnalyzer.SuppressionStorage.Solution));
 
 			// Creating the list of all different project locations (no duplicates)
 			HashSet<string> projectPaths = new HashSet<string>(); // enforce uniqueness on the list of project paths
@@ -42,7 +46,7 @@ namespace VSPackage.CPPCheckPlugin
 			// Creating the list of all different suppressions (no duplicates)
 			foreach (var path in projectPaths)
 			{
-				suppressions.UnionWith(readSuppressions(SuppressionStorage.Project, path, filesToAnalyze[0].ProjectName));
+				unitedSuppressionsInfo.UnionWith(readSuppressions(SuppressionStorage.Project, path, filesToAnalyze[0].ProjectName));
 			}
 
 			cppheckargs += (" --relative-paths=\"" + filesToAnalyze[0].BaseProjectPath + "\"");
@@ -50,6 +54,7 @@ namespace VSPackage.CPPCheckPlugin
 			if (Properties.Settings.Default.InconclusiveChecksEnabled)
 				cppheckargs += " --inconclusive ";
 
+			suppressions.UnionWith(unitedSuppressionsInfo.SuppressionLines);
 			foreach (string suppression in suppressions)
 			{
 				if (!String.IsNullOrWhiteSpace(suppression))
@@ -60,14 +65,15 @@ namespace VSPackage.CPPCheckPlugin
 			HashSet<string> includePaths = new HashSet<string>();
 			foreach (var file in filesToAnalyze)
 			{
-				includePaths.UnionWith(file.IncludePaths);
+				if (!MatchMasksList(file.FilePath, unitedSuppressionsInfo.SkippedFilesMask))
+					includePaths.UnionWith(file.IncludePaths);
 			}
 
 			includePaths.Add(filesToAnalyze[0].BaseProjectPath); // Fix for #60
 
 			foreach (string path in includePaths)
 			{
-				if (!path.ToLower().Contains("qt")) // TODO: make ignore include path setting
+				if (!MatchMasksList(path, unitedSuppressionsInfo.SkippedIncludesMask))
 				{
 					String includeArgument = " -I\"" + path + "\"";
 					cppheckargs = cppheckargs + " " + includeArgument;
@@ -175,6 +181,17 @@ namespace VSPackage.CPPCheckPlugin
 			run(analyzerPath, cppheckargs, outputWindow);
 		}
 
+		private static bool MatchMasksList(string line, HashSet<string> masks)
+		{
+			foreach (var mask in masks)
+			{
+				Regex rgx = new Regex(mask);
+				if (rgx.IsMatch(line))
+					return true;
+			}
+			return false;
+		}
+
 		public override void suppressProblem(Problem p, SuppressionScope scope)
 		{
 			if (p == null)
@@ -227,75 +244,24 @@ namespace VSPackage.CPPCheckPlugin
 			String suppresionsFilePath = suppressionsFilePathByScope(scope, p.BaseProjectPath, p.ProjectName);
 			Debug.Assert(suppresionsFilePath != null);
 
-			List<String> contentsLines = new List<String>();
-			if (File.Exists(suppresionsFilePath))
-				contentsLines = File.ReadAllLines(suppresionsFilePath).ToList();
+			SuppressionsInfo suppressionsInfo = new SuppressionsInfo();
+			suppressionsInfo.LoadFromFile(suppresionsFilePath);
 
-			int lineToInsertAfter = -1;
-			for (int i = 0; i < contentsLines.Count; ++i)
-			{
-				if (!String.IsNullOrWhiteSpace(contentsLines[i]) && contentsLines[i].Contains("[cppcheck]"))
-				{
-					lineToInsertAfter = i;
-					break;
-				}
-			}
-			if (lineToInsertAfter == -1)
-			{
-				contentsLines.Add("[cppcheck]");
-				lineToInsertAfter = 0;
-			}
+			suppressionsInfo.AddSuppressionLine(suppressionLine);
 
-			contentsLines.Insert(lineToInsertAfter+1, suppressionLine);
-
-			System.IO.FileInfo file = new System.IO.FileInfo(suppresionsFilePath);
-			file.Directory.Create(); // If the directory already exists, this method does nothing.
-			File.WriteAllLines(suppresionsFilePath, contentsLines);
+			suppressionsInfo.SaveToFile(suppresionsFilePath);
 		}
 
-		protected override HashSet<string> readSuppressions(SuppressionStorage storage, string projectBasePath = null, string projectName = null)
+		protected override SuppressionsInfo readSuppressions(SuppressionStorage storage, string projectBasePath = null, string projectName = null)
 		{
-			HashSet<string> suppressions = new HashSet<string>();
+			SuppressionsInfo suppressionsInfo = new SuppressionsInfo();
 
 			String suppresionsFilePath = suppressionsFilePathByStorage(storage, projectBasePath, projectName);
 			Debug.Assert(suppresionsFilePath != null);
 
-			if (File.Exists(suppresionsFilePath))
-			{
-				using( StreamReader stream = File.OpenText(suppresionsFilePath) )
-				{
-					string currentGroup = "";
-					for(;;)
-					{
-						var line = stream.ReadLine();
-						if (line == null)
-						{
-							break;
-						}
-						if (line.Contains("["))
-						{
-							currentGroup = line.Replace("[", "").Replace("]", "");
-							continue; // to the next line
-						}
-						if (currentGroup == "cppcheck")
-						{
-							var components = line.Split(':');
-							if (components.Length >= 2 && !components[1].StartsWith("*")) // id and some path without "*"
-								components[1] = "*" + components[1]; // adding * in front
+			suppressionsInfo.LoadFromFile(suppresionsFilePath);
 
-							string suppression = components[0];
-							if (components.Length > 1)
-								suppression += ":" + components[1];
-							if (components.Length > 2)
-								suppression += ":" + components[2];
-
-							if (!string.IsNullOrEmpty(suppression))
-								suppressions.Add(suppression.Replace("\\\\", "\\"));
-						}
-					}
-				}
-			}
-			return suppressions;
+			return suppressionsInfo;
 		}
 
 		protected override List<Problem> parseOutput(String output)

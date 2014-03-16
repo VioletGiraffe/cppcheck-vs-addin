@@ -117,6 +117,7 @@
     <Compile Include="PkgCmdID.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="SourceFile.cs" />
+    <Compile Include="SuppressionsInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources.resx">

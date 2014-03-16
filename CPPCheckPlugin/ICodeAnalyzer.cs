@@ -45,7 +45,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		public abstract void suppressProblem(Problem p, SuppressionScope scope);
 
-		protected abstract HashSet<string> readSuppressions(SuppressionStorage storage, string projectBasePath = null, string projectName = null);
+		protected abstract SuppressionsInfo readSuppressions(SuppressionStorage storage, string projectBasePath = null, string projectName = null);
 
 		protected abstract List<Problem> parseOutput(String output);
 
