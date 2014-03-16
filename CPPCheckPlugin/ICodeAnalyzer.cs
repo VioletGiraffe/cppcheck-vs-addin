@@ -41,7 +41,7 @@ namespace VSPackage.CPPCheckPlugin
 		}
 
 		public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputPane, bool is64bitConfiguration,
-			bool isDebugConfiguration);
+			bool isDebugConfiguration, bool analysisOnSavedFile);
 
 		public abstract void suppressProblem(Problem p, SuppressionScope scope);
 

@@ -11,7 +11,7 @@ namespace VSPackage.CPPCheckPlugin
 	class AnalyzerCppcheck : ICodeAnalyzer
 	{
 		public override void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration,
-			bool isDebugConfiguration)
+			bool isDebugConfiguration, bool analysisOnSavedFile)
 		{
 			if (filesToAnalyze.Count == 0)
 				return;
@@ -79,7 +79,8 @@ namespace VSPackage.CPPCheckPlugin
 				cppheckargs += " \"" + file.FilePath + "\"";
 			}
 
-			if ((filesToAnalyze.Count == 1 && Properties.Settings.Default.FileOnlyCheckCurrentConfig) || (filesToAnalyze.Count > 1 && Properties.Settings.Default.ProjectOnlyCheckCurrentConfig)) // Only checking current macros configuration (for speed)
+			if ((analysisOnSavedFile && Properties.Settings.Default.FileOnlyCheckCurrentConfig) ||
+				(!analysisOnSavedFile && Properties.Settings.Default.ProjectOnlyCheckCurrentConfig)) // Only checking current macros configuration (for speed)
 			{
 				cppheckargs = cppheckargs.Replace("--force", "");
 				// Creating the list of all different macros (no duplicates)

@@ -147,7 +147,7 @@ namespace VSPackage.CPPCheckPlugin
 
 				MainToolWindow.Instance.showIfWindowNotCreated();
 				MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.DocumentSavedAnalysis;
-				runAnalysis(sourceForAnalysis, currentConfig, _outputPane);
+				runSavedFileAnalysis(sourceForAnalysis, currentConfig, _outputPane);
 			}
 			catch (System.Exception ex)
 			{
@@ -207,17 +207,17 @@ namespace VSPackage.CPPCheckPlugin
 
 			MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.ProjectAnalysis;
 			MainToolWindow.Instance.showIfWindowNotCreated();
-			runAnalysis(files, currentConfig, _outputPane);
+			runAnalysis(files, currentConfig, _outputPane, false);
 		}
 
-		private void runAnalysis(SourceFile file, Configuration currentConfig, OutputWindowPane outputPane)
+		private void runSavedFileAnalysis(SourceFile file, Configuration currentConfig, OutputWindowPane outputPane)
 		{
 			var list = new List<SourceFile>();
 			list.Add(file);
-			runAnalysis(list, currentConfig, outputPane);
+			runAnalysis(list, currentConfig, outputPane, true);
 		}
 
-		private void runAnalysis(List<SourceFile> files, Configuration currentConfig, OutputWindowPane outputPane)
+		private void runAnalysis(List<SourceFile> files, Configuration currentConfig, OutputWindowPane outputPane, bool analysisOnSavedFile)
 		{
 			Debug.Assert(outputPane != null);
 			Debug.Assert(currentConfig != null);
@@ -225,7 +225,7 @@ namespace VSPackage.CPPCheckPlugin
 			var currentConfigName = currentConfig.ConfigurationName;
 			foreach (var analyzer in _analyzers)
 			{
-				analyzer.analyze(files, outputPane, currentConfigName.Contains("64"), currentConfigName.ToLower().Contains("debug"));
+				analyzer.analyze(files, outputPane, currentConfigName.Contains("64"), currentConfigName.ToLower().Contains("debug"), analysisOnSavedFile);
 			}
 		}
 
