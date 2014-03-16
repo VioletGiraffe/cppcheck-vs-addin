@@ -89,6 +89,9 @@
   <ItemGroup>
     <Compile Include="AnalyzerCppcheck.cs" />
     <Compile Include="ChecksPanel.cs" />
+    <Compile Include="CppcheckMessagesList.xaml.cs">
+      <DependentUpon>CppcheckMessagesList.xaml</DependentUpon>
+    </Compile>
     <Compile Include="CppcheckSettings.xaml.cs">
       <DependentUpon>CppcheckSettings.xaml</DependentUpon>
     </Compile>
@@ -166,6 +169,10 @@
     <Content Include="Resources\Package.ico" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="CppcheckMessagesList.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="CppcheckSettings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

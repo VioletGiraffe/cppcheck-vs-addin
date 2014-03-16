@@ -11,8 +11,8 @@
 
         <DockPanel HorizontalAlignment="Stretch" Width="Auto" LastChildFill="True">
             <Label Content="Additional arguments:" DockPanel.Dock="Left" Margin="0,0,5,0"/>
-            <Button Content="Reset arguments to default" Click="onDefaultArguments" DockPanel.Dock="Right" Margin="5,0,0,0"/>
-            <TextBox TextWrapping="NoWrap" Name="ArgumentsEditor" ScrollViewer.CanContentScroll="True" />
+            <Button Content="Reset to default" Click="onDefaultArguments" DockPanel.Dock="Right" Margin="5,0,0,0"/>
+            <TextBox TextWrapping="NoWrap" ScrollViewer.HorizontalScrollBarVisibility="Auto" MaxLines="1" Name="ArgumentsEditor" ScrollViewer.CanContentScroll="True" />
         </DockPanel>
 
         <Grid HorizontalAlignment="Stretch" Margin="0,5,0,5">
@@ -28,7 +28,7 @@
             <Button Grid.Column="2" Content="Edit Solution suppressions" Click="EditSolutionSuppressions"/>
             <Button Grid.Column="4" Content="Edit active Project suppressions" Click="EditProjectSuppressions"/>
         </Grid>
-        <Label Content="Checks"/>
-        <StackPanel Orientation="Vertical" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Width="Auto" Name="Checks_Panel"/>
+        
+        <Button Content="Display all cppcheck messages" Click="MessagesListClick"/>
     </StackPanel>
 </Window>

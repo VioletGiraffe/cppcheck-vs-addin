@@ -27,11 +27,6 @@ namespace VSPackage.CPPCheckPlugin
 			Activated += onActivated;
 			Closed += OnClosed;
 
-			ArgumentsEditor.MaxLines = 1;
-			ArgumentsEditor.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
-
-			mChecksPanel = new ChecksPanel(Checks_Panel);
-
 			if (String.IsNullOrWhiteSpace(Properties.Settings.Default.DefaultArguments))
 				Properties.Settings.Default["DefaultArguments"] = DefaultArguments;
 			else
@@ -42,7 +37,6 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void onActivated(object o, EventArgs e)
 		{
-			mChecksPanel.LoadSettings();
 			InconclusiveChecks.IsChecked = Properties.Settings.Default.InconclusiveChecksEnabled;
 			CheckSavedFiles.IsChecked = Properties.Settings.Default.CheckSavedFiles;
 			Project_OnlyCheckCurrentConfig.IsChecked = Properties.Settings.Default.ProjectOnlyCheckCurrentConfig;
@@ -137,6 +131,12 @@ namespace VSPackage.CPPCheckPlugin
 			}
 			else
 				MessageBox.Show("No active C++ project.");
+		}
+
+		private void MessagesListClick(object sender, RoutedEventArgs e)
+		{
+			var messagesListWindow = new CppcheckMessagesList();
+			messagesListWindow.Show();
 		}
 	}
 }
