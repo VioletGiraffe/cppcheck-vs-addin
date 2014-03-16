@@ -247,6 +247,9 @@ namespace VSPackage.CPPCheckPlugin
 			}
 
 			contentsLines.Insert(lineToInsertAfter+1, suppressionLine);
+
+			System.IO.FileInfo file = new System.IO.FileInfo(suppresionsFilePath);
+			file.Directory.Create(); // If the directory already exists, this method does nothing.
 			File.WriteAllLines(suppresionsFilePath, contentsLines);
 		}
 
