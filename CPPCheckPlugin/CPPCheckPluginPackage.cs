@@ -219,7 +219,16 @@ namespace VSPackage.CPPCheckPlugin
 				{
 					return;
 				}
-				var currentConfig = document.ProjectItem.ConfigurationManager.ActiveConfiguration;
+
+				Configuration currentConfig = null;
+				try { currentConfig = document.ProjectItem.ConfigurationManager.ActiveConfiguration; }
+				catch (Exception) { currentConfig = null; }
+				if (currentConfig == null)
+				{
+					MessageBox.Show("Cannot perform check - no valid configuration selected", "Cppcheck error");
+					return;
+				}
+
 				SourceFile sourceForAnalysis = createSourceFile(document.FullName, currentConfig, project);
 				if (sourceForAnalysis == null)
 					return;
@@ -266,7 +275,13 @@ namespace VSPackage.CPPCheckPlugin
 					System.Windows.MessageBox.Show("Only C++ projects can be checked.");
 					return;
 				}
-				currentConfig = ((Project)o).ConfigurationManager.ActiveConfiguration;
+				try { currentConfig = ((Project)o).ConfigurationManager.ActiveConfiguration; }
+				catch (Exception) { currentConfig = null; }
+				if (currentConfig == null)
+				{
+					MessageBox.Show("Cannot perform check - no valid configuration selected", "Cppcheck error");
+					return;
+				}
 				dynamic projectFiles = project.Files;
 				foreach (dynamic file in projectFiles)
 				{
