@@ -27,6 +27,20 @@ namespace VSPackage.CPPCheckPlugin
 	{
 		public CPPCheckPluginPackage()
 		{
+			CreateDefaultGlobalSuppressions();
+		}
+
+		private static void CreateDefaultGlobalSuppressions()
+		{
+			String globalSuppresionsFilePath = ICodeAnalyzer.suppressionsFilePathByStorage(ICodeAnalyzer.SuppressionStorage.Global);
+			if (!System.IO.File.Exists(globalSuppresionsFilePath))
+			{
+				SuppressionsInfo suppressionsInfo = new SuppressionsInfo();
+				suppressionsInfo.SkippedIncludesMask.Add(".*Microsoft Visual Studio.*");
+				suppressionsInfo.SkippedIncludesMask.Add(".*Microsoft SDKs.*");
+				suppressionsInfo.SkippedIncludesMask.Add(".*boost.*");
+				suppressionsInfo.SaveToFile(globalSuppresionsFilePath);
+			}
 		}
 
 		public static String solutionName()
