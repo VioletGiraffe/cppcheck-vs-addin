@@ -12,10 +12,10 @@ namespace VSPackage.CPPCheckPlugin
 		// list of suppressions in cppcheck format
 		public HashSet<string> SuppressionLines = new HashSet<string>();
 
-		// list of regular expresions with files that should be excluded from check
+		// list of regular expressions with files that should be excluded from check
 		public HashSet<string> SkippedFilesMask = new HashSet<string>();
 
-		// list of regular expresions with include paths that should be excluded from includes list
+		// list of regular expressions with include paths that should be excluded from includes list
 		public HashSet<string> SkippedIncludesMask = new HashSet<string>();
 
 		public void SaveToFile(string suppresionsFilePath)

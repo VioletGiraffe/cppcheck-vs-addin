@@ -39,6 +39,39 @@ namespace VSPackage.CPPCheckPlugin
 				suppressionsInfo.SkippedIncludesMask.Add(".*Microsoft Visual Studio.*");
 				suppressionsInfo.SkippedIncludesMask.Add(".*Microsoft SDKs.*");
 				suppressionsInfo.SkippedIncludesMask.Add(".*boost.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\ActiveQt.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\Qt.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtCore.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtDeclarative.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtGui.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtMultimedia.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtNetwork.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtOpenGL.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtOpenVG.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtScript.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtScriptTools.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtSql.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtSvg.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtTest.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtWebKit.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtXml.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtXmlPatterns.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtConcurrent.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtMultimediaWidgets.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtOpenGLExtensions.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtQml.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtQuick.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtSensors.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtWebKitWidgets.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtWidgets.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtZlib.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtV8.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\mkspecs\\win32-.*");
+
+				suppressionsInfo.SkippedFilesMask.Add("^moc_.*\\.cpp$");
+				suppressionsInfo.SkippedFilesMask.Add("^qrc_.*\\.cpp$");
+				suppressionsInfo.SkippedFilesMask.Add("^ui_.*\\.h$");
+
 				suppressionsInfo.SaveToFile(globalSuppresionsFilePath);
 			}
 		}
@@ -193,7 +226,7 @@ namespace VSPackage.CPPCheckPlugin
 
 				if (Properties.Settings.Default["CheckSavedFiles"] == null)
 				{
-					DialogResult reply = MessageBox.Show("Do you want to start analysis any time file is saved? It will clear previous analysis results.\nYou can change this behavior in cppcheck settings.", "Cppcheck: start analysis when file is saved?", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+					DialogResult reply = MessageBox.Show("Do you want to start analysis any time a file is saved? It will clear previous analysis results.\nYou can change this behavior in cppcheck settings.", "Cppcheck: start analysis when file is saved?", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
 					Properties.Settings.Default.CheckSavedFiles = (reply == DialogResult.Yes);
 					if (reply == DialogResult.No)
 						return;
@@ -247,13 +280,9 @@ namespace VSPackage.CPPCheckPlugin
 					if (fileTypeEnumConstant == "eFileTypeCppCode") // Only checking cpp files (performance)
 					{
 						String fileName = file.Name;
-						// Ignoring Qt MOC and UI files
-						if (!(fileName.StartsWith("moc_") && fileName.EndsWith(".cpp")) && !(fileName.StartsWith("ui_") && fileName.EndsWith(".h")) && !(fileName.StartsWith("qrc_") && fileName.EndsWith(".cpp")))
-						{
-							SourceFile f = createSourceFile(file.FullPath, currentConfig, project);
-							if (f != null)
-								files.Add(f);
-						}
+						SourceFile f = createSourceFile(file.FullPath, currentConfig, project);
+						if (f != null)
+							files.Add(f);
 					}
 				}
 				break; // Only checking one project at a time for now

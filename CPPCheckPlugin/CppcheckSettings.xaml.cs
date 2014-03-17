@@ -130,7 +130,7 @@ namespace VSPackage.CPPCheckPlugin
 				settings.ShowDialog();
 			}
 			else
-				MessageBox.Show("No active C++ project.");
+				MessageBox.Show("No C++ project selected in the solution explorer.");
 		}
 
 		private void MessagesListClick(object sender, RoutedEventArgs e)

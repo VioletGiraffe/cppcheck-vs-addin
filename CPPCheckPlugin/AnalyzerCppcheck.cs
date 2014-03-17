@@ -185,8 +185,8 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			foreach (var mask in masks)
 			{
-				Regex rgx = new Regex(mask);
-				if (rgx.IsMatch(line))
+				Regex rgx = new Regex(mask.ToLower());
+				if (rgx.IsMatch(line.ToLower()))
 					return true;
 			}
 			return false;
