@@ -3,3 +3,4 @@ UpgradeLog*.htm*
 Backup*
 CPPCheckPlugin/bin
 CPPCheckPlugin/obj
+CPPCheckPlugin.csproj.user
