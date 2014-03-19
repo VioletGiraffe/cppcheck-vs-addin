@@ -36,4 +36,4 @@ and <a href="http://www.microsoft.com/en-us/download/details.aspx?id=40758">here
 or the wrong Visual Studio version is started do the following:
   * right-click the project in Solution Explorer and get to *Properties*
   * get to *Debug* tab
-  * next to *start external program* alter the path so that it points to where the right version of Visual Studio is installed.
+  * next to *start external program* alter the path so that it points to where the right version of Visual Studio is installed. Path should be something like *"C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE\devenv.exe"*
