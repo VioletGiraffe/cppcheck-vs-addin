@@ -118,6 +118,14 @@ namespace VSPackage.CPPCheckPlugin
 			get { return _fullPath; }
 		}
 
+		public string FileName
+		{
+			get
+			{
+				return Path.GetFileName(FilePath);
+			}
+		}
+
 		public string RelativeFilePath
 		{
 			get { return cleanPath(_fullPath.Replace(_projectBasePath, "")); }

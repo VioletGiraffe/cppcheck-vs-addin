@@ -5,7 +5,6 @@ using EnvDTE;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
-using System.Text.RegularExpressions;
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -65,7 +64,7 @@ namespace VSPackage.CPPCheckPlugin
 			HashSet<string> includePaths = new HashSet<string>();
 			foreach (var file in filesToAnalyze)
 			{
-				if (!MatchMasksList(file.FilePath, unitedSuppressionsInfo.SkippedFilesMask))
+				if (!matchMasksList(file.FilePath, unitedSuppressionsInfo.SkippedFilesMask))
 					includePaths.UnionWith(file.IncludePaths);
 			}
 
@@ -73,7 +72,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			foreach (string path in includePaths)
 			{
-				if (!MatchMasksList(path, unitedSuppressionsInfo.SkippedIncludesMask))
+				if (!matchMasksList(path, unitedSuppressionsInfo.SkippedIncludesMask))
 				{
 					String includeArgument = " -I\"" + path + "\"";
 					cppheckargs = cppheckargs + " " + includeArgument;
@@ -82,7 +81,8 @@ namespace VSPackage.CPPCheckPlugin
 
 			foreach (SourceFile file in filesToAnalyze)
 			{
-				cppheckargs += " \"" + file.FilePath + "\"";
+				if (!matchMasksList(file.FileName, unitedSuppressionsInfo.SkippedFilesMask))
+					cppheckargs += " \"" + file.FilePath + "\"";
 			}
 
 			if ((analysisOnSavedFile && Properties.Settings.Default.FileOnlyCheckCurrentConfig) ||
@@ -181,26 +181,10 @@ namespace VSPackage.CPPCheckPlugin
 			run(analyzerPath, cppheckargs, outputWindow);
 		}
 
-		private static bool MatchMasksList(string line, HashSet<string> masks)
-		{
-			foreach (var mask in masks)
-			{
-				Regex rgx = new Regex(mask.ToLower());
-				if (rgx.IsMatch(line.ToLower()))
-					return true;
-			}
-			return false;
-		}
-
 		public override void suppressProblem(Problem p, SuppressionScope scope)
 		{
 			if (p == null)
 				return;
-			if (!Directory.Exists(p.BaseProjectPath))
-			{
-				Debug.WriteLine("Error: directory " + p.BaseProjectPath + " doesn't exist, can't add suppression");
-				return;
-			}
 
 			String simpleFileName = p.FileName;
 

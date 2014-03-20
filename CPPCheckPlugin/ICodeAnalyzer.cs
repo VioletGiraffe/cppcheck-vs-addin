@@ -2,6 +2,8 @@
 using System;
 using EnvDTE;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
+using System.IO;
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -58,6 +60,17 @@ namespace VSPackage.CPPCheckPlugin
 			_thread = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath, arguments));
 			_thread.Name = "cppcheck";
 			_thread.Start();
+		}
+
+		protected static bool matchMasksList(string line, HashSet<string> masks)
+		{
+			foreach (var mask in masks)
+			{
+				Regex rgx = new Regex(mask.ToLower());
+				if (rgx.IsMatch(line.ToLower()))
+					return true;
+			}
+			return false;
 		}
 
 		private void addProblemsToToolwindow(List<Problem> problems)
@@ -213,6 +226,7 @@ namespace VSPackage.CPPCheckPlugin
 		private static string projectSuppressionsFilePath(string projectBasePath, string projectName)
 		{
 			Debug.Assert(!String.IsNullOrWhiteSpace(projectBasePath) && !String.IsNullOrWhiteSpace(projectName));
+			Debug.Assert(Directory.Exists(projectBasePath));
 			return projectBasePath + "\\" + projectName + "_project_suppressions.cfg";
 		}
 

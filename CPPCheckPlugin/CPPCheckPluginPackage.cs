@@ -320,6 +320,7 @@ namespace VSPackage.CPPCheckPlugin
 			Debug.Assert(outputPane != null);
 			Debug.Assert(currentConfig != null);
 			outputPane.Clear();
+
 			var currentConfigName = currentConfig.ConfigurationName;
 			foreach (var analyzer in _analyzers)
 			{
