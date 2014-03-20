@@ -5,7 +5,8 @@
 This plugin integrates Cppcheck into Visual Studio and allows:
 
  * automatically checking every C / C++ source file upon saving;
- * checking the currently selected project in the Solution Explorer (menu -> Tools -> Check current project).
+ * checking the currently selected project in the Solution Explorer (menu -> Tools -> Check current project);
+ * convenient message suppression management with options to suppress specific messages, all messages in a given file, specific message types in a given file, message types globally, solution-wide and project-wide.
 
 ###Download
 Visual Studio 2012 and 2013 (except Express editions) supported.
