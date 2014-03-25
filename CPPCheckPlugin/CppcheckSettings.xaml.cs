@@ -38,6 +38,12 @@ namespace VSPackage.CPPCheckPlugin
 		private void onActivated(object o, EventArgs e)
 		{
 			InconclusiveChecks.IsChecked = Properties.Settings.Default.InconclusiveChecksEnabled;
+
+			if (Properties.Settings.Default["CheckSavedFiles"] == null)
+			{
+				CPPCheckPluginPackage.askCheckSavedFiles();
+			}
+
 			CheckSavedFiles.IsChecked = Properties.Settings.Default.CheckSavedFiles;
 			Project_OnlyCheckCurrentConfig.IsChecked = Properties.Settings.Default.ProjectOnlyCheckCurrentConfig;
 			File_OnlyCheckCurrentConfig.IsChecked = Properties.Settings.Default.FileOnlyCheckCurrentConfig;

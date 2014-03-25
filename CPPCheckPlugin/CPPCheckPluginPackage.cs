@@ -237,9 +237,9 @@ namespace VSPackage.CPPCheckPlugin
 
 				if (Properties.Settings.Default["CheckSavedFiles"] == null)
 				{
-					DialogResult reply = MessageBox.Show("Do you want to start analysis any time a file is saved? It will clear previous analysis results.\nYou can change this behavior in cppcheck settings.", "Cppcheck: start analysis when file is saved?", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
-					Properties.Settings.Default.CheckSavedFiles = (reply == DialogResult.Yes);
-					if (reply == DialogResult.No)
+					askCheckSavedFiles();
+
+					if (!Properties.Settings.Default.CheckSavedFiles)
 						return;
 				}
 
@@ -256,6 +256,12 @@ namespace VSPackage.CPPCheckPlugin
 				}
 				DebugTracer.Trace(ex);
 			}
+		}
+
+		public static void askCheckSavedFiles()
+		{
+			DialogResult reply = MessageBox.Show("Do you want to start analysis any time a file is saved? It will clear previous analysis results.\nYou can change this behavior in cppcheck settings.", "Cppcheck: start analysis when file is saved?", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+			Properties.Settings.Default.CheckSavedFiles = (reply == DialogResult.Yes);
 		}
 
 		private void checkCurrentProject()
