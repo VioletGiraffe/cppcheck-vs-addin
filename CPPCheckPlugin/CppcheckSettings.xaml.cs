@@ -33,16 +33,16 @@ namespace VSPackage.CPPCheckPlugin
 				Properties.Settings.Default["DefaultArguments"] = Properties.Settings.Default.DefaultArguments.Replace("--template=vs", "--template=\"{file}|{line}|{severity}|{id}|{message}\"");
 
 			Properties.Settings.Default.Save();
-		}
-
-		private void onActivated(object o, EventArgs e)
-		{
-			InconclusiveChecks.IsChecked = Properties.Settings.Default.InconclusiveChecksEnabled;
 
 			if (Properties.Settings.Default["CheckSavedFiles"] == null)
 			{
 				CPPCheckPluginPackage.askCheckSavedFiles();
 			}
+		}
+
+		private void onActivated(object o, EventArgs e)
+		{
+			InconclusiveChecks.IsChecked = Properties.Settings.Default.InconclusiveChecksEnabled;
 
 			CheckSavedFiles.IsChecked = Properties.Settings.Default.CheckSavedFiles;
 			Project_OnlyCheckCurrentConfig.IsChecked = Properties.Settings.Default.ProjectOnlyCheckCurrentConfig;
