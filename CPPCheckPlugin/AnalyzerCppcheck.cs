@@ -5,6 +5,7 @@ using EnvDTE;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -254,7 +255,30 @@ namespace VSPackage.CPPCheckPlugin
 
 			List<Problem> list = new List<Problem>();
 
-			if (String.IsNullOrWhiteSpace(output) || !output.Contains("|"))
+			if (String.IsNullOrWhiteSpace(output))
+				return list;
+
+			try
+			{
+				Match progressValueMatch = Regex.Match(output, @"([0-9]+)% done");
+				if (progressValueMatch.Success)
+				{
+					// This is a progress update
+					int progress = Convert.ToInt32(progressValueMatch.Groups[1].Value.Replace("% done", ""));
+					int filesChecked = 0, totalFiles = 0;
+					Match filesProgressMatch = Regex.Match(output, @"([0-9]+)/([0-9]+) files checked");
+					if (filesProgressMatch.Success)
+					{
+						filesChecked = Convert.ToInt32(filesProgressMatch.Groups[1].ToString());
+						totalFiles = Convert.ToInt32(filesProgressMatch.Groups[2].ToString());
+					}
+					onProgressUpdated(progress, filesChecked, totalFiles);
+					return list;
+				}
+			}
+			catch (System.Exception) {}
+
+			if (!output.Contains("|")) // This line does not represent a defect found by cppcheck
 				return list;
 
 			String[] parsed = output.Split('|');

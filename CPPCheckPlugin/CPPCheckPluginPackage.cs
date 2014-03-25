@@ -139,7 +139,9 @@ namespace VSPackage.CPPCheckPlugin
 
 			_outputPane = _dte.AddOutputWindowPane("cppcheck analysis output");
 
-			_analyzers.Add(new AnalyzerCppcheck());
+			AnalyzerCppcheck cppcheckAnalayzer = new AnalyzerCppcheck();
+			cppcheckAnalayzer.ProgressUpdated += checkProgressUpdated;
+			_analyzers.Add(cppcheckAnalayzer);
 
 			if (String.IsNullOrEmpty(Properties.Settings.Default.DefaultArguments))
 				Properties.Settings.Default["DefaultArguments"] = CppcheckSettings.DefaultArguments;
@@ -373,6 +375,28 @@ namespace VSPackage.CPPCheckPlugin
 			Type projectObjectType = project.GetType();
 			var projectInterface = projectObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCProject");
 			return projectInterface != null;
+		}
+
+		private void checkProgressUpdated(object sender, ICodeAnalyzer.ProgressEvenArgs e)
+		{
+			int progress = e.Progress;
+			if (progress == 0)
+				progress = 1; // statusBar.Progress won't display a progress bar with 0%
+			EnvDTE.StatusBar statusBar = _dte.StatusBar;
+			if (statusBar != null)
+			{
+				String label = "";
+				if (progress < 100)
+				{
+					if (e.FilesChecked == 0 || e.TotalFilesNumber == 0)
+						label = "cppcheck analysis in progress...";
+					else
+						label = "cppcheck analysis in progress (" + e.FilesChecked + " out of " + e.TotalFilesNumber + " files checked)";
+				}
+				else
+					label = "cppcheck analysis completed";
+				statusBar.Progress(progress < 100, label, progress, 100);
+			}
 		}
 
 		private static DTE _dte = null;

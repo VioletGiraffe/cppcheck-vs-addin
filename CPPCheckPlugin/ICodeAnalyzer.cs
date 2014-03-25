@@ -32,6 +32,33 @@ namespace VSPackage.CPPCheckPlugin
 
 		public enum AnalysisType { DocumentSavedAnalysis, ProjectAnalysis };
 
+		public class ProgressEvenArgs : EventArgs
+		{
+			public ProgressEvenArgs(int progress, int filesChecked = 0, int totalFilesNumber = 0)
+			{
+				Debug.Assert(progress >= 0 && progress <= 100);
+				Progress = progress; TotalFilesNumber = totalFilesNumber;
+				FilesChecked = filesChecked;
+			}
+			public int Progress { get; set; }
+			public int FilesChecked { get; set; }
+			public int TotalFilesNumber { get; set; }
+		}
+
+		public delegate void progressUpdatedHandler(object sender, ProgressEvenArgs e);
+		public event progressUpdatedHandler ProgressUpdated;
+
+		protected void onProgressUpdated(int progress, int filesChecked = 0, int totalFiles = 0)
+		{
+			// Make a temporary copy of the event to avoid possibility of 
+			// a race condition if the last subscriber unsubscribes 
+			// immediately after the null check and before the event is raised.
+			if (ProgressUpdated != null)
+			{
+				ProgressUpdated(this, new ProgressEvenArgs(progress, filesChecked, totalFiles));
+			}
+		}
+
 		protected ICodeAnalyzer()
 		{
 			_numCores = Environment.ProcessorCount;
@@ -158,6 +185,8 @@ namespace VSPackage.CPPCheckPlugin
 				process.Start();
 				process.PriorityClass = ProcessPriorityClass.Idle;
 
+				onProgressUpdated(0);
+
 				// Start the asynchronous read of the sort output stream.
 				process.BeginOutputReadLine();
 				process.BeginErrorReadLine();
@@ -187,6 +216,7 @@ namespace VSPackage.CPPCheckPlugin
 			}
 			finally
 			{
+				onProgressUpdated(100);
 				if (process != null)
 				{
 					try
