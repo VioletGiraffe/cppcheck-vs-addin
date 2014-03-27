@@ -38,6 +38,7 @@ namespace VSPackage.CPPCheckPlugin
 				SuppressionsInfo suppressionsInfo = new SuppressionsInfo();
 				suppressionsInfo.SkippedIncludesMask.Add(".*Microsoft Visual Studio.*");
 				suppressionsInfo.SkippedIncludesMask.Add(".*Microsoft SDKs.*");
+				suppressionsInfo.SkippedIncludesMask.Add(".*Windows Kits.*");
 				suppressionsInfo.SkippedIncludesMask.Add(".*boost.*");
 				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\ActiveQt.*");
 				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\Qt$");
