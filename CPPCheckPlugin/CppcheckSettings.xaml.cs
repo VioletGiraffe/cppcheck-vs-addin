@@ -107,7 +107,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void File_OnlyCheckCurrentConfig_Unchecked(object sender, RoutedEventArgs e)
 		{
-			Properties.Settings.Default["FileOnlyCheckCurrentConfig"] = true;
+			Properties.Settings.Default["FileOnlyCheckCurrentConfig"] = false;
 			Properties.Settings.Default.Save();
 		}
 
