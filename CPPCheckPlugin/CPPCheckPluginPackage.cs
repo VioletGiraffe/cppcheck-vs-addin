@@ -10,6 +10,7 @@ using EnvDTE;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using System.Threading.Tasks;
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -399,10 +400,19 @@ namespace VSPackage.CPPCheckPlugin
 						label = "cppcheck analysis in progress...";
 					else
 						label = "cppcheck analysis in progress (" + e.FilesChecked + " out of " + e.TotalFilesNumber + " files checked)";
+
+					statusBar.Progress(true, label, progress, 100);
 				}
 				else
+				{
 					label = "cppcheck analysis completed";
-				statusBar.Progress(progress < 100, label, progress, 100);
+					statusBar.Progress(true, label, progress, 100);
+					System.Threading.Tasks.Task.Run(async delegate
+					{
+						await System.Threading.Tasks.Task.Delay(5000);
+						statusBar.Progress(false, label, 100, 100);
+					});
+				}
 			}
 		}
 
