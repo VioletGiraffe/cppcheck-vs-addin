@@ -7,7 +7,7 @@
         <CheckBox Content="Enable inconclusive checks" Name="InconclusiveChecks" Checked="inconclusive_Checked" Unchecked="inconclusive_Unchecked"/>
         <CheckBox Content="Check files after save (this would overwrite results from previous cppcheck run)" Name="CheckSavedFiles" Checked="checkSavedFiles_Checked" Unchecked="checkSavedFiles_Unchecked"/>
         <CheckBox Content="When checking a project use only currently active #if/#ifdef branches (faster check)" Name="Project_OnlyCheckCurrentConfig" Checked="Project_OnlyCheckCurrentConfig_Checked" Unchecked="Project_OnlyCheckCurrentConfig_Unchecked"/>
-        <CheckBox Content="When checking a saved files use only currently active #if/#ifdef branches (faster check)" Name="File_OnlyCheckCurrentConfig" Checked="File_OnlyCheckCurrentConfig_Checked" Unchecked="File_OnlyCheckCurrentConfig_Unchecked"/>
+        <CheckBox Content="When checking a saved file use only currently active #if/#ifdef branches (faster check)" Name="File_OnlyCheckCurrentConfig" Checked="File_OnlyCheckCurrentConfig_Checked" Unchecked="File_OnlyCheckCurrentConfig_Unchecked"/>
 
         <DockPanel HorizontalAlignment="Stretch" Width="Auto" LastChildFill="True">
             <Label Content="Additional arguments:" DockPanel.Dock="Left" Margin="0,0,5,0"/>
