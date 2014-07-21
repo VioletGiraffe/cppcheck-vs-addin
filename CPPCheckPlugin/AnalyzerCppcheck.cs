@@ -292,8 +292,9 @@ namespace VSPackage.CPPCheckPlugin
 				severity = Problem.SeverityLevel.warning;
 
 			list.Add(new Problem(this, severity, parsed[3], parsed[4], parsed[0], String.IsNullOrWhiteSpace(parsed[1]) ? 0 : Int32.Parse(parsed[1]), _projectBasePath, _projectName));
-			if (severity == Problem.SeverityLevel.error)
+
 			MainToolWindow.Instance.bringToFront();
+
 			return list;
 		}
 	}
