@@ -38,8 +38,11 @@ namespace VSPackage.CPPCheckPlugin
 		public void bringToFront()
 		{
 			IVsWindowFrame frame = Frame as IVsWindowFrame;
+			int onScreen = 0;
 			if (frame != null)
-				frame.Show();
+				frame.IsOnScreen(out onScreen);
+			if (frame != null && onScreen == 0)
+				frame.ShowNoActivate();
 		}
 
 		public void showIfWindowNotCreated()
