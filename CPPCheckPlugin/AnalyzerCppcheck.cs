@@ -242,8 +242,6 @@ namespace VSPackage.CPPCheckPlugin
 			SuppressionsInfo suppressionsInfo = new SuppressionsInfo();
 
 			String suppresionsFilePath = suppressionsFilePathByStorage(storage, projectBasePath, projectName);
-			Debug.Assert(suppresionsFilePath != null);
-
 			suppressionsInfo.LoadFromFile(suppresionsFilePath);
 
 			return suppressionsInfo;

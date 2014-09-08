@@ -80,12 +80,15 @@ namespace VSPackage.CPPCheckPlugin
 
 		public static String solutionName()
 		{
-			return System.IO.Path.GetFileNameWithoutExtension(_dte.Solution.FullName);
+			try { return System.IO.Path.GetFileNameWithoutExtension(_dte.Solution.FullName); }
+			catch(Exception) { return ""; }
+			
 		}
 
 		public static String solutionPath()
 		{
-			return System.IO.Path.GetDirectoryName(_dte.Solution.FullName);
+			try { return System.IO.Path.GetDirectoryName(_dte.Solution.FullName); }
+			catch (Exception) { return ""; }
 		}
 
 		public static String activeProjectName()
