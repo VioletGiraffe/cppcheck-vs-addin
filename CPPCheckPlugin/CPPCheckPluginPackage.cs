@@ -210,7 +210,7 @@ namespace VSPackage.CPPCheckPlugin
 			if (document == null || document.Language != "C/C++")
 				return;
 
-			if (Properties.Settings.Default["CheckSavedFiles"] != null && Properties.Settings.Default.CheckSavedFiles == false)
+			if (Properties.Settings.Default[Properties.Settings.CheckSavedFilesOptionKeyName] != null && Properties.Settings.Default.CheckSavedFiles == false)
 				return;
 
 			if (document.ActiveWindow == null)
@@ -240,7 +240,7 @@ namespace VSPackage.CPPCheckPlugin
 				if (sourceForAnalysis == null)
 					return;
 
-				if (Properties.Settings.Default["CheckSavedFiles"] == null)
+				if (Properties.Settings.Default[Properties.Settings.CheckSavedFilesOptionKeyName] == null)
 				{
 					askCheckSavedFiles();
 

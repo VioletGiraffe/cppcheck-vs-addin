@@ -34,7 +34,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			Properties.Settings.Default.Save();
 
-			if (Properties.Settings.Default["CheckSavedFiles"] == null)
+			if (Properties.Settings.Default[Properties.Settings.CheckSavedFilesOptionKeyName] == null)
 			{
 				CPPCheckPluginPackage.askCheckSavedFiles();
 			}
@@ -42,12 +42,17 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void onActivated(object o, EventArgs e)
 		{
-			InconclusiveChecks.IsChecked = Properties.Settings.Default.InconclusiveChecksEnabled;
+			var settings = Properties.Settings.Default;
 
-			CheckSavedFiles.IsChecked = Properties.Settings.Default.CheckSavedFiles;
-			Project_OnlyCheckCurrentConfig.IsChecked = Properties.Settings.Default.ProjectOnlyCheckCurrentConfig;
-			File_OnlyCheckCurrentConfig.IsChecked = Properties.Settings.Default.FileOnlyCheckCurrentConfig;
-			ArgumentsEditor.Text = Properties.Settings.Default.DefaultArguments;
+			InconclusiveChecks.IsChecked = settings.InconclusiveChecksEnabled;
+
+			if (settings[Properties.Settings.CheckSavedFilesOptionKeyName] == null)
+				CheckSavedFiles.IsChecked = false;
+			else
+				CheckSavedFiles.IsChecked = settings.CheckSavedFiles;
+			Project_OnlyCheckCurrentConfig.IsChecked = settings.ProjectOnlyCheckCurrentConfig;
+			File_OnlyCheckCurrentConfig.IsChecked = settings.FileOnlyCheckCurrentConfig;
+			ArgumentsEditor.Text = settings.DefaultArguments;
 		}
 
 		private void OnClosed(object o, EventArgs e)
@@ -70,13 +75,13 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void checkSavedFiles_Unchecked(object sender, RoutedEventArgs e)
 		{
-			Properties.Settings.Default["CheckSavedFiles"] = false;
+			Properties.Settings.Default[Properties.Settings.CheckSavedFilesOptionKeyName] = false;
 			Properties.Settings.Default.Save();
 		}
 
 		private void checkSavedFiles_Checked(object sender, RoutedEventArgs e)
 		{
-			Properties.Settings.Default["CheckSavedFiles"] = true;
+			Properties.Settings.Default[Properties.Settings.CheckSavedFilesOptionKeyName] = true;
 			Properties.Settings.Default.Save();
 		}
 
