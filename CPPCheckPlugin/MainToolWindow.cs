@@ -121,7 +121,7 @@ namespace VSPackage.CPPCheckPlugin
 			Debug.Assert(dte.ActiveDocument != null);
 			var selection = (EnvDTE.TextSelection)dte.ActiveDocument.Selection;
 			Debug.Assert(selection != null);
-			selection.GotoLine(problem.Line);
+			selection.GotoLine(problem.Line > 0 ? problem.Line : 1); // Line cannot be 0 here
 		}
 
 		private void suppressProblem(object sender, MainToolWindowUI.SuppresssionRequestedEventArgs e)
