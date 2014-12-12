@@ -149,7 +149,7 @@ namespace VSPackage.CPPCheckPlugin
 			_analyzers.Add(cppcheckAnalayzer);
 
 			if (String.IsNullOrEmpty(Properties.Settings.Default.DefaultArguments))
-				Properties.Settings.Default["DefaultArguments"] = CppcheckSettings.DefaultArguments;
+				Properties.Settings.Default.DefaultArguments = CppcheckSettings.DefaultArguments;
 
 			// Add our command handlers for menu (commands must exist in the .vsct file)
 			OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
@@ -210,7 +210,7 @@ namespace VSPackage.CPPCheckPlugin
 			if (document == null || document.Language != "C/C++")
 				return;
 
-			if (Properties.Settings.Default[Properties.Settings.CheckSavedFilesOptionKeyName] != null && Properties.Settings.Default.CheckSavedFiles == false)
+			if (Properties.Settings.Default.CheckSavedFilesHasValue && Properties.Settings.Default.CheckSavedFiles == false)
 				return;
 
 			if (document.ActiveWindow == null)
@@ -240,7 +240,7 @@ namespace VSPackage.CPPCheckPlugin
 				if (sourceForAnalysis == null)
 					return;
 
-				if (Properties.Settings.Default[Properties.Settings.CheckSavedFilesOptionKeyName] == null)
+				if (!Properties.Settings.Default.CheckSavedFilesHasValue)
 				{
 					askCheckSavedFiles();
 

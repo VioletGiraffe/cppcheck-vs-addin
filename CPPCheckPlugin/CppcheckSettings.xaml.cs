@@ -28,13 +28,13 @@ namespace VSPackage.CPPCheckPlugin
 			Closed += OnClosed;
 
 			if (String.IsNullOrWhiteSpace(Properties.Settings.Default.DefaultArguments))
-				Properties.Settings.Default["DefaultArguments"] = DefaultArguments;
+				Properties.Settings.Default.DefaultArguments = DefaultArguments;
 			else
-				Properties.Settings.Default["DefaultArguments"] = Properties.Settings.Default.DefaultArguments.Replace("--template=vs", "--template=\"{file}|{line}|{severity}|{id}|{message}\"");
+				Properties.Settings.Default.DefaultArguments = Properties.Settings.Default.DefaultArguments.Replace("--template=vs", "--template=\"{file}|{line}|{severity}|{id}|{message}\"");
 
 			Properties.Settings.Default.Save();
 
-			if (Properties.Settings.Default[Properties.Settings.CheckSavedFilesOptionKeyName] == null)
+			if (!Properties.Settings.Default.CheckSavedFilesHasValue)
 			{
 				CPPCheckPluginPackage.askCheckSavedFiles();
 			}
@@ -46,7 +46,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			InconclusiveChecks.IsChecked = settings.InconclusiveChecksEnabled;
 
-			if (settings[Properties.Settings.CheckSavedFilesOptionKeyName] == null)
+			if (!settings.CheckSavedFilesHasValue)
 				CheckSavedFiles.IsChecked = false;
 			else
 				CheckSavedFiles.IsChecked = settings.CheckSavedFiles;
@@ -57,62 +57,62 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void OnClosed(object o, EventArgs e)
 		{
-			Properties.Settings.Default["DefaultArguments"] = String.IsNullOrEmpty(ArgumentsEditor.Text) ? DefaultArguments.Replace('\n', ' ').Replace('\r', ' ') : ArgumentsEditor.Text;
+			Properties.Settings.Default.DefaultArguments = String.IsNullOrEmpty(ArgumentsEditor.Text) ? DefaultArguments.Replace('\n', ' ').Replace('\r', ' ') : ArgumentsEditor.Text;
 			Properties.Settings.Default.Save();
 		}
 
 		private void inconclusive_Unchecked(object sender, RoutedEventArgs e)
 		{
-			Properties.Settings.Default["InconclusiveChecksEnabled"] = false;
+			Properties.Settings.Default.InconclusiveChecksEnabled = false;
 			Properties.Settings.Default.Save();
 		}
 
 		private void inconclusive_Checked(object sender, RoutedEventArgs e)
 		{
-			Properties.Settings.Default["InconclusiveChecksEnabled"] = true;
+			Properties.Settings.Default.InconclusiveChecksEnabled = true;
 			Properties.Settings.Default.Save();
 		}
 
 		private void checkSavedFiles_Unchecked(object sender, RoutedEventArgs e)
 		{
-			Properties.Settings.Default[Properties.Settings.CheckSavedFilesOptionKeyName] = false;
+			Properties.Settings.Default.CheckSavedFiles = false;
 			Properties.Settings.Default.Save();
 		}
 
 		private void checkSavedFiles_Checked(object sender, RoutedEventArgs e)
 		{
-			Properties.Settings.Default[Properties.Settings.CheckSavedFilesOptionKeyName] = true;
+			Properties.Settings.Default.CheckSavedFiles = true;
 			Properties.Settings.Default.Save();
 		}
 
 		private void onDefaultArguments(object sender, RoutedEventArgs e)
 		{
-			Properties.Settings.Default["DefaultArguments"] = DefaultArguments;
+			Properties.Settings.Default.DefaultArguments = DefaultArguments;
 			ArgumentsEditor.Text = DefaultArguments;
 			Properties.Settings.Default.Save();
 		}
 
 		private void Project_OnlyCheckCurrentConfig_Checked(object sender, RoutedEventArgs e)
 		{
-			Properties.Settings.Default["ProjectOnlyCheckCurrentConfig"] = true;
+			Properties.Settings.Default.ProjectOnlyCheckCurrentConfig = true;
 			Properties.Settings.Default.Save();
 		}
 
 		private void Project_OnlyCheckCurrentConfig_Unchecked(object sender, RoutedEventArgs e)
 		{
-			Properties.Settings.Default["ProjectOnlyCheckCurrentConfig"] = false;
+			Properties.Settings.Default.ProjectOnlyCheckCurrentConfig = false;
 			Properties.Settings.Default.Save();
 		}
 
 		private void File_OnlyCheckCurrentConfig_Checked(object sender, RoutedEventArgs e)
 		{
-			Properties.Settings.Default["FileOnlyCheckCurrentConfig"] = true;
+			Properties.Settings.Default.FileOnlyCheckCurrentConfig = true;
 			Properties.Settings.Default.Save();
 		}
 
 		private void File_OnlyCheckCurrentConfig_Unchecked(object sender, RoutedEventArgs e)
 		{
-			Properties.Settings.Default["FileOnlyCheckCurrentConfig"] = false;
+			Properties.Settings.Default.FileOnlyCheckCurrentConfig = false;
 			Properties.Settings.Default.Save();
 		}
 
