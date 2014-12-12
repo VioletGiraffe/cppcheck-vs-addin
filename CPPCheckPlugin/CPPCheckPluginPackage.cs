@@ -117,7 +117,6 @@ namespace VSPackage.CPPCheckPlugin
 				return null;
 			}
 
-			List<SourceFile> files = new List<SourceFile>();
 			foreach (dynamic o in activeProjects)
 			{
 				dynamic project = o.Object;
