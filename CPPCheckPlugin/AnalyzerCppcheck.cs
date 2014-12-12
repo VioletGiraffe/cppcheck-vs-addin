@@ -177,7 +177,7 @@ namespace VSPackage.CPPCheckPlugin
 				analyzerPath = dialog.FileName;
 			}
 
-			Properties.Settings.Default["CPPcheckPath"] = analyzerPath;
+			Properties.Settings.Default.CPPcheckPath = analyzerPath;
 			Properties.Settings.Default.Save();
 			run(analyzerPath, cppheckargs, outputWindow);
 		}

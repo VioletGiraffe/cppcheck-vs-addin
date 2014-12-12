@@ -25,6 +25,16 @@
             // Add code to handle the SettingsSaving event here.
         }
 
-        public const string CheckSavedFilesOptionKeyName = "CheckSavedFiles";
+        private const string CheckSavedFilesOptionKeyName = "CheckSavedFiles";
+
+        public bool CheckSavedFilesHasValue {
+            get {
+                if (this[CheckSavedFilesOptionKeyName] == null)
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
     }
 }
