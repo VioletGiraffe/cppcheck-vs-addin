@@ -244,7 +244,8 @@ namespace VSPackage.CPPCheckPlugin
 			if (!String.IsNullOrEmpty(output))
 			{
 				addProblemsToToolwindow(parseOutput(output));
-				_outputPane.OutputString(output + "\n");
+				try { _outputPane.OutputString(output + "\n"); }
+				catch (Exception) { }
 			}
 		}
 
