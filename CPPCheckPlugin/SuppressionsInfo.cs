@@ -18,7 +18,7 @@ namespace VSPackage.CPPCheckPlugin
 		// list of regular expressions with include paths that should be excluded from includes list
 		public HashSet<string> SkippedIncludesMask = new HashSet<string>();
 
-		public void SaveToFile(string suppresionsFilePath)
+		public void SaveToFile(string suppressionsFilePath)
 		{
 			HashSet<string> lines = new HashSet<string>();
 			lines.Add("[cppcheck]");
@@ -28,20 +28,20 @@ namespace VSPackage.CPPCheckPlugin
 			lines.Add("[cppcheck_includes]");
 			lines.UnionWith(SkippedIncludesMask);
 
-			System.IO.FileInfo file = new System.IO.FileInfo(suppresionsFilePath);
+			System.IO.FileInfo file = new System.IO.FileInfo(suppressionsFilePath);
 			file.Directory.Create(); // If the directory already exists, this method does nothing.
-			File.WriteAllLines(suppresionsFilePath, lines);
+			File.WriteAllLines(suppressionsFilePath, lines);
 		}
 
-		public void LoadFromFile(string suppresionsFilePath)
+		public void LoadFromFile(string suppressionsFilePath)
 		{
 			SuppressionLines.Clear();
 			SkippedFilesMask.Clear();
 			SkippedIncludesMask.Clear();
 
-			if (File.Exists(suppresionsFilePath))
+			if (File.Exists(suppressionsFilePath))
 			{
-				using (StreamReader stream = File.OpenText(suppresionsFilePath))
+				using (StreamReader stream = File.OpenText(suppressionsFilePath))
 				{
 					string currentGroup = "";
 					var line = stream.ReadLine();

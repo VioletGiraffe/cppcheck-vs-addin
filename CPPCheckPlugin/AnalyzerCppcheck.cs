@@ -226,23 +226,23 @@ namespace VSPackage.CPPCheckPlugin
 					throw new InvalidOperationException("Unsupported value: " + scope.ToString());
 			}
 
-			String suppresionsFilePath = suppressionsFilePathByScope(scope, p.BaseProjectPath, p.ProjectName);
-			Debug.Assert(suppresionsFilePath != null);
+			String suppressionsFilePath = suppressionsFilePathByScope(scope, p.BaseProjectPath, p.ProjectName);
+			Debug.Assert(suppressionsFilePath != null);
 
 			SuppressionsInfo suppressionsInfo = new SuppressionsInfo();
-			suppressionsInfo.LoadFromFile(suppresionsFilePath);
+			suppressionsInfo.LoadFromFile(suppressionsFilePath);
 
 			suppressionsInfo.AddSuppressionLine(suppressionLine);
 
-			suppressionsInfo.SaveToFile(suppresionsFilePath);
+			suppressionsInfo.SaveToFile(suppressionsFilePath);
 		}
 
 		protected override SuppressionsInfo readSuppressions(SuppressionStorage storage, string projectBasePath = null, string projectName = null)
 		{
 			SuppressionsInfo suppressionsInfo = new SuppressionsInfo();
 
-			String suppresionsFilePath = suppressionsFilePathByStorage(storage, projectBasePath, projectName);
-			suppressionsInfo.LoadFromFile(suppresionsFilePath);
+			String suppressionsFilePath = suppressionsFilePathByStorage(storage, projectBasePath, projectName);
+			suppressionsInfo.LoadFromFile(suppressionsFilePath);
 
 			return suppressionsInfo;
 		}

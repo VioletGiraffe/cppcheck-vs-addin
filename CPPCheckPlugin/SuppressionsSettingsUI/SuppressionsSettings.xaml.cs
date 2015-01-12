@@ -19,15 +19,15 @@ namespace VSPackage.CPPCheckPlugin.SuppressionSettingsUI
 	/// </summary>
 	public partial class SuppressionsSettings : Window
 	{
-		public string suppresionsFilePath;
+		public string suppressionsFilePath;
 
 		public SuppressionsSettings(ICodeAnalyzer.SuppressionStorage suppressionStorage, string projectBasePath = null, string projectName = null)
 		{
 			InitializeComponent();
 
-			suppresionsFilePath = ICodeAnalyzer.suppressionsFilePathByStorage(suppressionStorage, projectBasePath, projectName);
+			suppressionsFilePath = ICodeAnalyzer.suppressionsFilePathByStorage(suppressionStorage, projectBasePath, projectName);
 			SuppressionsInfo suppressionsInfo = new SuppressionsInfo();
-			suppressionsInfo.LoadFromFile(suppresionsFilePath);
+			suppressionsInfo.LoadFromFile(suppressionsFilePath);
 
 			CppcheckLines.Items = suppressionsInfo.SuppressionLines;
 			FilesLines.Items = suppressionsInfo.SkippedFilesMask;
@@ -45,7 +45,7 @@ namespace VSPackage.CPPCheckPlugin.SuppressionSettingsUI
 			suppressionsInfo.SkippedIncludesMask = IncludesLines.Items;
 			while (suppressionsInfo.SkippedIncludesMask.Remove("")) { /* nothing */ }
 
-			suppressionsInfo.SaveToFile(suppresionsFilePath);
+			suppressionsInfo.SaveToFile(suppressionsFilePath);
 
 			Close();
 		}

@@ -33,8 +33,8 @@ namespace VSPackage.CPPCheckPlugin
 
 		private static void CreateDefaultGlobalSuppressions()
 		{
-			String globalSuppresionsFilePath = ICodeAnalyzer.suppressionsFilePathByStorage(ICodeAnalyzer.SuppressionStorage.Global);
-			if (!System.IO.File.Exists(globalSuppresionsFilePath))
+			String globalsuppressionsFilePath = ICodeAnalyzer.suppressionsFilePathByStorage(ICodeAnalyzer.SuppressionStorage.Global);
+			if (!System.IO.File.Exists(globalsuppressionsFilePath))
 			{
 				SuppressionsInfo suppressionsInfo = new SuppressionsInfo();
 				suppressionsInfo.SkippedIncludesMask.Add(".*Microsoft Visual Studio.*");
@@ -74,7 +74,7 @@ namespace VSPackage.CPPCheckPlugin
 				suppressionsInfo.SkippedFilesMask.Add("^qrc_.*\\.cpp$");
 				suppressionsInfo.SkippedFilesMask.Add("^ui_.*\\.h$");
 
-				suppressionsInfo.SaveToFile(globalSuppresionsFilePath);
+				suppressionsInfo.SaveToFile(globalsuppressionsFilePath);
 			}
 		}
 
