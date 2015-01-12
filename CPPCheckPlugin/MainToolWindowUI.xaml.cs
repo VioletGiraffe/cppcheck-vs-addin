@@ -124,7 +124,6 @@ namespace VSPackage.CPPCheckPlugin
 		public class ProblemsListItem
 		{
 			public ProblemsListItem(Problem problem)
-				: base()
 			{
 				_problem = problem;
 				Debug.Assert(problem != null);

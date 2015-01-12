@@ -78,6 +78,8 @@ namespace VSPackage.CPPCheckPlugin
 
 		protected abstract List<Problem> parseOutput(String output);
 
+		protected abstract void analysisFinished();
+
 		protected void run(string analyzerExePath, string arguments, OutputWindowPane outputPane)
 		{
 			_outputPane = outputPane;
@@ -100,12 +102,18 @@ namespace VSPackage.CPPCheckPlugin
 			return false;
 		}
 
-		private void addProblemsToToolwindow(List<Problem> problems)
+		protected void addProblemsToToolwindow(List<Problem> problems)
 		{
-			if (MainToolWindow.Instance == null)
+			if (MainToolWindow.Instance == null || problems == null)
 				return;
 			
 			foreach(var problem in problems)
+				MainToolWindow.Instance.displayProblem(problem);
+		}
+
+		protected void addProblemToToolwindow(Problem problem)
+		{
+			if (MainToolWindow.Instance != null && problem != null)
 				MainToolWindow.Instance.displayProblem(problem);
 		}
 
@@ -200,6 +208,7 @@ namespace VSPackage.CPPCheckPlugin
 					}
 				}
 				timer.Stop();
+				analysisFinished();
 				if (process.ExitCode != 0)
 					_outputPane.OutputString(analyzerExePath + " has exited with code " + process.ExitCode.ToString() + "\n");
 				else

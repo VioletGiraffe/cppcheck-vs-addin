@@ -40,6 +40,7 @@ namespace VSPackage.CPPCheckPlugin
 		public String Message
 		{
 			get { return _message; }
+			set { _message = value; }
 		}
 
 		// This should be file path relative to project root

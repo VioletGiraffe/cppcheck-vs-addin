@@ -251,10 +251,8 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			// template={file}|{line}|{severity}|{id}|{message}
 
-			List<Problem> list = new List<Problem>();
-
 			if (String.IsNullOrWhiteSpace(output))
-				return list;
+				return null;
 
 			try
 			{
@@ -271,17 +269,48 @@ namespace VSPackage.CPPCheckPlugin
 						totalFiles = Convert.ToInt32(filesProgressMatch.Groups[2].ToString());
 					}
 					onProgressUpdated(progress, filesChecked, totalFiles);
-					return list;
+
+					if (_unfinishedProblem != null)
+					{
+						List<Problem> list = new List<Problem>();
+						list.Add(_unfinishedProblem); // Done with the current message
+						_unfinishedProblem = null;
+						return list;
+					}
+					else
+						return null;
 				}
 			}
 			catch (System.Exception) {}
 
-			if (!output.Contains("|")) // This line does not represent a defect found by cppcheck
-				return list;
+			if (output.StartsWith("Checking "))
+			{
+				if (_unfinishedProblem != null)
+				{
+					List<Problem> list = new List<Problem>();
+					list.Add(_unfinishedProblem); // Done with the current message
+					_unfinishedProblem = null;
+					return list;
+				}
+				else
+					return null;
+			}
+			else if (!output.Contains("|")) // This line does not represent a new defect found by cppcheck; could be continuation of a multi-line issue description
+			{
+				if (_unfinishedProblem != null)
+					_unfinishedProblem.Message += "\n" + output;
+
+				return null; // Not done with the current message yet
+			}
 
 			String[] parsed = output.Split('|');
 			if (parsed.Length != 5)
-				return list;
+				return null;
+
+			// New issue found - finalize the previous one
+			List<Problem> result = new List<Problem>();
+			if (_unfinishedProblem != null)
+				result.Add(_unfinishedProblem);
 
 			Problem.SeverityLevel severity = Problem.SeverityLevel.info;
 			if (parsed[2] == "error")
@@ -289,11 +318,19 @@ namespace VSPackage.CPPCheckPlugin
 			else if (parsed[2] == "warning")
 				severity = Problem.SeverityLevel.warning;
 
-			list.Add(new Problem(this, severity, parsed[3], parsed[4], parsed[0], String.IsNullOrWhiteSpace(parsed[1]) ? 0 : Int32.Parse(parsed[1]), _projectBasePath, _projectName));
+			_unfinishedProblem = new Problem(this, severity, parsed[3], parsed[4], parsed[0], String.IsNullOrWhiteSpace(parsed[1]) ? 0 : Int32.Parse(parsed[1]), _projectBasePath, _projectName);
 
 			MainToolWindow.Instance.bringToFront();
 
-			return list;
+			return result;
 		}
+
+		protected override void analysisFinished()
+		{
+			if (_unfinishedProblem != null)
+				addProblemToToolwindow(_unfinishedProblem);
+		}
+
+		private Problem _unfinishedProblem = null;
 	}
 }
