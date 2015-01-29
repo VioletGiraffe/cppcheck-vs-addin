@@ -270,30 +270,28 @@ namespace VSPackage.CPPCheckPlugin
 					}
 					onProgressUpdated(progress, filesChecked, totalFiles);
 
-					if (_unfinishedProblem != null)
+					if (_unfinishedProblem == null)
 					{
-						List<Problem> list = new List<Problem>();
-						list.Add(_unfinishedProblem); // Done with the current message
-						_unfinishedProblem = null;
-						return list;
-					}
-					else
 						return null;
+					}
+					List<Problem> list = new List<Problem>();
+					list.Add(_unfinishedProblem); // Done with the current message
+					_unfinishedProblem = null;
+					return list;
 				}
 			}
 			catch (System.Exception) {}
 
 			if (output.StartsWith("Checking "))
 			{
-				if (_unfinishedProblem != null)
+				if (_unfinishedProblem == null)
 				{
-					List<Problem> list = new List<Problem>();
-					list.Add(_unfinishedProblem); // Done with the current message
-					_unfinishedProblem = null;
-					return list;
-				}
-				else
 					return null;
+				}
+				List<Problem> list = new List<Problem>();
+				list.Add(_unfinishedProblem); // Done with the current message
+				_unfinishedProblem = null;
+				return list;
 			}
 			else if (!output.Contains("|")) // This line does not represent a new defect found by cppcheck; could be continuation of a multi-line issue description
 			{
