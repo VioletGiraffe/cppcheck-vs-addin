@@ -193,34 +193,22 @@ namespace VSPackage.CPPCheckPlugin
 			switch (scope)
 			{
 				case SuppressionScope.suppressAllMessagesThisFileGlobally:
-					suppressionLine = "*:" + simpleFileName;
-					break;
 				case SuppressionScope.suppressAllMessagesThisFileSolutionWide:
-					suppressionLine = "*:" + simpleFileName;
-					break;
 				case SuppressionScope.suppressAllMessagesThisFileProjectWide:
 					suppressionLine = "*:" + simpleFileName;
-					break;
-				case SuppressionScope.suppressThisMessage:
-					suppressionLine = p.MessageId + ":" + simpleFileName + ":" + p.Line;
 					break;
 				case SuppressionScope.suppressThisTypeOfMessageFileWide:
 					suppressionLine = p.MessageId + ":" + simpleFileName;
 					break;
 				case SuppressionScope.suppressThisTypeOfMessagesGlobally:
-					suppressionLine = p.MessageId;
-					break;
 				case SuppressionScope.suppressThisTypeOfMessageProjectWide:
-					suppressionLine = p.MessageId;
-					break;
-				case SuppressionScope.suppressThisMessageSolutionWide:
-					suppressionLine = p.MessageId + ":" + simpleFileName + ":" + p.Line;
-					break;
-				case SuppressionScope.suppressThisMessageGlobally:
-					suppressionLine = p.MessageId + ":" + simpleFileName + ":" + p.Line;
-					break;
 				case SuppressionScope.suppressThisTypeOfMessagesSolutionWide:
 					suppressionLine = p.MessageId;
+					break;
+				case SuppressionScope.suppressThisMessage:
+				case SuppressionScope.suppressThisMessageSolutionWide:
+				case SuppressionScope.suppressThisMessageGlobally:
+					suppressionLine = p.MessageId + ":" + simpleFileName + ":" + p.Line;
 					break;
 				default:
 					throw new InvalidOperationException("Unsupported value: " + scope.ToString());

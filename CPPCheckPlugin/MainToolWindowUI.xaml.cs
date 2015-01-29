@@ -148,20 +148,29 @@ namespace VSPackage.CPPCheckPlugin
 			{
 				get
 				{
-					Bitmap bitmap = null;
+					Icon fromIcon = null;
 					switch (_problem.Severity)
 					{
 						case Problem.SeverityLevel.info:
-							bitmap = resizeBitmap(new System.Drawing.Icon(SystemIcons.Information, SystemIcons.Information.Height, SystemIcons.Information.Width).ToBitmap(), iconSize, iconSize);
+							fromIcon = SystemIcons.Information;
 							break;
 						case Problem.SeverityLevel.warning:
-							bitmap = resizeBitmap(new System.Drawing.Icon(SystemIcons.Warning, SystemIcons.Warning.Height, SystemIcons.Warning.Width).ToBitmap(), iconSize, iconSize);
+							fromIcon = SystemIcons.Warning;
 							break;
 						case Problem.SeverityLevel.error:
-							bitmap = resizeBitmap(new System.Drawing.Icon(SystemIcons.Error, SystemIcons.Error.Height, SystemIcons.Error.Width).ToBitmap(), iconSize, iconSize);
+							fromIcon = SystemIcons.Error;
 							break;
 						default:
 							throw new InvalidOperationException("Unsupported value: " + _problem.Severity.ToString());
+					}
+
+					int destWidth = iconSize;
+					int destHeight = iconSize;
+					Bitmap bitmap = new Bitmap(destWidth, destHeight);
+					using (Graphics g = Graphics.FromImage((System.Drawing.Image)bitmap))
+					{
+						g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+						g.DrawImage(fromIcon.ToBitmap(), 0, 0, destWidth, destHeight);
 					}
 					ImageSource imgSource = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(), IntPtr.Zero, System.Windows.Int32Rect.Empty, BitmapSizeOptions.FromWidthAndHeight(bitmap.Width, bitmap.Height));
 					return imgSource;
@@ -171,17 +180,6 @@ namespace VSPackage.CPPCheckPlugin
 			public Problem Problem
 			{
 				get { return _problem; }
-			}
-
-			private static Bitmap resizeBitmap(Bitmap src, int destWidth, int destHeight)
-			{
-				Bitmap dest = new Bitmap(destWidth, destHeight);
-				using (Graphics g = Graphics.FromImage((System.Drawing.Image)dest))
-				{
-					g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-					g.DrawImage(src, 0, 0, destWidth, destHeight);
-				}
-				return dest;
 			}
 
 			Problem _problem;
