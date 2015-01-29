@@ -135,12 +135,19 @@ namespace VSPackage.CPPCheckPlugin
 
 		protected string suppressionsFilePathByScope(SuppressionScope scope, string projectBasePath = null, string projectName = null)
 		{
-			if (scope == SuppressionScope.suppressThisTypeOfMessagesGlobally || scope == SuppressionScope.suppressAllMessagesThisFileGlobally || scope == SuppressionScope.suppressThisMessageGlobally)
-				return globalSuppressionsFilePath();
-			if (scope == SuppressionScope.suppressThisMessageSolutionWide || scope == SuppressionScope.suppressThisTypeOfMessagesSolutionWide || scope == SuppressionScope.suppressAllMessagesThisFileSolutionWide)
-				return solutionSuppressionsFilePath();
-			else
-				return projectSuppressionsFilePath(projectBasePath, projectName);
+			switch (scope)
+			{
+				case SuppressionScope.suppressThisMessageGlobally:
+				case SuppressionScope.suppressThisTypeOfMessagesGlobally:
+				case SuppressionScope.suppressAllMessagesThisFileGlobally:
+					return globalSuppressionsFilePath();
+				case SuppressionScope.suppressThisMessageSolutionWide:
+				case SuppressionScope.suppressThisTypeOfMessagesSolutionWide:
+				case SuppressionScope.suppressAllMessagesThisFileSolutionWide:
+					return solutionSuppressionsFilePath();
+				default:
+					return projectSuppressionsFilePath(projectBasePath, projectName);
+			}
 		}
 
 		private void abortThreadIfAny()
