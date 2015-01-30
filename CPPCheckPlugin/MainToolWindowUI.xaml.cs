@@ -166,14 +166,29 @@ namespace VSPackage.CPPCheckPlugin
 
 					int destWidth = iconSize;
 					int destHeight = iconSize;
-					Bitmap bitmap = new Bitmap(destWidth, destHeight);
-					using (Graphics g = Graphics.FromImage((System.Drawing.Image)bitmap))
+					using (Bitmap bitmap = new Bitmap(destWidth, destHeight))
 					{
-						g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-						g.DrawImage(fromIcon.ToBitmap(), 0, 0, destWidth, destHeight);
+						using (Graphics graphicsSurface = Graphics.FromImage((System.Drawing.Image)bitmap))
+						{
+							graphicsSurface.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+							using (var iconBitmap = fromIcon.ToBitmap())
+							{
+								graphicsSurface.DrawImage(iconBitmap, 0, 0, destWidth, destHeight);
+							}
+						}
+						// This obtains an unmanaged resource that must be released explicitly
+						IntPtr hBitmap = bitmap.GetHbitmap();
+						try
+						{
+							var sizeOptions = BitmapSizeOptions.FromWidthAndHeight(bitmap.Width, bitmap.Height);
+							ImageSource imgSource = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(hBitmap, IntPtr.Zero, System.Windows.Int32Rect.Empty, sizeOptions);
+							return imgSource;
+						}
+						finally
+						{
+							DeleteObjectInvoker.DeleteObject(hBitmap);
+						}
 					}
-					ImageSource imgSource = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(), IntPtr.Zero, System.Windows.Int32Rect.Empty, BitmapSizeOptions.FromWidthAndHeight(bitmap.Width, bitmap.Height));
-					return imgSource;
 				}
 			}
 
@@ -184,5 +199,11 @@ namespace VSPackage.CPPCheckPlugin
 
 			Problem _problem;
 		}
+	}
+
+	public class DeleteObjectInvoker
+	{
+		[System.Runtime.InteropServices.DllImport("gdi32.dll")]
+		public static extern bool DeleteObject(IntPtr hObject);
 	}
 }
