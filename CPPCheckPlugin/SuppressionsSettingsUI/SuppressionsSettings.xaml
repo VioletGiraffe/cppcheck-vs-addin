@@ -17,7 +17,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <local:ItemsListEditor x:Name="CppcheckLines" Grid.Column="0" Label="Cppcheck suppressions" ToolTip="List of suppressions in cppcheck format"/>
-            <local:ItemsListEditor x:Name="FilesLines" Grid.Column="1" Label="Files excluded from check (C# regex)" ToolTip="List of regular expressions with files names that should not be checked" Loaded="FilesLines_Loaded"/>
+            <local:ItemsListEditor x:Name="FilesLines" Grid.Column="1" Label="Files excluded from check (C# regex)" ToolTip="List of regular expressions with file names that should not be checked"/>
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
