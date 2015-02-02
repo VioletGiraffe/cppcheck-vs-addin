@@ -145,8 +145,13 @@ namespace VSPackage.CPPCheckPlugin
 				case SuppressionScope.suppressThisTypeOfMessagesSolutionWide:
 				case SuppressionScope.suppressAllMessagesThisFileSolutionWide:
 					return solutionSuppressionsFilePath();
-				default:
+				case SuppressionScope.suppressThisMessage:
+				case SuppressionScope.suppressThisTypeOfMessageFileWide:
+				case SuppressionScope.suppressThisTypeOfMessageProjectWide:
+				case SuppressionScope.suppressAllMessagesThisFileProjectWide:
 					return projectSuppressionsFilePath(projectBasePath, projectName);
+				default:
+					throw new InvalidOperationException("Unsupported enum value: " + scope.ToString());
 			}
 		}
 
