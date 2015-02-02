@@ -297,14 +297,19 @@ namespace VSPackage.CPPCheckPlugin
 				dynamic projectFiles = project.Files;
 				foreach (dynamic file in projectFiles)
 				{
+					// Only checking cpp files (performance)
+					// Checking file.FileType == eFileType.eFileTypeCppCode using reflection...
 					Type fileObjectType = file.GetType();
 					// Automatic property binding fails with VS2013 because there the property is *explicitly implemented* and so
 					// only accessible via the declaring interface. Using Reflection to get to the interface and access the property directly instead.
 					var vcFileInterface = fileObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCFile");
-					var fileType = vcFileInterface.GetProperty("FileType").GetValue(file);
-					Type fileTypeEnumType = fileType.GetType();
-					var fileTypeEnumConstant = Enum.GetName(fileTypeEnumType, fileType);
-					if (fileTypeEnumConstant == "eFileTypeCppCode") // Only checking cpp files (performance)
+					var fileTypeValue = vcFileInterface.GetProperty("FileType").GetValue(file);
+					Type fileTypeEnumType = fileTypeValue.GetType();
+					var fileTypeEnumValue = Enum.GetName(fileTypeEnumType, fileTypeValue);
+					var fileTypeCppCodeConstant = "eFileTypeCppCode";
+					// First check the enum contains the value we're looking for
+					Debug.Assert(Enum.GetNames(fileTypeEnumType).Contains(fileTypeCppCodeConstant));
+					if (fileTypeEnumValue == fileTypeCppCodeConstant)
 					{
 						String fileName = file.Name;
 						SourceFile f = createSourceFile(file.FullPath, currentConfig, project);
