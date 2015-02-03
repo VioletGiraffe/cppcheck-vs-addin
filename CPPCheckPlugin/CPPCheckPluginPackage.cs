@@ -347,6 +347,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		SourceFile createSourceFile(string filePath, Configuration targetConfig, dynamic project)
 		{
+			Debug.Assert(isVisualCppProject((object)project));
 			try
 			{
 				var configurationName = targetConfig.ConfigurationName;
