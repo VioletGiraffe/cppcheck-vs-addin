@@ -184,6 +184,7 @@ namespace VSPackage.CPPCheckPlugin
 
 				process = new System.Diagnostics.Process();
 				process.StartInfo.FileName = analyzerExePath;
+				process.StartInfo.WorkingDirectory = Path.GetDirectoryName(analyzerExePath);
 				process.StartInfo.Arguments = arguments;
 				process.StartInfo.CreateNoWindow = true;
 
