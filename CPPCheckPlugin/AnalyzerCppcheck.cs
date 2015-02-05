@@ -14,7 +14,7 @@ namespace VSPackage.CPPCheckPlugin
 		public override void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration,
 			bool isDebugConfiguration, bool analysisOnSavedFile)
 		{
-			if (filesToAnalyze.Count == 0)
+			if (!filesToAnalyze.Any())
 				return;
 
 			Debug.Assert(_numCores > 0);
