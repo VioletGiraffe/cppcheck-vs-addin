@@ -305,6 +305,7 @@ namespace VSPackage.CPPCheckPlugin
 					var vcFileInterface = fileObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCFile");
 					var fileTypeValue = vcFileInterface.GetProperty("FileType").GetValue(file);
 					Type fileTypeEnumType = fileTypeValue.GetType();
+					Debug.Assert(fileTypeEnumType.FullName == "Microsoft.VisualStudio.VCProjectEngine.eFileType");
 					var fileTypeEnumValue = Enum.GetName(fileTypeEnumType, fileTypeValue);
 					var fileTypeCppCodeConstant = "eFileTypeCppCode";
 					// First check the enum contains the value we're looking for
