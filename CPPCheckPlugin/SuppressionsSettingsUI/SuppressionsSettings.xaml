@@ -23,7 +23,7 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <local:ItemsListEditor Grid.Row="0" VerticalAlignment="Stretch" x:Name="IncludesLines" Label="Excluded include paths (regexp)" ToolTip="List of regular expresions with include paths that should be excluded from includes list"/>
+                <local:ItemsListEditor Grid.Row="0" VerticalAlignment="Stretch" x:Name="IncludesLines" Label="Excluded include paths (C# regex)" ToolTip="List of regular expressions with include paths that should be excluded from includes list"/>
                 <TextBlock TextWrapping="Wrap" Grid.Row="1" Text="It is strongly recommended to exlude big libraries for much faster check with lines &quot;.*boost.*&quot;, &quot;.*qt.*&quot;, &quot;.*Microsoft Visual Studio.*&quot;, &quot;.*Microsoft SDKs.*&quot;, etc."/>
             </Grid>
         </Grid>
