@@ -19,7 +19,7 @@ namespace VSPackage.CPPCheckPlugin
 	/// </summary>
 	public partial class CppcheckSettings : Window
 	{
-		public static string DefaultArguments = "--inline-suppr -v --template=\"{file}|{line}|{severity}|{id}|{message}\" --library=windows --library=std";
+		public static string DefaultArguments = "--inline-suppr -v --template=\"{file}|{line}|{severity}|{id}|{message}\" --library=windows --library=std --language=c++";
 
 		public CppcheckSettings()
 		{
