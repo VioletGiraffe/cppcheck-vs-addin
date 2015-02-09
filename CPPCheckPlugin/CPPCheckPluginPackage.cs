@@ -356,7 +356,9 @@ namespace VSPackage.CPPCheckPlugin
 				String toolSetName = config.PlatformToolsetShortName;
 				if (String.IsNullOrEmpty(toolSetName))
 					toolSetName = config.PlatformToolsetFriendlyName;
-				SourceFile sourceForAnalysis = new SourceFile(filePath, project.ProjectDirectory.Replace("\"", ""), project.Name, toolSetName);
+				String projectDirectory = project.ProjectDirectory;
+				String projectName = project.Name;
+				SourceFile sourceForAnalysis = new SourceFile(filePath, projectDirectory, projectName, toolSetName);
 				dynamic toolsCollection = config.Tools;
 				foreach (var tool in toolsCollection)
 				{
