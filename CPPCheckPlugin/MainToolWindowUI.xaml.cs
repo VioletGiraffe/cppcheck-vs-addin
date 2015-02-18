@@ -168,7 +168,7 @@ namespace VSPackage.CPPCheckPlugin
 					int destHeight = iconSize;
 					using (Bitmap bitmap = new Bitmap(destWidth, destHeight))
 					{
-						using (Graphics graphicsSurface = Graphics.FromImage((System.Drawing.Image)bitmap))
+						using (Graphics graphicsSurface = Graphics.FromImage(bitmap))
 						{
 							graphicsSurface.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
 							using (var iconBitmap = fromIcon.ToBitmap())
