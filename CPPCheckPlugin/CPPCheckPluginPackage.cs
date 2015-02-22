@@ -162,7 +162,11 @@ namespace VSPackage.CPPCheckPlugin
 				CommandID settingsWndCmdId = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidSettings);
 				MenuCommand menuSettings = new MenuCommand(onSettingsWindowRequested, settingsWndCmdId);
 				mcs.AddCommand(menuSettings);
-			}
+
+                CommandID projectMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginProjectCmdSet, (int)PkgCmdIDList.cmdidCheckProjectCppcheck1);
+                MenuCommand projectMenuItem = new MenuCommand(onCheckCurrentProjectRequested, projectMenuCommandID);
+                mcs.AddCommand(projectMenuItem);
+            }
 
 			// Creating the tool window
 			FindToolWindow(typeof(MainToolWindow), 0, true);
