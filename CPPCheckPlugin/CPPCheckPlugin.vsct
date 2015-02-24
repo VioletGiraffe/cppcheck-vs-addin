@@ -49,7 +49,9 @@
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_PROJNODE"/>
       </Group>
 
-
+      <Group guid="guidCPPCheckPluginMultiProjectCmdSet" id="MyMultiProjectMenuGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_MULTIPROJ"/>
+      </Group>
 
     </Groups>
     
@@ -91,6 +93,14 @@
         </Strings>
       </Button>
 
+      <Button guid="guidCPPCheckPluginMultiProjectCmdSet" id="cmdidCheckProjectsCppcheck" priority="0x0100" type="Button">
+        <Parent guid="guidCPPCheckPluginMultiProjectCmdSet" id="MyMultiProjectMenuGroup" />
+        <Icon guid="guidImages" id="bmpPic1" />
+        <Strings>
+          <ButtonText>CPPCheck current projects</ButtonText>
+        </Strings>
+      </Button>
+
     </Buttons>
    
     <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
@@ -118,10 +128,15 @@
       <IDSymbol name="cmdidCheckProjectCppcheck" value="0x0100" />
       <IDSymbol name="cmdidSettings" value="0x0101" />
     </GuidSymbol>
-    
+
     <GuidSymbol name="guidCPPCheckPluginProjectCmdSet" value="{9019df3f-c4aa-499b-b46a-0bcb43d006db}">
       <IDSymbol name="MyProjectMenuGroup" value="0x1022" />
       <IDSymbol name="cmdidCheckProjectCppcheck1" value="0x0100" />
+    </GuidSymbol>
+
+    <GuidSymbol name="guidCPPCheckPluginMultiProjectCmdSet" value="{a21f0125-e59b-4ac6-8db6-fc01601237d7}">
+      <IDSymbol name="MyMultiProjectMenuGroup" value="0x1023" />
+      <IDSymbol name="cmdidCheckProjectsCppcheck" value="0x0100" />
     </GuidSymbol>
 
 

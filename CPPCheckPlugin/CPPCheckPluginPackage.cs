@@ -22,7 +22,7 @@ namespace VSPackage.CPPCheckPlugin
 	[InstalledProductRegistration("#110", "#112", "1.2.0", IconResourceID = 400)]
 	// This attribute is needed to let the shell know that this package exposes some menus.
 	[ProvideMenuResource("Menus.ctmenu", 1)]
-	[ProvideToolWindow(typeof(MainToolWindow), Style=VsDockStyle.Tabbed, Window=Microsoft.VisualStudio.Shell.Interop.ToolWindowGuids.Outputwindow, MultiInstances=false, Transient=false)]
+	[ProvideToolWindow(typeof(MainToolWindow), Style = VsDockStyle.Tabbed, Window = Microsoft.VisualStudio.Shell.Interop.ToolWindowGuids.Outputwindow, MultiInstances = false, Transient = false)]
 	[Guid(GuidList.guidCPPCheckPluginPkgString)]
 	public sealed class CPPCheckPluginPackage : Package
 	{
@@ -81,8 +81,8 @@ namespace VSPackage.CPPCheckPlugin
 		public static String solutionName()
 		{
 			try { return System.IO.Path.GetFileNameWithoutExtension(_dte.Solution.FullName); }
-			catch(Exception) { return ""; }
-			
+			catch (Exception) { return ""; }
+
 		}
 
 		public static String solutionPath()
@@ -134,7 +134,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		protected override void Initialize()
 		{
-			Debug.WriteLine (string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
+			Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
 			base.Initialize();
 
 			_dte = (EnvDTE.DTE)GetService(typeof(SDTE));
@@ -152,21 +152,25 @@ namespace VSPackage.CPPCheckPlugin
 
 			// Add our command handlers for menu (commands must exist in the .vsct file)
 			OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-			if ( null != mcs )
+			if (null != mcs)
 			{
 				// Create the command for the menu item.
 				CommandID menuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidCheckProjectCppcheck);
 				MenuCommand menuItem = new MenuCommand(onCheckCurrentProjectRequested, menuCommandID);
-				mcs.AddCommand( menuItem );
+				mcs.AddCommand(menuItem);
 				// Create the command for the settings window
 				CommandID settingsWndCmdId = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidSettings);
 				MenuCommand menuSettings = new MenuCommand(onSettingsWindowRequested, settingsWndCmdId);
 				mcs.AddCommand(menuSettings);
 
-                CommandID projectMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginProjectCmdSet, (int)PkgCmdIDList.cmdidCheckProjectCppcheck1);
-                MenuCommand projectMenuItem = new MenuCommand(onCheckCurrentProjectRequested, projectMenuCommandID);
-                mcs.AddCommand(projectMenuItem);
-            }
+				CommandID projectMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginProjectCmdSet, (int)PkgCmdIDList.cmdidCheckProjectCppcheck1);
+				MenuCommand projectMenuItem = new MenuCommand(onCheckAllProjectsRequested, projectMenuCommandID);
+				mcs.AddCommand(projectMenuItem);
+
+				CommandID projectsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginMultiProjectCmdSet, (int)PkgCmdIDList.cmdidCheckProjectsCppcheck);
+				MenuCommand projectsMenuItem = new MenuCommand(onCheckAllProjectsRequested, projectsMenuCommandID);
+				mcs.AddCommand(projectsMenuItem);
+			}
 
 			// Creating the tool window
 			FindToolWindow(typeof(MainToolWindow), 0, true);
@@ -199,7 +203,12 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void onCheckCurrentProjectRequested(object sender, EventArgs e)
 		{
-			checkCurrentProject();
+			checkFirstActiveProject();
+		}
+
+		private void onCheckAllProjectsRequested(object sender, EventArgs e)
+		{
+			checkAllActiveProjects();
 		}
 
 		private void onSettingsWindowRequested(object sender, EventArgs e)
@@ -272,49 +281,84 @@ namespace VSPackage.CPPCheckPlugin
 			Properties.Settings.Default.CheckSavedFiles = (reply == DialogResult.Yes);
 		}
 
-		private void checkCurrentProject()
+		private Object[] getActiveProjects()
 		{
 			Object[] activeProjects = (Object[])_dte.ActiveSolutionProjects;
 			if (!activeProjects.Any())
 			{
 				System.Windows.MessageBox.Show("No project selected in Solution Explorer - nothing to check.");
+				return null;
+			}
+			return activeProjects;
+		}
+
+		private void checkFirstActiveProject()
+		{
+			Object[] activeProjects = getActiveProjects();
+			if (activeProjects != null)
+				checkProjects(new Object[1] { activeProjects[0] });
+		}
+
+		private void checkAllActiveProjects()
+		{
+			Object[] activeProjects = getActiveProjects();
+			if (activeProjects != null)
+				checkProjects(activeProjects);
+		}
+
+		private List<SourceFile> getProjectFiles(dynamic o, Configuration currentConfig)
+		{
+			dynamic project = o.Object;
+			if (!isVisualCppProject(project))
+			{
+				System.Windows.MessageBox.Show("Only C++ projects can be checked.");
+				return null;
+			}
+			List<SourceFile> files = new List<SourceFile>();
+			dynamic projectFiles = project.Files;
+			foreach (dynamic file in projectFiles)
+			{
+				if (isCppFile(file))
+				{
+					String fileName = file.Name;
+					SourceFile f = createSourceFile(file.FullPath, currentConfig, project);
+					if (f != null)
+						files.Add(f);
+				}
+			}
+			return files;
+		}
+
+		private Configuration getCurrentConfig(Object[] activeProjects)
+		{
+			Configuration config = null;
+			foreach (dynamic o in activeProjects)
+				try { config = ((Project)o).ConfigurationManager.ActiveConfiguration; }
+				catch (Exception) { config = null; }
+			return config;
+		}
+
+		private void checkProjects(Object[] activeProjects)
+		{
+			Debug.Assert(activeProjects.Any());
+
+			Configuration currentConfig = getCurrentConfig(activeProjects);
+			if (currentConfig == null)
+			{
+				MessageBox.Show("Cannot perform check - no valid configuration selected", "Cppcheck error");
 				return;
 			}
-
-			Configuration currentConfig = null;
-			List<SourceFile> files = new List<SourceFile>();
+			List<SourceFile> allFiles = new List<SourceFile>();
 			foreach (dynamic o in activeProjects)
 			{
-				dynamic project = o.Object;
-				if (!isVisualCppProject(project))
-				{
-					System.Windows.MessageBox.Show("Only C++ projects can be checked.");
-					return;
-				}
-				try { currentConfig = ((Project)o).ConfigurationManager.ActiveConfiguration; }
-				catch (Exception) { currentConfig = null; }
-				if (currentConfig == null)
-				{
-					MessageBox.Show("Cannot perform check - no valid configuration selected", "Cppcheck error");
-					return;
-				}
-				dynamic projectFiles = project.Files;
-				foreach (dynamic file in projectFiles)
-				{
-					if (isCppFile(file))
-					{
-						String fileName = file.Name;
-						SourceFile f = createSourceFile(file.FullPath, currentConfig, project);
-						if (f != null)
-							files.Add(f);
-					}
-				}
-				break; // Only checking one project at a time for now
+				dynamic projectFiles = getProjectFiles(o, currentConfig);
+				if (projectFiles != null)
+					allFiles.AddRange(projectFiles);
 			}
 
 			MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.ProjectAnalysis;
 			MainToolWindow.Instance.showIfWindowNotCreated();
-			runAnalysis(files, currentConfig, _outputPane, false);
+			runAnalysis(allFiles, currentConfig, _outputPane, false);
 		}
 
 		private static bool isCppFile(dynamic file)
