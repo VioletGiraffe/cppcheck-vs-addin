@@ -22,7 +22,7 @@ namespace VSPackage.CPPCheckPlugin
 	[InstalledProductRegistration("#110", "#112", "1.2.0", IconResourceID = 400)]
 	// This attribute is needed to let the shell know that this package exposes some menus.
 	[ProvideMenuResource("Menus.ctmenu", 1)]
-	[ProvideToolWindow(typeof(MainToolWindow), Style=VsDockStyle.Tabbed, Window=Microsoft.VisualStudio.Shell.Interop.ToolWindowGuids.Outputwindow, MultiInstances=false, Transient=false)]
+	[ProvideToolWindow(typeof(MainToolWindow), Style=VsDockStyle.Tabbed, Window=ToolWindowGuids.Outputwindow, MultiInstances=false, Transient=false)]
 	[Guid(GuidList.guidCPPCheckPluginPkgString)]
 	public sealed class CPPCheckPluginPackage : Package
 	{
