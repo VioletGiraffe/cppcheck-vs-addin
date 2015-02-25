@@ -69,8 +69,7 @@ namespace VSPackage.CPPCheckPlugin
 			Dispose(false);
 		}
 
-		public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputPane, bool is64bitConfiguration,
-			bool isDebugConfiguration, bool analysisOnSavedFile);
+		public abstract void analyze(List<ConfiguredFiles> configuredFiles, OutputWindowPane outputPane, bool analysisOnSavedFile);
 
 		public abstract void suppressProblem(Problem p, SuppressionScope scope);
 
@@ -80,13 +79,14 @@ namespace VSPackage.CPPCheckPlugin
 
 		protected abstract void analysisFinished();
 
-		protected void run(string analyzerExePath, string arguments, OutputWindowPane outputPane)
+		protected void run(string analyzerExePath, List<string> arguments, OutputWindowPane outputPane)
 		{
 			_outputPane = outputPane;
+			_allArguments = arguments;
 
 			abortThreadIfAny();
 			MainToolWindow.Instance.clear();
-			_thread = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath, arguments));
+			_thread = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath));
 			_thread.Name = "cppcheck";
 			_thread.Start();
 		}
@@ -172,85 +172,88 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		private void analyzerThreadFunc(string analyzerExePath, string arguments)
+		private void analyzerThreadFunc(string analyzerExePath)
 		{
-			System.Diagnostics.Process process = null;
 			_terminateThread = false;
-			try
+			foreach (var arguments in _allArguments)
 			{
-				Debug.Assert(!String.IsNullOrEmpty(analyzerExePath));
-				Debug.Assert(!String.IsNullOrEmpty(arguments));
-				Debug.Assert(_outputPane != null);
-
-				process = new System.Diagnostics.Process();
-				process.StartInfo.FileName = analyzerExePath;
-				process.StartInfo.WorkingDirectory = Path.GetDirectoryName(analyzerExePath);
-				process.StartInfo.Arguments = arguments;
-				process.StartInfo.CreateNoWindow = true;
-
-				// Set UseShellExecute to false for output redirection.
-				process.StartInfo.UseShellExecute = false;
-
-				// Redirect the standard output of the command.
-				process.StartInfo.RedirectStandardOutput = true;
-				process.StartInfo.RedirectStandardError = true;
-
-				// Set our event handler to asynchronously read the sort output.
-				process.OutputDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
-				process.ErrorDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
-
-				_outputPane.OutputString("Starting analyzer with arguments: " + arguments + "\n");
-
-				var timer = Stopwatch.StartNew();
-				// Start the process.
-				process.Start();
-				process.PriorityClass = ProcessPriorityClass.Idle;
-
-				onProgressUpdated(0);
-
-				// Start the asynchronous read of the sort output stream.
-				process.BeginOutputReadLine();
-				process.BeginErrorReadLine();
-				// Wait for analysis completion
-				while (!process.WaitForExit(30))
+				System.Diagnostics.Process process = null;
+				try
 				{
-					if (_terminateThread)
+					Debug.Assert(!String.IsNullOrEmpty(analyzerExePath));
+					Debug.Assert(!String.IsNullOrEmpty(arguments));
+					Debug.Assert(_outputPane != null);
+
+					process = new System.Diagnostics.Process();
+					process.StartInfo.FileName = analyzerExePath;
+					process.StartInfo.WorkingDirectory = Path.GetDirectoryName(analyzerExePath);
+					process.StartInfo.Arguments = arguments;
+					process.StartInfo.CreateNoWindow = true;
+
+					// Set UseShellExecute to false for output redirection.
+					process.StartInfo.UseShellExecute = false;
+
+					// Redirect the standard output of the command.
+					process.StartInfo.RedirectStandardOutput = true;
+					process.StartInfo.RedirectStandardError = true;
+
+					// Set our event handler to asynchronously read the sort output.
+					process.OutputDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
+					process.ErrorDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
+
+					_outputPane.OutputString("Starting analyzer with arguments: " + arguments + "\n");
+
+					var timer = Stopwatch.StartNew();
+					// Start the process.
+					process.Start();
+					process.PriorityClass = ProcessPriorityClass.Idle;
+
+					onProgressUpdated(0);
+
+					// Start the asynchronous read of the sort output stream.
+					process.BeginOutputReadLine();
+					process.BeginErrorReadLine();
+					// Wait for analysis completion
+					while (!process.WaitForExit(30))
 					{
-						// finally block will run anyway and do the cleanup
-						return;
+						if (_terminateThread)
+						{
+							// finally block will run anyway and do the cleanup
+							return;
+						}
 					}
+					timer.Stop();
+					analysisFinished();
+					if (process.ExitCode != 0)
+						_outputPane.OutputString(analyzerExePath + " has exited with code " + process.ExitCode.ToString() + "\n");
+					else
+					{
+						double timeElapsed = Math.Round(timer.Elapsed.TotalSeconds, 3);
+						_outputPane.OutputString("Analysis completed in " + timeElapsed.ToString() + " seconds\n");
+					}
+					process.Close();
+					process = null;
 				}
-				timer.Stop();
-				analysisFinished();
-				if (process.ExitCode != 0)
-					_outputPane.OutputString(analyzerExePath + " has exited with code " + process.ExitCode.ToString() + "\n");
-				else
+				catch (Exception ex)
 				{
-					double timeElapsed = Math.Round(timer.Elapsed.TotalSeconds, 3);
-					_outputPane.OutputString("Analysis completed in " + timeElapsed.ToString() + " seconds\n");
+					DebugTracer.Trace(ex);
 				}
-				process.Close();
-				process = null;
-			}
-			catch (Exception ex)
-			{
-				DebugTracer.Trace(ex);
-			}
-			finally
-			{
-				onProgressUpdated(100);
-				if (process != null)
+				finally
 				{
-					try
+					onProgressUpdated(100);
+					if (process != null)
 					{
-						process.Kill();
-					}
-					catch (Exception ex)
-					{
-						DebugTracer.Trace(ex);
-					}
+						try
+						{
+							process.Kill();
+						}
+						catch (Exception ex)
+						{
+							DebugTracer.Trace(ex);
+						}
 
-					process.Dispose();
+						process.Dispose();
+					}
 				}
 			}
 		}
@@ -306,5 +309,6 @@ namespace VSPackage.CPPCheckPlugin
 
 		private System.Threading.Thread _thread = null;
 		private bool _terminateThread = false;
+		private List<string> _allArguments;
 	}
 }

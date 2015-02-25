@@ -306,9 +306,9 @@ namespace VSPackage.CPPCheckPlugin
 				checkProjects(activeProjects);
 		}
 
-		private List<SourceFile> getProjectFiles(dynamic o, Configuration currentConfig)
+		private List<SourceFile> getProjectFiles(Project p, Configuration currentConfig)
 		{
-			dynamic project = o.Object;
+			dynamic project = p.Object;
 			if (!isVisualCppProject(project))
 			{
 				System.Windows.MessageBox.Show("Only C++ projects can be checked.");
@@ -329,36 +329,44 @@ namespace VSPackage.CPPCheckPlugin
 			return files;
 		}
 
-		private Configuration getCurrentConfig(Object[] activeProjects)
+		private Configuration getConfiguration(Project project)
 		{
-			Configuration config = null;
-			foreach (dynamic o in activeProjects)
-				try { config = ((Project)o).ConfigurationManager.ActiveConfiguration; }
-				catch (Exception) { config = null; }
-			return config;
+			try 
+			{ 
+				return project.ConfigurationManager.ActiveConfiguration; 
+			}
+			catch (Exception) 
+			{ 
+				return null; 
+			}
 		}
 
 		private void checkProjects(Object[] activeProjects)
 		{
 			Debug.Assert(activeProjects.Any());
 
-			Configuration currentConfig = getCurrentConfig(activeProjects);
-			if (currentConfig == null)
-			{
-				MessageBox.Show("Cannot perform check - no valid configuration selected", "Cppcheck error");
-				return;
-			}
-			List<SourceFile> allFiles = new List<SourceFile>();
+			List<ConfiguredFiles> allConfiguredFiles = new List<ConfiguredFiles>();
 			foreach (dynamic o in activeProjects)
 			{
-				dynamic projectFiles = getProjectFiles(o, currentConfig);
-				if (projectFiles != null)
-					allFiles.AddRange(projectFiles);
+				Configuration configuration = getConfiguration(o);
+				if (configuration == null)
+				{
+					MessageBox.Show("Cannot perform check - no valid configuration selected", "Cppcheck error");
+					return;
+				}
+				dynamic projectFiles = getProjectFiles(o, configuration);
+				if (projectFiles == null)
+					continue;
+
+				ConfiguredFiles configuredFiles = new ConfiguredFiles();
+				configuredFiles.Files = projectFiles;
+				configuredFiles.Configuration = configuration;
+				allConfiguredFiles.Add(configuredFiles);
 			}
 
 			MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.ProjectAnalysis;
 			MainToolWindow.Instance.showIfWindowNotCreated();
-			runAnalysis(allFiles, currentConfig, _outputPane, false);
+			runAnalysis(allConfiguredFiles, _outputPane, false);
 		}
 
 		private static bool isCppFile(dynamic file)
@@ -383,21 +391,22 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void runSavedFileAnalysis(SourceFile file, Configuration currentConfig, OutputWindowPane outputPane)
 		{
-			var list = new List<SourceFile>();
-			list.Add(file);
-			runAnalysis(list, currentConfig, outputPane, true);
+			Debug.Assert(currentConfig != null);
+			
+			var configuredFiles = new ConfiguredFiles();
+			configuredFiles.Files = new List<SourceFile> {file};
+			configuredFiles.Configuration = currentConfig;
+			runAnalysis(new List<ConfiguredFiles> {configuredFiles}, outputPane, true);
 		}
 
-		private void runAnalysis(List<SourceFile> files, Configuration currentConfig, OutputWindowPane outputPane, bool analysisOnSavedFile)
+		private void runAnalysis(List<ConfiguredFiles> configuredFiles, OutputWindowPane outputPane, bool analysisOnSavedFile)
 		{
 			Debug.Assert(outputPane != null);
-			Debug.Assert(currentConfig != null);
 			outputPane.Clear();
 
-			var currentConfigName = currentConfig.ConfigurationName;
 			foreach (var analyzer in _analyzers)
 			{
-				analyzer.analyze(files, outputPane, currentConfigName.Contains("64"), currentConfigName.ToLower().Contains("debug"), analysisOnSavedFile);
+				analyzer.analyze(configuredFiles, outputPane, analysisOnSavedFile);
 			}
 		}
 
