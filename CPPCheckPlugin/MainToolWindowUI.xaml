@@ -66,10 +66,26 @@
             </ListView.ItemContainerStyle>
             <ListView.View>
                 <GridView>
-                    <GridViewColumn x:Name="SeverityColumn" Header="" CellTemplate="{StaticResource Template}" Width ="Auto"/>
-                    <GridViewColumn x:Name="FileNameColumn" Header="File" DisplayMemberBinding="{Binding FileName}" Width="Auto"/>
-                    <GridViewColumn x:Name="LineColumn" Header="Line" DisplayMemberBinding="{Binding Line}" Width="Auto"/>
-                    <GridViewColumn x:Name="MessageColumn" Header="Message" DisplayMemberBinding="{Binding Message}" Width="{Binding ElementName=helperField, Path=ActualWidth}"/>
+                    <GridViewColumn x:Name="SeverityColumn" CellTemplate="{StaticResource Template}" Width ="Auto">
+                        <GridViewColumn.Header>
+                            <GridViewColumnHeader Tag="Severity" Click="problemColumnHeader_Click"></GridViewColumnHeader>
+                        </GridViewColumn.Header>
+                    </GridViewColumn>
+                    <GridViewColumn x:Name="FileNameColumn" DisplayMemberBinding="{Binding FileName}" Width="Auto">
+                        <GridViewColumn.Header>
+                            <GridViewColumnHeader Tag="FileName" Click="problemColumnHeader_Click">File</GridViewColumnHeader>
+                        </GridViewColumn.Header>
+                    </GridViewColumn>
+                    <GridViewColumn x:Name="LineColumn" DisplayMemberBinding="{Binding Line}" Width="Auto">
+                        <GridViewColumn.Header>
+                            <GridViewColumnHeader Tag="Line" Click="problemColumnHeader_Click">Line</GridViewColumnHeader>
+                        </GridViewColumn.Header>
+                    </GridViewColumn>
+                    <GridViewColumn x:Name="MessageColumn" DisplayMemberBinding="{Binding Message}" Width="{Binding ElementName=helperField, Path=ActualWidth}">
+                        <GridViewColumn.Header>
+                            <GridViewColumnHeader Tag="Message" Click="problemColumnHeader_Click">Message</GridViewColumnHeader>
+                        </GridViewColumn.Header>
+                    </GridViewColumn>
                 </GridView>
             </ListView.View>
         </ListView>

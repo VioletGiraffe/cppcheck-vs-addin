@@ -1,7 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -34,6 +37,9 @@ namespace VSPackage.CPPCheckPlugin
 		public event openProblemInEditor EditorRequestedForProblem;
 
 		private static int iconSize = 20;
+
+        private GridViewColumnHeader listViewSortCol = null;
+        private SortAdorner listViewSortAdorner = null;
 
 		public MainToolWindowUI()
 		{
@@ -121,6 +127,27 @@ namespace VSPackage.CPPCheckPlugin
 			return obj as TParent;
 		}
 
+        private void problemColumnHeader_Click(object sender, RoutedEventArgs e)
+        {
+            GridViewColumnHeader column = (sender as GridViewColumnHeader);
+            string sortBy = column.Tag.ToString();
+
+            if(listViewSortCol != null)
+            {
+                    AdornerLayer.GetAdornerLayer(listViewSortCol).Remove(listViewSortAdorner);
+                    listView.Items.SortDescriptions.Clear();
+            }
+
+            ListSortDirection newDir = ListSortDirection.Ascending;
+            if(listViewSortCol == column && listViewSortAdorner.Direction == newDir)
+                    newDir = ListSortDirection.Descending;
+
+            listViewSortCol = column;
+            listViewSortAdorner = new SortAdorner(listViewSortCol, newDir);
+            AdornerLayer.GetAdornerLayer(listViewSortCol).Add(listViewSortAdorner);
+            listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
+        }
+
 		public class ProblemsListItem
 		{
 			public ProblemsListItem(Problem problem)
@@ -143,6 +170,11 @@ namespace VSPackage.CPPCheckPlugin
 			{
 				get { return _problem.Line; }
 			}
+
+            public Problem.SeverityLevel Severity
+            {
+                get { return _problem.Severity; }
+            }
 
 			public ImageSource Icon
 			{
@@ -206,4 +238,39 @@ namespace VSPackage.CPPCheckPlugin
 		[System.Runtime.InteropServices.DllImport("gdi32.dll")]
 		public static extern bool DeleteObject(IntPtr hObject);
 	}
+
+    public class SortAdorner : Adorner
+    {
+        private static Geometry ascGeometry =
+                Geometry.Parse("M 0 4 L 3.5 0 L 7 4 Z");
+
+        private static Geometry descGeometry =
+                Geometry.Parse("M 0 0 L 3.5 4 L 7 0 Z");
+
+        public ListSortDirection Direction { get; private set; }
+
+        public SortAdorner(UIElement element, ListSortDirection dir)
+            : base(element)
+        {
+            this.Direction = dir;
+        }
+
+        protected override void OnRender(DrawingContext drawingContext)
+        {
+            base.OnRender(drawingContext);
+
+            if (AdornedElement.RenderSize.Width < 20)
+                return;
+
+            TranslateTransform transform = new TranslateTransform(AdornedElement.RenderSize.Width - 15, (AdornedElement.RenderSize.Height - 5) / 2);
+            drawingContext.PushTransform(transform);
+
+            Geometry geometry = ascGeometry;
+            if (this.Direction == ListSortDirection.Descending)
+                geometry = descGeometry;
+            drawingContext.DrawGeometry(System.Windows.Media.Brushes.Black, null, geometry);
+
+            drawingContext.Pop();
+        }
+    }
 }
