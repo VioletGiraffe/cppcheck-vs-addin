@@ -44,6 +44,8 @@ namespace VSPackage.CPPCheckPlugin
 		public MainToolWindowUI()
 		{
 			InitializeComponent();
+
+            
 		}
 
 		private void menuItem_suppressThisMessageProjectWide(object sender, RoutedEventArgs e)
@@ -145,7 +147,33 @@ namespace VSPackage.CPPCheckPlugin
             listViewSortCol = column;
             listViewSortAdorner = new SortAdorner(listViewSortCol, newDir);
             AdornerLayer.GetAdornerLayer(listViewSortCol).Add(listViewSortAdorner);
-            listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
+
+            if (sortBy == "Severity")
+            {
+                listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
+                listView.Items.SortDescriptions.Add(new SortDescription("FileName", ListSortDirection.Ascending));
+                listView.Items.SortDescriptions.Add(new SortDescription("Line", ListSortDirection.Ascending));
+            }
+            else if (sortBy == "FileName")
+            {
+                listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
+                listView.Items.SortDescriptions.Add(new SortDescription("Line", ListSortDirection.Ascending));
+            }
+            else if (sortBy == "Line")
+            {
+                listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
+                listView.Items.SortDescriptions.Add(new SortDescription("FileName", ListSortDirection.Ascending));
+            }
+            else if (sortBy == "Message")
+            {
+                listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
+                listView.Items.SortDescriptions.Add(new SortDescription("FileName", ListSortDirection.Ascending));
+                listView.Items.SortDescriptions.Add(new SortDescription("Line", ListSortDirection.Ascending));
+            }
+            else
+            {
+                listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
+            }
         }
 
 		public class ProblemsListItem
