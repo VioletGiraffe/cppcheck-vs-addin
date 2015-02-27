@@ -78,7 +78,7 @@
                     </GridViewColumn>
                     <GridViewColumn x:Name="LineColumn" DisplayMemberBinding="{Binding Line}" Width="Auto">
                         <GridViewColumn.Header>
-                            <GridViewColumnHeader Tag="Line" Click="problemColumnHeader_Click">Line</GridViewColumnHeader>
+                            <GridViewColumnHeader Tag="Line">Line</GridViewColumnHeader>
                         </GridViewColumn.Header>
                     </GridViewColumn>
                     <GridViewColumn x:Name="MessageColumn" DisplayMemberBinding="{Binding Message}" Width="{Binding ElementName=helperField, Path=ActualWidth}">

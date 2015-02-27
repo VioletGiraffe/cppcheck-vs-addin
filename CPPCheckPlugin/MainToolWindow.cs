@@ -57,6 +57,7 @@ namespace VSPackage.CPPCheckPlugin
 		public void clear()
 		{
 			_listView.Items.Clear();
+            _ui.ClearSorting();
 		}
 
 		public bool isEmpty()
