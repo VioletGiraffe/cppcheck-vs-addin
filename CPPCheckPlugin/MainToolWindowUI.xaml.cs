@@ -44,8 +44,6 @@ namespace VSPackage.CPPCheckPlugin
 		public MainToolWindowUI()
 		{
 			InitializeComponent();
-
-            
 		}
 
 		private void menuItem_suppressThisMessageProjectWide(object sender, RoutedEventArgs e)
@@ -134,15 +132,13 @@ namespace VSPackage.CPPCheckPlugin
             GridViewColumnHeader column = (sender as GridViewColumnHeader);
             string sortBy = column.Tag.ToString();
 
-            if(listViewSortCol != null)
-            {
-                    AdornerLayer.GetAdornerLayer(listViewSortCol).Remove(listViewSortAdorner);
-                    listView.Items.SortDescriptions.Clear();
-            }
+            ClearSorting();
 
             ListSortDirection newDir = ListSortDirection.Ascending;
-            if(listViewSortCol == column && listViewSortAdorner.Direction == newDir)
-                    newDir = ListSortDirection.Descending;
+            if (listViewSortCol == column && listViewSortAdorner.Direction == newDir)
+            {
+                newDir = ListSortDirection.Descending;
+            }
 
             listViewSortCol = column;
             listViewSortAdorner = new SortAdorner(listViewSortCol, newDir);
@@ -159,11 +155,6 @@ namespace VSPackage.CPPCheckPlugin
                 listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
                 listView.Items.SortDescriptions.Add(new SortDescription("Line", ListSortDirection.Ascending));
             }
-            else if (sortBy == "Line")
-            {
-                listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
-                listView.Items.SortDescriptions.Add(new SortDescription("FileName", ListSortDirection.Ascending));
-            }
             else if (sortBy == "Message")
             {
                 listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
@@ -173,6 +164,15 @@ namespace VSPackage.CPPCheckPlugin
             else
             {
                 listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
+            }
+        }
+
+        public void ClearSorting()
+        {
+            if(listViewSortCol != null)
+            {
+                AdornerLayer.GetAdornerLayer(listViewSortCol).Remove(listViewSortAdorner);
+                listView.Items.SortDescriptions.Clear();
             }
         }
 
@@ -269,11 +269,8 @@ namespace VSPackage.CPPCheckPlugin
 
     public class SortAdorner : Adorner
     {
-        private static Geometry ascGeometry =
-                Geometry.Parse("M 0 4 L 3.5 0 L 7 4 Z");
-
-        private static Geometry descGeometry =
-                Geometry.Parse("M 0 0 L 3.5 4 L 7 0 Z");
+        private static Geometry ascGeometry = Geometry.Parse("M 0 4 L 3.5 0 L 7 4 Z");
+        private static Geometry descGeometry = Geometry.Parse("M 0 0 L 3.5 4 L 7 0 Z");
 
         public ListSortDirection Direction { get; private set; }
 
@@ -288,14 +285,18 @@ namespace VSPackage.CPPCheckPlugin
             base.OnRender(drawingContext);
 
             if (AdornedElement.RenderSize.Width < 20)
+            {
                 return;
+            }
 
             TranslateTransform transform = new TranslateTransform(AdornedElement.RenderSize.Width - 15, (AdornedElement.RenderSize.Height - 5) / 2);
             drawingContext.PushTransform(transform);
 
             Geometry geometry = ascGeometry;
             if (this.Direction == ListSortDirection.Descending)
+            {
                 geometry = descGeometry;
+            }
             drawingContext.DrawGeometry(System.Windows.Media.Brushes.Black, null, geometry);
 
             drawingContext.Pop();
