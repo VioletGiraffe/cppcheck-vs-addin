@@ -69,8 +69,7 @@ namespace VSPackage.CPPCheckPlugin
 			Dispose(false);
 		}
 
-		public abstract void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputPane, bool is64bitConfiguration,
-			bool isDebugConfiguration, bool analysisOnSavedFile);
+		public abstract void analyze(List<ConfiguredFiles> configuredFiles, OutputWindowPane outputPane, bool analysisOnSavedFile);
 
 		public abstract void suppressProblem(Problem p, SuppressionScope scope);
 
@@ -80,13 +79,14 @@ namespace VSPackage.CPPCheckPlugin
 
 		protected abstract void analysisFinished();
 
-		protected void run(string analyzerExePath, string arguments, OutputWindowPane outputPane)
+		protected void run(string analyzerExePath, List<string> arguments, OutputWindowPane outputPane)
 		{
 			_outputPane = outputPane;
+			_allArguments = arguments;
 
 			abortThreadIfAny();
 			MainToolWindow.Instance.clear();
-			_thread = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath, arguments));
+			_thread = new System.Threading.Thread(() => analyzerThreadFunc(analyzerExePath));
 			_thread.Name = "cppcheck";
 			_thread.Start();
 		}
@@ -172,10 +172,16 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		private void analyzerThreadFunc(string analyzerExePath, string arguments)
+		private void analyzerThreadFunc(string analyzerExePath)
+		{
+			_terminateThread = false;
+			foreach (var arguments in _allArguments)
+				startAnalyzerProcess(analyzerExePath, arguments);
+		}
+
+		private void startAnalyzerProcess(string analyzerExePath, string arguments)
 		{
 			System.Diagnostics.Process process = null;
-			_terminateThread = false;
 			try
 			{
 				Debug.Assert(!String.IsNullOrEmpty(analyzerExePath));
@@ -306,5 +312,6 @@ namespace VSPackage.CPPCheckPlugin
 
 		private System.Threading.Thread _thread = null;
 		private bool _terminateThread = false;
+		private List<string> _allArguments;
 	}
 }
