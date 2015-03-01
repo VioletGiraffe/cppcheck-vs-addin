@@ -11,7 +11,7 @@ namespace VSPackage.CPPCheckPlugin
 {
 	class AnalyzerCppcheck : ICodeAnalyzer
 	{
-		private string getCPPCheckArgs(ConfiguredFiles configuredFiles, bool analysisOnSavedFile)
+		private string getCPPCheckArgs(ConfiguredFiles configuredFiles, bool analysisOnSavedFile, bool multipleProjects)
 		{
 			Debug.Assert(_numCores > 0);
 			String cppheckargs = Properties.Settings.Default.DefaultArguments;
@@ -46,7 +46,8 @@ namespace VSPackage.CPPCheckPlugin
 				unitedSuppressionsInfo.UnionWith(readSuppressions(SuppressionStorage.Project, path, filesToAnalyze[0].ProjectName));
 			}
 
-			cppheckargs += (" --relative-paths=\"" + filesToAnalyze[0].BaseProjectPath + "\"");
+			if (!multipleProjects)
+				cppheckargs += (" --relative-paths=\"" + filesToAnalyze[0].BaseProjectPath + "\"");
 			cppheckargs += (" -j " + _numCores.ToString());
 			if (Properties.Settings.Default.InconclusiveChecksEnabled)
 				cppheckargs += " --inconclusive ";
@@ -173,7 +174,7 @@ namespace VSPackage.CPPCheckPlugin
 			
 			List<string> cppheckargs = new List<string>();
 			foreach (var configuredFiles in allConfiguredFiles)
-				cppheckargs.Add(getCPPCheckArgs(configuredFiles, analysisOnSavedFile));
+				cppheckargs.Add(getCPPCheckArgs(configuredFiles, analysisOnSavedFile, allConfiguredFiles.Count > 1));
 
 			string analyzerPath = Properties.Settings.Default.CPPcheckPath;
 			while (!File.Exists(analyzerPath))
