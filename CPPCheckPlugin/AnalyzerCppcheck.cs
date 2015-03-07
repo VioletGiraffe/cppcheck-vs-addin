@@ -11,12 +11,8 @@ namespace VSPackage.CPPCheckPlugin
 {
 	class AnalyzerCppcheck : ICodeAnalyzer
 	{
-		public override void analyze(List<SourceFile> filesToAnalyze, OutputWindowPane outputWindow, bool is64bitConfiguration,
-			bool isDebugConfiguration, bool analysisOnSavedFile)
+		private string getCPPCheckArgs(ConfiguredFiles configuredFiles, bool analysisOnSavedFile, bool multipleProjects)
 		{
-			if (!filesToAnalyze.Any())
-				return;
-
 			Debug.Assert(_numCores > 0);
 			String cppheckargs = Properties.Settings.Default.DefaultArguments;
 
@@ -32,6 +28,7 @@ namespace VSPackage.CPPCheckPlugin
 			SuppressionsInfo unitedSuppressionsInfo = readSuppressions(ICodeAnalyzer.SuppressionStorage.Global);
 			unitedSuppressionsInfo.UnionWith(readSuppressions(ICodeAnalyzer.SuppressionStorage.Solution));
 
+			var filesToAnalyze = configuredFiles.Files;
 			// Creating the list of all different project locations (no duplicates)
 			HashSet<string> projectPaths = new HashSet<string>(); // enforce uniqueness on the list of project paths
 			foreach (var file in filesToAnalyze)
@@ -49,7 +46,8 @@ namespace VSPackage.CPPCheckPlugin
 				unitedSuppressionsInfo.UnionWith(readSuppressions(SuppressionStorage.Project, path, filesToAnalyze[0].ProjectName));
 			}
 
-			cppheckargs += (" --relative-paths=\"" + filesToAnalyze[0].BaseProjectPath + "\"");
+			if (!multipleProjects)
+				cppheckargs += (" --relative-paths=\"" + filesToAnalyze[0].BaseProjectPath + "\"");
 			cppheckargs += (" -j " + _numCores.ToString());
 			if (Properties.Settings.Default.InconclusiveChecksEnabled)
 				cppheckargs += " --inconclusive ";
@@ -126,7 +124,7 @@ namespace VSPackage.CPPCheckPlugin
 				macros.Add("WIN32");
 				macros.Add("_WIN32");
 
-				if (is64bitConfiguration)
+				if (configuredFiles.is64bitConfiguration())
 				{
 					macros.Add("_M_X64");
 					macros.Add("_WIN64");
@@ -136,7 +134,7 @@ namespace VSPackage.CPPCheckPlugin
 					macros.Add("_M_IX86");
 				}
 
-				if (isDebugConfiguration)
+				if (configuredFiles.isDebugConfiguration())
 					macros.Add("_DEBUG");
 
 				foreach (string macro in macros)
@@ -165,6 +163,18 @@ namespace VSPackage.CPPCheckPlugin
 			}
 			else if (!cppheckargs.Contains("--force"))
 				cppheckargs += " --force";
+			
+			return cppheckargs;
+		}
+
+		public override void analyze(List<ConfiguredFiles> allConfiguredFiles, OutputWindowPane outputWindow, bool analysisOnSavedFile)
+		{
+			if (!allConfiguredFiles.Any())
+				return;
+			
+			List<string> cppheckargs = new List<string>();
+			foreach (var configuredFiles in allConfiguredFiles)
+				cppheckargs.Add(getCPPCheckArgs(configuredFiles, analysisOnSavedFile, allConfiguredFiles.Count > 1));
 
 			string analyzerPath = Properties.Settings.Default.CPPcheckPath;
 			while (!File.Exists(analyzerPath))
@@ -179,6 +189,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			Properties.Settings.Default.CPPcheckPath = analyzerPath;
 			Properties.Settings.Default.Save();
+			
 			run(analyzerPath, cppheckargs, outputWindow);
 		}
 
