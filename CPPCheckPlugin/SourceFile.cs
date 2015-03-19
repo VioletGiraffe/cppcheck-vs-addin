@@ -185,4 +185,19 @@ namespace VSPackage.CPPCheckPlugin
 		private List<string> _macrosToUndefine = new List<string>();
 		private VCCompilerVersion _compilerVersion;
 	}
+
+	public class ConfiguredFiles {
+		public List<SourceFile> Files;
+		public EnvDTE.Configuration Configuration;
+
+		public bool is64bitConfiguration()
+		{
+			return Configuration.ConfigurationName.Contains("64");
+		}
+
+		public bool isDebugConfiguration()
+		{
+			return Configuration.ConfigurationName.ToLower().Contains("debug");
+		}
+	}
 }
