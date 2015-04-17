@@ -33,7 +33,11 @@ namespace VSPackage.CPPCheckPlugin.SuppressionsSettingsUI
 		public HashSet<string> Items
 		{
 			set { ItemsListText.Text = string.Join("\n", value); }
-			get { return new HashSet<string>(ItemsListText.Text.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.None)); }
+			get {
+				var text = ItemsListText.Text;
+				var splitted = text.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+				return new HashSet<string>(splitted);
+			}
 		}
 	}
 }

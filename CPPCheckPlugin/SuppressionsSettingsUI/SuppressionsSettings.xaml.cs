@@ -31,11 +31,8 @@ namespace VSPackage.CPPCheckPlugin.SuppressionSettingsUI
 			SuppressionsInfo suppressionsInfo = new SuppressionsInfo();
 
 			suppressionsInfo.SuppressionLines = CppcheckLines.Items;
-			while (suppressionsInfo.SuppressionLines.Remove("")) { /* nothing */ }
 			suppressionsInfo.SkippedFilesMask = FilesLines.Items;
-			while (suppressionsInfo.SkippedFilesMask.Remove("")) { /* nothing */ }
 			suppressionsInfo.SkippedIncludesMask = IncludesLines.Items;
-			while (suppressionsInfo.SkippedIncludesMask.Remove("")) { /* nothing */ }
 
 			suppressionsInfo.SaveToFile(suppressionsFilePath);
 
