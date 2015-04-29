@@ -11,7 +11,7 @@ namespace VSPackage.CPPCheckPlugin
 {
 	class AnalyzerCppcheck : ICodeAnalyzer
 	{
-		private string getCPPCheckArgs(ConfiguredFiles configuredFiles, bool analysisOnSavedFile, bool multipleProjects)
+		private string getCPPCheckArgs(ConfiguredFiles configuredFiles, bool analysisOnSavedFile, bool multipleProjects, StreamWriter tempFile)
 		{
 			Debug.Assert(_numCores > 0);
 			String cppheckargs = Properties.Settings.Default.DefaultArguments;
@@ -81,8 +81,10 @@ namespace VSPackage.CPPCheckPlugin
 			foreach (SourceFile file in filesToAnalyze)
 			{
 				if (!matchMasksList(file.FileName, unitedSuppressionsInfo.SkippedFilesMask))
-					cppheckargs += " \"" + file.FilePath + "\"";
+					tempFile.WriteLine(file.FilePath);
 			}
+
+			cppheckargs += " --file-list=\"" + tempFileName + "\"";
 
 			if ((analysisOnSavedFile && Properties.Settings.Default.FileOnlyCheckCurrentConfig) ||
 				(!analysisOnSavedFile && Properties.Settings.Default.ProjectOnlyCheckCurrentConfig)) // Only checking current macros configuration (for speed)
@@ -171,10 +173,12 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			if (!allConfiguredFiles.Any())
 				return;
-			
+
+			StreamWriter tempFile = new StreamWriter(tempFileName);
+
 			List<string> cppheckargs = new List<string>();
 			foreach (var configuredFiles in allConfiguredFiles)
-				cppheckargs.Add(getCPPCheckArgs(configuredFiles, analysisOnSavedFile, allConfiguredFiles.Count > 1));
+				cppheckargs.Add(getCPPCheckArgs(configuredFiles, analysisOnSavedFile, allConfiguredFiles.Count > 1, tempFile));
 
 			string analyzerPath = Properties.Settings.Default.CPPcheckPath;
 			while (!File.Exists(analyzerPath))
@@ -187,6 +191,8 @@ namespace VSPackage.CPPCheckPlugin
 				analyzerPath = dialog.FileName;
 			}
 
+			tempFile.Close();
+            
 			Properties.Settings.Default.CPPcheckPath = analyzerPath;
 			Properties.Settings.Default.Save();
 			
@@ -326,8 +332,13 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			if (_unfinishedProblem != null)
 				addProblemToToolwindow(_unfinishedProblem);
+
+			// Delete the temp file. Doesn't throw an exception if the file was never
+			// created, so we don't need to worry about that.
+			File.Delete(tempFileName);
 		}
 
 		private Problem _unfinishedProblem = null;
+		string tempFileName = Path.GetTempFileName();
 	}
 }
