@@ -174,11 +174,12 @@ namespace VSPackage.CPPCheckPlugin
 			if (!allConfiguredFiles.Any())
 				return;
 
-			StreamWriter tempFile = new StreamWriter(tempFileName);
-
 			List<string> cppheckargs = new List<string>();
-			foreach (var configuredFiles in allConfiguredFiles)
-				cppheckargs.Add(getCPPCheckArgs(configuredFiles, analysisOnSavedFile, allConfiguredFiles.Count > 1, tempFile));
+			using( StreamWriter tempFile = new StreamWriter(tempFileName) )
+			{
+				foreach (var configuredFiles in allConfiguredFiles)
+					cppheckargs.Add(getCPPCheckArgs(configuredFiles, analysisOnSavedFile, allConfiguredFiles.Count > 1, tempFile));
+			}
 
 			string analyzerPath = Properties.Settings.Default.CPPcheckPath;
 			while (!File.Exists(analyzerPath))
@@ -191,8 +192,6 @@ namespace VSPackage.CPPCheckPlugin
 				analyzerPath = dialog.FileName;
 			}
 
-			tempFile.Close();
-            
 			Properties.Settings.Default.CPPcheckPath = analyzerPath;
 			Properties.Settings.Default.Save();
 			
@@ -337,8 +336,8 @@ namespace VSPackage.CPPCheckPlugin
 			// created, so we don't need to worry about that.
 			File.Delete(tempFileName);
 		}
-
+		
 		private Problem _unfinishedProblem = null;
-		string tempFileName = Path.GetTempFileName();
+		private string tempFileName = Path.GetTempFileName();
 	}
 }
