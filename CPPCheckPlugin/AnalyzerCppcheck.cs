@@ -11,6 +11,13 @@ namespace VSPackage.CPPCheckPlugin
 {
 	class AnalyzerCppcheck : ICodeAnalyzer
 	{
+		~AnalyzerCppcheck()
+		{
+			// Delete the temp file. Doesn't throw an exception if the file was never
+			// created, so we don't need to worry about that.
+			File.Delete(tempFileName);
+		}
+		
 		private string getCPPCheckArgs(ConfiguredFiles configuredFiles, bool analysisOnSavedFile, bool multipleProjects, StreamWriter tempFile)
 		{
 			Debug.Assert(_numCores > 0);
