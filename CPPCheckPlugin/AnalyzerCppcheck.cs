@@ -27,10 +27,10 @@ namespace VSPackage.CPPCheckPlugin
 				{
 					DateTime fileModifiedDate = File.GetLastWriteTime(file);
 					
-                    if (fileModifiedDate.AddMinutes(60) < DateTime.Now)
+					if (fileModifiedDate.AddMinutes(60) < DateTime.Now)
 					{
-                        // File hasn't been written to in the last 60 mins, so it must be 
-                        // from an earlier instance which didn't exit gracefully.
+						// File hasn't been written to in the last 60 mins, so it must be 
+						// from an earlier instance which didn't exit gracefully.
 						File.Delete(file);
 					}
 				}
