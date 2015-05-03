@@ -11,6 +11,40 @@ namespace VSPackage.CPPCheckPlugin
 {
 	class AnalyzerCppcheck : ICodeAnalyzer
 	{
+		private const string tempFilePrefix = "CPPCheckPlugin";
+		
+		public AnalyzerCppcheck()
+		{
+			// Perform some cleanup of old temporary files
+			string tempPath = Path.GetTempPath();
+			
+			try 
+			{
+				// Get all files that have our unique prefix
+				string[] oldFiles = Directory.GetFiles(tempPath, tempFilePrefix + "*");
+				
+				foreach (string file in oldFiles) 
+				{
+					DateTime fileModifiedDate = File.GetLastWriteTime(file);
+					
+					if (fileModifiedDate.AddMinutes(60) < DateTime.Now)
+					{
+						// File hasn't been written to in the last 60 mins, so it must be 
+						// from an earlier instance which didn't exit gracefully.
+						File.Delete(file);
+					}
+				}
+			}
+			catch (System.Exception) {}
+		}
+		
+		~AnalyzerCppcheck()
+		{
+			// Delete the temp file. Doesn't throw an exception if the file was never
+			// created, so we don't need to worry about that.
+			File.Delete(tempFileName);
+		}
+		
 		private string getCPPCheckArgs(ConfiguredFiles configuredFiles, bool analysisOnSavedFile, bool multipleProjects, StreamWriter tempFile)
 		{
 			Debug.Assert(_numCores > 0);
@@ -174,11 +208,12 @@ namespace VSPackage.CPPCheckPlugin
 			if (!allConfiguredFiles.Any())
 				return;
 
-			StreamWriter tempFile = new StreamWriter(tempFileName);
-
 			List<string> cppheckargs = new List<string>();
-			foreach (var configuredFiles in allConfiguredFiles)
-				cppheckargs.Add(getCPPCheckArgs(configuredFiles, analysisOnSavedFile, allConfiguredFiles.Count > 1, tempFile));
+			using( StreamWriter tempFile = new StreamWriter(tempFileName) )
+			{
+				foreach (var configuredFiles in allConfiguredFiles)
+					cppheckargs.Add(getCPPCheckArgs(configuredFiles, analysisOnSavedFile, allConfiguredFiles.Count > 1, tempFile));
+			}
 
 			string analyzerPath = Properties.Settings.Default.CPPcheckPath;
 			while (!File.Exists(analyzerPath))
@@ -191,8 +226,6 @@ namespace VSPackage.CPPCheckPlugin
 				analyzerPath = dialog.FileName;
 			}
 
-			tempFile.Close();
-            
 			Properties.Settings.Default.CPPcheckPath = analyzerPath;
 			Properties.Settings.Default.Save();
 			
@@ -337,8 +370,8 @@ namespace VSPackage.CPPCheckPlugin
 			// created, so we don't need to worry about that.
 			File.Delete(tempFileName);
 		}
-
+		
 		private Problem _unfinishedProblem = null;
-		string tempFileName = Path.GetTempFileName();
+		private string tempFileName = Path.GetTempPath() + tempFilePrefix + "_" + Path.GetRandomFileName();
 	}
 }
