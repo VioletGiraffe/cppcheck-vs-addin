@@ -34,10 +34,8 @@ namespace VSPackage.CPPCheckPlugin
 						File.Delete(file);
 					}
 				}
-			} 
-			catch (Exception e) 
-			{
 			}
+			catch (System.Exception) {}
 		}
 		
 		~AnalyzerCppcheck()
