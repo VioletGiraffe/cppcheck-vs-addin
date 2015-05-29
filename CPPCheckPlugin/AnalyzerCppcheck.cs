@@ -27,9 +27,9 @@ namespace VSPackage.CPPCheckPlugin
 				{
 					DateTime fileModifiedDate = File.GetLastWriteTime(file);
 					
-					if (fileModifiedDate.AddMinutes(60) < DateTime.Now)
+					if (fileModifiedDate.AddMinutes(120) < DateTime.Now)
 					{
-						// File hasn't been written to in the last 60 mins, so it must be 
+						// File hasn't been written to in the last 120 minutes, so it must be 
 						// from an earlier instance which didn't exit gracefully.
 						File.Delete(file);
 					}
@@ -40,12 +40,10 @@ namespace VSPackage.CPPCheckPlugin
 		
 		~AnalyzerCppcheck()
 		{
-			// Delete the temp file. Doesn't throw an exception if the file was never
-			// created, so we don't need to worry about that.
-			File.Delete(tempFileName);
+			cleanupTempFiles();
 		}
 		
-		private string getCPPCheckArgs(ConfiguredFiles configuredFiles, bool analysisOnSavedFile, bool multipleProjects, StreamWriter tempFile)
+		private string getCPPCheckArgs(ConfiguredFiles configuredFiles, bool analysisOnSavedFile, bool multipleProjects, string tempFileName)
 		{
 			Debug.Assert(_numCores > 0);
 			String cppheckargs = Properties.Settings.Default.DefaultArguments;
@@ -112,10 +110,13 @@ namespace VSPackage.CPPCheckPlugin
 				}
 			}
 
-			foreach (SourceFile file in filesToAnalyze)
+			using (StreamWriter tempFile = new StreamWriter(tempFileName))
 			{
-				if (!matchMasksList(file.FileName, unitedSuppressionsInfo.SkippedFilesMask))
-					tempFile.WriteLine(file.FilePath);
+				foreach (SourceFile file in filesToAnalyze)
+				{
+					if (!matchMasksList(file.FileName, unitedSuppressionsInfo.SkippedFilesMask))
+						tempFile.WriteLine(file.FilePath);
+				}
 			}
 
 			cppheckargs += " --file-list=\"" + tempFileName + "\"";
@@ -209,11 +210,8 @@ namespace VSPackage.CPPCheckPlugin
 				return;
 
 			List<string> cppheckargs = new List<string>();
-			using( StreamWriter tempFile = new StreamWriter(tempFileName) )
-			{
-				foreach (var configuredFiles in allConfiguredFiles)
-					cppheckargs.Add(getCPPCheckArgs(configuredFiles, analysisOnSavedFile, allConfiguredFiles.Count > 1, tempFile));
-			}
+			foreach (var configuredFiles in allConfiguredFiles)
+				cppheckargs.Add(getCPPCheckArgs(configuredFiles, analysisOnSavedFile, allConfiguredFiles.Count > 1, createNewTempFileName()));
 
 			string analyzerPath = Properties.Settings.Default.CPPcheckPath;
 			while (!File.Exists(analyzerPath))
@@ -361,17 +359,37 @@ namespace VSPackage.CPPCheckPlugin
 			return result;
 		}
 
-		protected override void analysisFinished()
+		protected override void analysisFinished(string arguments)
 		{
 			if (_unfinishedProblem != null)
 				addProblemToToolwindow(_unfinishedProblem);
 
-			// Delete the temp file. Doesn't throw an exception if the file was never
-			// created, so we don't need to worry about that.
+			const string fileListPattern = "--file-list=\"";
+			int filenamePos = arguments.IndexOf(fileListPattern) + fileListPattern.Length;
+			int filenameLength = arguments.IndexOf('\"', filenamePos) - filenamePos;
+			string tempFileName = arguments.Substring(filenamePos, filenameLength);
+
 			File.Delete(tempFileName);
+		}
+
+		private void cleanupTempFiles()
+		{
+			// Delete the temp files. Doesn't throw an exception if the file was never
+			// created, so we don't need to worry about that.
+			foreach (string name in _tempFileNamesInUse)
+				File.Delete(name);
+
+			_tempFileNamesInUse.Clear();
+		}
+
+		private string createNewTempFileName()
+		{
+			string name = Path.GetTempPath() + tempFilePrefix + "_" + Path.GetRandomFileName();
+			_tempFileNamesInUse.Add(name);
+			return name;
 		}
 		
 		private Problem _unfinishedProblem = null;
-		private string tempFileName = Path.GetTempPath() + tempFilePrefix + "_" + Path.GetRandomFileName();
+		private List<string> _tempFileNamesInUse = new List<string>();
 	}
 }

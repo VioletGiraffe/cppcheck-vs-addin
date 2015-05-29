@@ -77,7 +77,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		protected abstract List<Problem> parseOutput(String output);
 
-		protected abstract void analysisFinished();
+		protected abstract void analysisFinished(string arguments);
 
 		protected void run(string analyzerExePath, List<string> arguments, OutputWindowPane outputPane)
 		{
@@ -210,7 +210,14 @@ namespace VSPackage.CPPCheckPlugin
 				var timer = Stopwatch.StartNew();
 				// Start the process.
 				process.Start();
-				process.PriorityClass = ProcessPriorityClass.Idle;
+
+				try
+				{
+					process.PriorityClass = ProcessPriorityClass.Idle;
+				}
+				catch (System.InvalidOperationException ex)
+				{
+				}
 
 				onProgressUpdated(0);
 
@@ -227,7 +234,7 @@ namespace VSPackage.CPPCheckPlugin
 					}
 				}
 				timer.Stop();
-				analysisFinished();
+				analysisFinished(arguments);
 				if (process.ExitCode != 0)
 					_outputPane.OutputString(analyzerExePath + " has exited with code " + process.ExitCode.ToString() + "\n");
 				else
