@@ -169,10 +169,18 @@ namespace VSPackage.CPPCheckPlugin
 
 		private static string cleanPath(string path)
 		{
-			string result = path.Replace("\"", "").Replace("\\\\", "\\");
-			if (result.EndsWith("\\"))
+			string result = path.Replace("\"", "");
+			const string doubleBackSlash = "\\\\";
+			const string singleBackSlash = "\\";
+			if( result.StartsWith( doubleBackSlash )) {
+				// UNC path - must preserve the leading double slash
+				result = singleBackSlash + result.Replace( doubleBackSlash, singleBackSlash );
+			} else {
+				result = result.Replace( doubleBackSlash, singleBackSlash );
+			}
+			if (result.EndsWith(singleBackSlash))
 				result = result.Substring(0, result.Length - 1);
-			if (result.StartsWith("\\"))
+			if (result.StartsWith(singleBackSlash) && !result.StartsWith(doubleBackSlash))
 				result = result.Substring(1);
 			return result;
 		}
