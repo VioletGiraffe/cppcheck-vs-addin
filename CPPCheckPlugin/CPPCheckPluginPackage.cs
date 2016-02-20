@@ -377,7 +377,7 @@ namespace VSPackage.CPPCheckPlugin
 			// Using Reflection to get to the interface and access the property directly instead.
 			Type fileObjectType = file.GetType();
 			var vcFileInterface = fileObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCFile");
-			var fileTypeValue = vcFileInterface.GetProperty("FileType").GetValue(file);
+			var fileTypeValue = vcFileInterface.GetProperty("FileType").GetValue((object)file);
 			Type fileTypeEnumType = fileTypeValue.GetType();
 			Debug.Assert(fileTypeEnumType.FullName == "Microsoft.VisualStudio.VCProjectEngine.eFileType");
 			var fileTypeEnumValue = Enum.GetName(fileTypeEnumType, fileTypeValue);
