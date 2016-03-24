@@ -215,7 +215,7 @@ namespace VSPackage.CPPCheckPlugin
 				{
 					process.PriorityClass = ProcessPriorityClass.Idle;
 				}
-				catch (System.InvalidOperationException ex)
+				catch (System.InvalidOperationException)
 				{
 				}
 
