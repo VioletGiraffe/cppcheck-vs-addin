@@ -154,8 +154,8 @@ namespace VSPackage.CPPCheckPlugin
 				startInfo.UseShellExecute = false;
 				startInfo.CreateNoWindow = true;
 				startInfo.RedirectStandardOutput = true;
-				startInfo.WorkingDirectory = Path.GetDirectoryName(Properties.Settings.Default.CPPcheckPath);
-				startInfo.FileName = Properties.Settings.Default.CPPcheckPath;
+				startInfo.FileName = AnalyzerCppcheck.cppcheckExePath();
+				startInfo.WorkingDirectory = Path.GetDirectoryName(startInfo.FileName);
 				startInfo.Arguments = "--errorlist --xml-version=2";
 				process.Start();
 				String output;

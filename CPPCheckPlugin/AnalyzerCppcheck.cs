@@ -42,6 +42,42 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			cleanupTempFiles();
 		}
+
+		public static string cppcheckExePath()
+		{
+			System.Collections.Specialized.StringCollection analyzerPathCandidates = Properties.Settings.Default.CPPcheckPath;
+			string analyzerPath = "";
+
+			foreach (string candidatePath in analyzerPathCandidates)
+			{
+				if (File.Exists(candidatePath))
+				{
+					analyzerPath = candidatePath;
+					break;
+				}
+			}
+
+			if (String.IsNullOrEmpty(analyzerPath))
+			{
+				for (; ; )
+				{
+					OpenFileDialog dialog = new OpenFileDialog();
+					dialog.Filter = "cppcheck executable|cppcheck.exe";
+					if (dialog.ShowDialog() != DialogResult.OK)
+						continue;
+
+					analyzerPath = dialog.FileName;
+					if (File.Exists(analyzerPath))
+					{
+						Properties.Settings.Default.CPPcheckPath.Add(analyzerPath);
+						Properties.Settings.Default.Save();
+						break;
+					}
+				}
+			}
+
+			return analyzerPath;
+		}
 		
 		private string getCPPCheckArgs(ConfiguredFiles configuredFiles, bool analysisOnSavedFile, bool multipleProjects, string tempFileName)
 		{
@@ -213,21 +249,7 @@ namespace VSPackage.CPPCheckPlugin
 			foreach (var configuredFiles in allConfiguredFiles)
 				cppheckargs.Add(getCPPCheckArgs(configuredFiles, analysisOnSavedFile, allConfiguredFiles.Count > 1, createNewTempFileName()));
 
-			string analyzerPath = Properties.Settings.Default.CPPcheckPath;
-			while (!File.Exists(analyzerPath))
-			{
-				OpenFileDialog dialog = new OpenFileDialog();
-				dialog.Filter = "cppcheck executable|cppcheck.exe";
-				if (dialog.ShowDialog() != DialogResult.OK)
-					return;
-
-				analyzerPath = dialog.FileName;
-			}
-
-			Properties.Settings.Default.CPPcheckPath = analyzerPath;
-			Properties.Settings.Default.Save();
-			
-			run(analyzerPath, cppheckargs, outputWindow);
+			run(cppcheckExePath(), cppheckargs, outputWindow);
 		}
 
 		public override void suppressProblem(Problem p, SuppressionScope scope)

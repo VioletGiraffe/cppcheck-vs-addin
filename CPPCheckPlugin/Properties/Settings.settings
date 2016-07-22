@@ -2,8 +2,12 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="VSPackage.CPPCheckPlugin.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="CPPcheckPath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">c:\Program Files (x86)\Cppcheck\cppcheck.exe</Value>
+    <Setting Name="CPPcheckPath" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;ArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
+  &lt;string&gt;C:\Program Files (x86)\Cppcheck\cppcheck.exe&lt;/string&gt;
+  &lt;string&gt;C:\Program Files\Cppcheck\cppcheck.exe&lt;/string&gt;
+&lt;/ArrayOfString&gt;</Value>
     </Setting>
     <Setting Name="InconclusiveChecksEnabled" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
