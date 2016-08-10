@@ -244,6 +244,20 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			if (!allConfiguredFiles.Any())
 				return;
+			else
+			{
+				bool validFilesQueuedForCheck = false;
+				foreach (ConfiguredFiles files in allConfiguredFiles)
+					if (files.Files.Any())
+					{
+						validFilesQueuedForCheck = true;
+						break;
+					}
+
+				if (!validFilesQueuedForCheck)
+					return;
+			}
+
 
 			List<string> cppheckargs = new List<string>();
 			foreach (var configuredFiles in allConfiguredFiles)
