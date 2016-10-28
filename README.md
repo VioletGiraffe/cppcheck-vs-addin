@@ -10,6 +10,13 @@ This fork supports the following extensions to cppcheck:
 
 3. Prevents setting the focus to the analysis window after saving files
 
+4. Performance optimation
+
+4.1 Column size calculation will not be performed on all problems
+
+5. Keep sorting indicator after clear
+
+
 
 
 #Visual Studio integration add-in for Cppcheck
