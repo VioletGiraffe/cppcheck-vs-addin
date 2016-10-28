@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.VCProjectEngine;
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -138,7 +139,7 @@ namespace VSPackage.CPPCheckPlugin
 			base.Initialize();
 
 			_dte = (EnvDTE.DTE)GetService(typeof(SDTE));
-			_eventsHandlers = _dte.Events.DocumentEvents;
+            _eventsHandlers = _dte.Events.DocumentEvents;
 			_eventsHandlers.DocumentSaved += documentSaved;
 
 			_outputPane = _dte.AddOutputWindowPane("cppcheck analysis output");
@@ -154,22 +155,51 @@ namespace VSPackage.CPPCheckPlugin
 			OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
 			if ( null != mcs )
 			{
-				// Create the command for the menu item.
-				CommandID menuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidCheckProjectCppcheck);
-				MenuCommand menuItem = new MenuCommand(onCheckCurrentProjectRequested, menuCommandID);
-				mcs.AddCommand( menuItem );
-				// Create the command for the settings window
-				CommandID settingsWndCmdId = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidSettings);
-				MenuCommand menuSettings = new MenuCommand(onSettingsWindowRequested, settingsWndCmdId);
-				mcs.AddCommand(menuSettings);
+                // Create the command for the menu item.
+                {
+                    CommandID menuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidCheckProjectCppcheck);
+                    MenuCommand menuItem = new MenuCommand(onCheckCurrentProjectRequested, menuCommandID);
+                    mcs.AddCommand(menuItem);
+                }
 
-				CommandID projectMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginProjectCmdSet, (int)PkgCmdIDList.cmdidCheckProjectCppcheck1);
-				MenuCommand projectMenuItem = new MenuCommand(onCheckCurrentProjectRequested, projectMenuCommandID);
-				mcs.AddCommand(projectMenuItem);
+                {
+                    // Create the command for the settings window
+                    CommandID settingsWndCmdId = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidSettings);
+                    MenuCommand menuSettings = new MenuCommand(onSettingsWindowRequested, settingsWndCmdId);
+                    mcs.AddCommand(menuSettings);
+                }
 
-				CommandID projectsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginMultiProjectCmdSet, (int)PkgCmdIDList.cmdidCheckProjectsCppcheck);
-                MenuCommand projectsMenuItem = new MenuCommand(onCheckAllProjectsRequested, projectsMenuCommandID);
-                mcs.AddCommand(projectsMenuItem);
+                {
+                    CommandID stopCheckMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidStopCppcheck);
+                    MenuCommand stopCheckMenuItem = new MenuCommand(onStopCheckRequested, stopCheckMenuCommandID);
+                    mcs.AddCommand(stopCheckMenuItem);
+                }
+
+                {
+                    CommandID selectionsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidCheckMultiItemCppcheck);
+                    MenuCommand selectionsMenuItem = new MenuCommand(onCheckSelectionsRequested, selectionsMenuCommandID);
+                    mcs.AddCommand(selectionsMenuItem);
+                }
+
+                {
+                    CommandID projectMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginProjectCmdSet, (int)PkgCmdIDList.cmdidCheckProjectCppcheck1);
+                    MenuCommand projectMenuItem = new MenuCommand(onCheckCurrentProjectRequested, projectMenuCommandID);
+                    mcs.AddCommand(projectMenuItem);
+                }
+
+                {
+                    CommandID projectsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginMultiProjectCmdSet, (int)PkgCmdIDList.cmdidCheckProjectsCppcheck);
+                    MenuCommand projectsMenuItem = new MenuCommand(onCheckAllProjectsRequested, projectsMenuCommandID);
+                    mcs.AddCommand(projectsMenuItem);
+                }
+
+                {
+                    CommandID selectionsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginMultiItemProjectCmdSet, (int)PkgCmdIDList.cmdidCheckMultiItemCppcheck1);
+                    MenuCommand selectionsMenuItem = new MenuCommand(onCheckSelectionsRequested, selectionsMenuCommandID);
+                    mcs.AddCommand(selectionsMenuItem);
+                }
+
+                
             }
 
 			// Creating the tool window
@@ -211,7 +241,17 @@ namespace VSPackage.CPPCheckPlugin
 			checkAllActiveProjects();
 		}
 
-		private void onSettingsWindowRequested(object sender, EventArgs e)
+        private void onCheckSelectionsRequested(object sender, EventArgs e)
+        {
+            checkSelections();
+        }
+
+        private void onStopCheckRequested(object sender, EventArgs e)
+        {
+            stopAnalysis();
+        }
+
+        private void onSettingsWindowRequested(object sender, EventArgs e)
 		{
 			var settings = new CppcheckSettings();
 			settings.ShowDialog();
@@ -292,6 +332,150 @@ namespace VSPackage.CPPCheckPlugin
 			return activeProjects;
 		}
 
+        private static void addEntry(ConfiguredFiles configuredFiles, SourceFile sourceFile, Project project)
+        {
+            if(sourceFile != null)
+            {
+                List<SourceFile> sourceFileList = new List<SourceFile>();
+                sourceFileList.Add(sourceFile);
+                addEntry(configuredFiles, sourceFileList, project);
+            }
+        }
+
+        private static void addEntry(ConfiguredFiles configuredFiles, List<SourceFile> sourceFileList, Project project)
+        {
+            Boolean foundFlag = false;
+            foreach (SourceFile newSourceFile in sourceFileList)
+            {
+                if (newSourceFile == null)
+                    continue;
+
+                foundFlag = false;
+                for (int index = 0; index < configuredFiles.Files.Count && !foundFlag; index++)
+                {
+                    if (newSourceFile.FileName.CompareTo(configuredFiles.Files[index].FileName) == 0 &&
+                        newSourceFile.FilePath.CompareTo(configuredFiles.Files[index].FilePath) == 0)
+                    {
+                        // file already exists in list
+                        foundFlag = true;
+                    }
+                }
+
+                if(!foundFlag)
+                {
+                    configuredFiles.Files.Add(newSourceFile);
+                    string projectName = project.Name;
+                    _outputPane.OutputString("Will check: " + projectName + " | " + newSourceFile.FilePath + "/" + newSourceFile.FileName);
+                }
+            }
+        }
+
+        private static void scanFilter(dynamic filter, List<SourceFile> sourceFileList, ConfiguredFiles configuredFiles,
+            Configuration configuration, Project project)
+        {
+            foreach(dynamic item in filter.Items)
+            {
+                if(isFilter(item))
+                {
+                    scanFilter(item, sourceFileList, configuredFiles, configuration, project);
+                }
+                else if(isCppFile(item))
+                {
+                    dynamic file = item.ProjectItem.Object;
+
+                    // non project selected
+                    if (file != null)
+                    {
+                        // document selected
+                        SourceFile sourceFile = createSourceFile(file.FullPath, configuration, project.Object);
+                        addEntry(configuredFiles, sourceFile, project);
+                    }
+                }
+            }
+        }
+
+        private List<ConfiguredFiles> getActiveSelections()
+        {           
+            Dictionary<Project, ConfiguredFiles> confMap = new Dictionary<Project, ConfiguredFiles>();
+
+            foreach (SelectedItem selItem in _dte.SelectedItems)
+            {
+                Project project = null;
+
+                if (project == null && selItem.ProjectItem != null)
+                {
+                    project = selItem.ProjectItem.ContainingProject;
+                }
+                
+                if(project == null)
+                {
+                    project = selItem.Project;
+                }
+
+                if (project == null || !isVisualCppProject(project.Object))
+                {
+                    continue;
+                }
+
+                Configuration configuration = getConfiguration(project);
+
+                if (!confMap.ContainsKey(project))
+                {
+                    // create new Map key entry for project
+                    ConfiguredFiles configuredFiles = new ConfiguredFiles();
+                    confMap.Add(project, configuredFiles);
+                    configuredFiles.Files = new List<SourceFile>();
+                    configuredFiles.Configuration = configuration;
+                }
+
+                ConfiguredFiles currentConfiguredFiles = confMap[project];
+
+                if(currentConfiguredFiles == null)
+                {
+                    continue;
+                }
+
+                if (selItem.ProjectItem == null)
+                {
+                    // project selected
+                    List<SourceFile> projectSourceFileList = getProjectFiles(project, configuration);
+                    foreach (SourceFile projectSourceFile in projectSourceFileList)
+                        addEntry(currentConfiguredFiles, projectSourceFileList, project);
+                }
+                else
+                {
+                    dynamic projectItem = selItem.ProjectItem.Object;
+
+                    if (isFilter(projectItem))
+                    {
+                        List<SourceFile> sourceFileList = new List<SourceFile>();
+                        scanFilter(projectItem, sourceFileList, currentConfiguredFiles, configuration, project);
+                        addEntry(currentConfiguredFiles, sourceFileList, project);
+                    }
+                    else if (isCppFile(projectItem))
+                    {
+                        dynamic file = selItem.ProjectItem.Object;
+
+                        // non project selected
+                        if (file != null)
+                        {
+                            // document selected
+                            SourceFile sourceFile = createSourceFile(file.FullPath, configuration, project.Object);
+                            addEntry(currentConfiguredFiles, sourceFile, project);
+                        }
+                    }
+                }
+            }
+
+            List<ConfiguredFiles> configuredFilesList = new List<ConfiguredFiles>();
+            foreach (ConfiguredFiles configuredFiles in confMap.Values)
+            {
+                configuredFilesList.Add(configuredFiles);
+            }
+
+            return configuredFilesList;
+        }
+
 		private void checkFirstActiveProject()
 		{
 			Object[] activeProjects = getActiveProjects();
@@ -306,7 +490,20 @@ namespace VSPackage.CPPCheckPlugin
 				checkProjects(activeProjects);
 		}
 
-		private List<SourceFile> getProjectFiles(Project p, Configuration currentConfig)
+        private void checkSelections()
+        {
+            List<ConfiguredFiles> configuredFilesList = getActiveSelections();
+
+            MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.ProjectAnalysis;
+			MainToolWindow.Instance.showIfWindowNotCreated();
+
+            if(configuredFilesList.Count > 0)
+            {
+                runAnalysis(configuredFilesList, _outputPane, false);
+            }
+        }
+
+        private List<SourceFile> getProjectFiles(Project p, Configuration currentConfig)
 		{
 			dynamic project = p.Object;
 			if (!isVisualCppProject(project))
@@ -369,27 +566,36 @@ namespace VSPackage.CPPCheckPlugin
 			runAnalysis(allConfiguredFiles, _outputPane, false);
 		}
 
-		private static bool isCppFile(dynamic file)
-		{
-			// Checking file.FileType == eFileType.eFileTypeCppCode...
-			// Automatic property binding fails with VS2013 because there the FileType property
-			// is *explicitly implemented* and so only accessible via the declaring interface.
-			// Using Reflection to get to the interface and access the property directly instead.
-			Type fileObjectType = file.GetType();
-			var vcFileInterface = fileObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCFile");
-			var fileTypeValue = vcFileInterface.GetProperty("FileType").GetValue((object)file);
-			Type fileTypeEnumType = fileTypeValue.GetType();
-			Debug.Assert(fileTypeEnumType.FullName == "Microsoft.VisualStudio.VCProjectEngine.eFileType");
-			var fileTypeEnumValue = Enum.GetName(fileTypeEnumType, fileTypeValue);
-			var fileTypeCppCodeConstant = "eFileTypeCppCode";
-			// First check the enum contains the value we're looking for
-			Debug.Assert(Enum.GetNames(fileTypeEnumType).Contains(fileTypeCppCodeConstant));
-			if (fileTypeEnumValue == fileTypeCppCodeConstant)
-				return true;
-			return false;
-		}
+        private static bool isCppFile(dynamic file)
+        {
+            // Checking file.FileType == eFileType.eFileTypeCppCode...
+            // Automatic property binding fails with VS2013 because there the FileType property
+            // is *explicitly implemented* and so only accessible via the declaring interface.
+            // Using Reflection to get to the interface and access the property directly instead.
+            Type fileObjectType = file.GetType();
+            var vcFileInterface = fileObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCFile");
+            var fileTypeValue = vcFileInterface.GetProperty("FileType").GetValue((object)file);
+            Type fileTypeEnumType = fileTypeValue.GetType();
+            Debug.Assert(fileTypeEnumType.FullName == "Microsoft.VisualStudio.VCProjectEngine.eFileType");
+            var fileTypeEnumValue = Enum.GetName(fileTypeEnumType, fileTypeValue);
+            var fileTypeCppCodeConstant = "eFileTypeCppCode";
+            // First check the enum contains the value we're looking for
+            Debug.Assert(Enum.GetNames(fileTypeEnumType).Contains(fileTypeCppCodeConstant));
+            if (fileTypeEnumValue == fileTypeCppCodeConstant)
+                return true;
+            return false;
+        }
 
-		private void runSavedFileAnalysis(SourceFile file, Configuration currentConfig, OutputWindowPane outputPane)
+        private static bool isFilter(dynamic checkObject)
+        {
+            Type checkObjectType = checkObject.GetType();
+            var vcFilterInterface = checkObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCFilter");
+            if (vcFilterInterface != null)
+                return true;
+            return false;
+        }
+
+        private void runSavedFileAnalysis(SourceFile file, Configuration currentConfig, OutputWindowPane outputPane)
 		{
 			Debug.Assert(currentConfig != null);
 			
@@ -399,10 +605,18 @@ namespace VSPackage.CPPCheckPlugin
 			runAnalysis(new List<ConfiguredFiles> {configuredFiles}, outputPane, true);
 		}
 
+        public void stopAnalysis()
+        {
+            foreach (var analyzer in _analyzers)
+            {
+                analyzer.abortThreadIfAny();
+            }
+        }
+
 		private void runAnalysis(List<ConfiguredFiles> configuredFiles, OutputWindowPane outputPane, bool analysisOnSavedFile)
 		{
 			Debug.Assert(outputPane != null);
-			outputPane.Clear();
+			// outputPane.Clear();
 
 			foreach (var analyzer in _analyzers)
 			{
@@ -410,7 +624,7 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		SourceFile createSourceFile(string filePath, Configuration targetConfig, dynamic project)
+		private static SourceFile createSourceFile(string filePath, Configuration targetConfig, dynamic project)
 		{
 			Debug.Assert(isVisualCppProject((object)project));
 			try

@@ -11,9 +11,11 @@ namespace VSPackage.CPPCheckPlugin
         public const string guidToolWindowPersistanceString = "7cc7c6f9-a686-4108-abf5-fab92cd024bc";
         public const string guidCPPCheckPluginProjectCmdSetString = "9019df3f-c4aa-499b-b46a-0bcb43d006db";
         public const string guidCPPCheckPluginMultiProjectCmdSetString = "a21f0125-e59b-4ac6-8db6-fc01601237d7";
-		
+        public const string guidCPPCheckPluginMultiItemProjectCmdSetString = "6db8495c-52d3-45d8-ba02-09a3938aa893";
+
         public static readonly Guid guidCPPCheckPluginCmdSet = new Guid(guidCPPCheckPluginCmdSetString);
         public static readonly Guid guidCPPCheckPluginProjectCmdSet = new Guid(guidCPPCheckPluginProjectCmdSetString);
         public static readonly Guid guidCPPCheckPluginMultiProjectCmdSet = new Guid(guidCPPCheckPluginMultiProjectCmdSetString);
+        public static readonly Guid guidCPPCheckPluginMultiItemProjectCmdSet = new Guid(guidCPPCheckPluginMultiItemProjectCmdSetString);
     };
 }
