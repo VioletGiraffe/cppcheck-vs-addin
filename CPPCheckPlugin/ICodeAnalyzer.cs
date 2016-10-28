@@ -108,13 +108,13 @@ namespace VSPackage.CPPCheckPlugin
 				return;
 			
 			foreach(var problem in problems)
-				MainToolWindow.Instance.displayProblem(problem);
+				MainToolWindow.Instance.displayProblem(problem, false);
 		}
 
 		protected void addProblemToToolwindow(Problem problem)
 		{
 			if (MainToolWindow.Instance != null && problem != null)
-				MainToolWindow.Instance.displayProblem(problem);
+				MainToolWindow.Instance.displayProblem(problem, true);
 		}
 
 		public static string suppressionsFilePathByStorage(SuppressionStorage storage, string projectBasePath = null, string projectName = null)

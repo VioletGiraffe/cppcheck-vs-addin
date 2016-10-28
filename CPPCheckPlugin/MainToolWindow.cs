@@ -37,6 +37,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		public void bringToFront()
 		{
+            /*
 			IVsWindowFrame frame = Frame as IVsWindowFrame;
 			if (frame == null)
 				return;
@@ -45,6 +46,7 @@ namespace VSPackage.CPPCheckPlugin
 			frame.IsOnScreen(out onScreen);
 			if (onScreen == 0)
 				frame.ShowNoActivate();
+            */
 		}
 
 		public void showIfWindowNotCreated()
@@ -57,7 +59,7 @@ namespace VSPackage.CPPCheckPlugin
 		public void clear()
 		{
 			_listView.Items.Clear();
-            _ui.ClearSorting();
+            //_ui.ClearSorting();
 		}
 
 		public bool isEmpty()
@@ -85,12 +87,13 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		public void displayProblem(Problem problem)
+		public void displayProblem(Problem problem, bool autoSize)
 		{
 			Application.Current.Dispatcher.BeginInvoke(new Action(()=> 
 			{
 				_listView.Items.Add(new MainToolWindowUI.ProblemsListItem(problem)); 
-				AutoSizeColumns();
+				if(autoSize)
+                    AutoSizeColumns();
 			}));
 		}
 
