@@ -53,7 +53,22 @@
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_MULTIPROJ"/>
       </Group>
 
+      <Group guid="guidCPPCheckPluginMultiItemCmdSet" id="MyMultiItemMenuGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_MULTIITEM"/>
+      </Group>
 
+      <Group guid="guidCPPCheckPluginMultiItemCmdSet" id="MyMultiItemMenuGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_FOLDERNODE"/>
+      </Group>
+
+      <Group guid="guidCPPCheckPluginMultiItemCmdSet" id="MyMultiItemMenuGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_XPROJ_PROJITEM"/>
+      </Group>
+
+      <Group guid="guidCPPCheckPluginMultiItemCmdSet" id="MyMultiItemMenuGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
+      </Group>
+      
     </Groups>
     
     <!--Buttons section. -->
@@ -75,13 +90,28 @@
           <ButtonText>Check current project with cppcheck</ButtonText>
         </Strings>
       </Button>
-
+      
+      <Button guid="guidCPPCheckPluginCmdSet" id="cmdidCheckMultiItemCppcheck" priority="0x0100" type="Button">
+        <Parent guid="guidCPPCheckPluginCmdSet" id="MyMenuGroup" />
+        <Icon guid="guidImages" id="bmpPic1" />
+        <Strings>
+          <ButtonText>Check selected items</ButtonText>
+        </Strings>
+      </Button>
 
       <Button guid="guidCPPCheckPluginCmdSet" id="cmdidSettings" priority="0x0100" type="Button">
         <Parent guid="guidCPPCheckPluginCmdSet" id="MyMenuGroup"/>
         <Icon guid="guidImages" id="bmpPic2" />
         <Strings>
           <ButtonText>Cppcheck settings</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidCPPCheckPluginCmdSet" id="cmdidStopCppcheck" priority="0x0100" type="Button">
+        <Parent guid="guidCPPCheckPluginCmdSet" id="MyMenuGroup" />
+        <Icon guid="guidImages" id="bmpPic2" />
+        <Strings>
+          <ButtonText>Stop check</ButtonText>
         </Strings>
       </Button>
 
@@ -99,6 +129,14 @@
         <Icon guid="guidImages" id="bmpPic1" />
         <Strings>
           <ButtonText>CPPCheck current projects</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidCPPCheckPluginMultiItemCmdSet" id="cmdidCheckMultiItemCppcheck" priority="0x0100" type="Button">
+        <Parent guid="guidCPPCheckPluginMultiItemCmdSet" id="MyMultiItemMenuGroup" />
+        <Icon guid="guidImages" id="bmpPic1" />
+        <Strings>
+          <ButtonText>CPPCheck selected items</ButtonText>
         </Strings>
       </Button>
 
@@ -126,8 +164,10 @@
     <GuidSymbol name="guidCPPCheckPluginCmdSet" value="{7fcb87ef-4f0c-4713-8217-5bef43dc0de4}">
 
       <IDSymbol name="MyMenuGroup" value="0x1021" />
-      <IDSymbol name="cmdidCheckProjectCppcheck" value="0x0100" />
-      <IDSymbol name="cmdidSettings" value="0x0101" />
+      <IDSymbol name="cmdidCheckProjectCppcheck" value="0x0101" />
+      <IDSymbol name="cmdidCheckMultiItemCppcheck" value="0x0102" />
+      <IDSymbol name="cmdidStopCppcheck" value="0x0103" />
+      <IDSymbol name="cmdidSettings" value="0x0104" />
     </GuidSymbol>
     
     <GuidSymbol name="guidCPPCheckPluginProjectCmdSet" value="{9019df3f-c4aa-499b-b46a-0bcb43d006db}">
@@ -140,6 +180,10 @@
       <IDSymbol name="cmdidCheckProjectsCppcheck" value="0x0100" />
     </GuidSymbol>
 
+    <GuidSymbol name="guidCPPCheckPluginMultiItemCmdSet" value="{6db8495c-52d3-45d8-ba02-09a3938aa893}">
+      <IDSymbol name="MyMultiItemMenuGroup" value="0x1023" />
+      <IDSymbol name="cmdidCheckMultiItemCppcheck" value="0x0100" />
+    </GuidSymbol>
 
     <GuidSymbol name="guidImages" value="{c0a853da-1933-420e-ac21-cbca10f4542c}" >
       <IDSymbol name="bmpPic1" value="1" />

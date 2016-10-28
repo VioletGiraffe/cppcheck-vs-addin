@@ -155,7 +155,7 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		private void abortThreadIfAny()
+		public void abortThreadIfAny()
 		{
 			if (_thread != null)
 			{
