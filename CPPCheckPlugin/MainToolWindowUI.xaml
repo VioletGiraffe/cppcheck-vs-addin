@@ -2,12 +2,17 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.11.0"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
-    <Grid>
+    <Grid Background="{DynamicResource {x:Static vsp:EnvironmentColors.ToolWindowBackgroundBrushKey}}"
+          >
         <ListView Margin="0" Name="listView" MouseDoubleClick="onProblemDoubleClick"
-                  ScrollViewer.CanContentScroll ="False">
+                  ScrollViewer.CanContentScroll ="False"
+                  Background="{DynamicResource {x:Static vsp:EnvironmentColors.ToolWindowBackgroundBrushKey}}"
+                  Foreground="{DynamicResource {x:Static vsp:EnvironmentColors.ToolWindowTextBrushKey}}"
+                  >
             <ListView.Resources>
                 <DataTemplate x:Key="Template">
                     <Image Source="{Binding Path=Icon}"/>
@@ -66,6 +71,12 @@
             </ListView.ItemContainerStyle>
             <ListView.View>
                 <GridView>
+                    <GridView.ColumnHeaderContainerStyle>
+                        <Style TargetType="{x:Type GridViewColumnHeader}">
+                            <Setter Property="Background" Value="{DynamicResource {x:Static vsp:EnvironmentColors.GridHeadingBackgroundBrushKey}}" />
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:EnvironmentColors.GridHeadingTextBrushKey}}" />
+                        </Style>
+                    </GridView.ColumnHeaderContainerStyle>
                     <GridViewColumn x:Name="SeverityColumn" CellTemplate="{StaticResource Template}" Width ="Auto">
                         <GridViewColumn.Header>
                             <GridViewColumnHeader Tag="Severity" Click="problemColumnHeader_Click"></GridViewColumnHeader>
