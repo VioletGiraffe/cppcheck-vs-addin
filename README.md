@@ -1,24 +1,3 @@
-This fork supports the following extensions to cppcheck:
-
-1. Selected entries in solution explorer can be checked via context menu and tools menu
-
-1.1 Selected filter entries will be scanned recursively
-
-
-2. stop currently running analyse processes via menu entry 
-
-
-3. Prevents setting the focus to the analysis window after saving files
-
-4. Performance optimation
-
-4.1 Column size calculation will not be performed on all problems
-
-5. Keep sorting indicator after clear
-
-
-
-
 #Visual Studio integration add-in for Cppcheck
 
 [Cppcheck](http://cppcheck.sourceforge.net/) is a C and C++ source code static analysis tool.
