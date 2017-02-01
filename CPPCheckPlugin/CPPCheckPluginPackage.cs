@@ -523,6 +523,12 @@ namespace VSPackage.CPPCheckPlugin
 						files.Add(f);
 				}
 			}
+			if (!files.Any())
+			{
+				System.Windows.MessageBox.Show(String.Format(
+					"Project {0} contains no suitable source files.", p.Name));
+				return null;
+			}
 			return files;
 		}
 
