@@ -470,7 +470,10 @@ namespace VSPackage.CPPCheckPlugin
             List<ConfiguredFiles> configuredFilesList = new List<ConfiguredFiles>();
             foreach (ConfiguredFiles configuredFiles in confMap.Values)
             {
-                configuredFilesList.Add(configuredFiles);
+                if (configuredFiles.Files.Any())
+                {
+                    configuredFilesList.Add(configuredFiles);
+                }
             }
 
             return configuredFilesList;
@@ -522,12 +525,6 @@ namespace VSPackage.CPPCheckPlugin
 					if (f != null)
 						files.Add(f);
 				}
-			}
-			if (!files.Any())
-			{
-				System.Windows.MessageBox.Show(String.Format(
-					"Project {0} contains no suitable source files.", p.Name));
-				return null;
 			}
 			return files;
 		}
