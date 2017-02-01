@@ -591,11 +591,7 @@ namespace VSPackage.CPPCheckPlugin
 
         private static bool isFilter(dynamic checkObject)
         {
-            Type checkObjectType = checkObject.GetType();
-            var vcFilterInterface = checkObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCFilter");
-            if (vcFilterInterface != null)
-                return true;
-            return false;
+            return implementsInterface(checkObject, "Microsoft.VisualStudio.VCProjectEngine.VCFilter");
         }
 
         private void runSavedFileAnalysis(SourceFile file, Configuration currentConfig, OutputWindowPane outputPane)
@@ -644,9 +640,7 @@ namespace VSPackage.CPPCheckPlugin
 				foreach (var tool in toolsCollection)
 				{
 					// Project-specific includes
-					Type toolType = tool.GetType();
-					var compilerToolInterface = toolType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool");
-					if (compilerToolInterface != null)
+					if (implementsInterface(tool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
 					{
 						String includes = tool.FullIncludePath;
 						String definitions = tool.PreprocessorDefinitions;
@@ -672,9 +666,14 @@ namespace VSPackage.CPPCheckPlugin
 
 		private static bool isVisualCppProject(object project)
 		{
-			Type projectObjectType = project.GetType();
-			var projectInterface = projectObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCProject");
-			return projectInterface != null;
+			return implementsInterface(project, "Microsoft.VisualStudio.VCProjectEngine.VCProject");
+		}
+
+		private static bool implementsInterface(object objectToCheck, String interfaceName)
+		{
+			Type objectType = objectToCheck.GetType();
+			var requestedInterface = objectType.GetInterface(interfaceName);
+			return requestedInterface != null;
 		}
 
 		private void checkProgressUpdated(object sender, ICodeAnalyzer.ProgressEvenArgs e)
