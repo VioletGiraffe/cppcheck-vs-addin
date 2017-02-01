@@ -347,13 +347,12 @@ namespace VSPackage.CPPCheckPlugin
 
         private static void addEntry(ConfiguredFiles configuredFiles, List<SourceFile> sourceFileList, Project project)
         {
-            Boolean foundFlag = false;
             foreach (SourceFile newSourceFile in sourceFileList)
             {
                 if (newSourceFile == null)
                     continue;
 
-                foundFlag = false;
+                bool foundFlag = false;
                 for (int index = 0; index < configuredFiles.Files.Count && !foundFlag; index++)
                 {
                     if (newSourceFile.FileName.CompareTo(configuredFiles.Files[index].FileName) == 0 &&
