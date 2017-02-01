@@ -105,7 +105,10 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			var project = activeProject();
 			if (project != null)
-				return project.ProjectDirectory.Replace("\"", "");
+			{
+				String projectDirectory = project.ProjectDirectory;
+				return projectDirectory.Replace("\"", "");
+			}
 
 			return "";
 		}
