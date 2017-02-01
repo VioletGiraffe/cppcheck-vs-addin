@@ -353,13 +353,14 @@ namespace VSPackage.CPPCheckPlugin
                     continue;
 
                 bool foundFlag = false;
-                for (int index = 0; index < configuredFiles.Files.Count && !foundFlag; index++)
+                for (int index = 0; index < configuredFiles.Files.Count; index++)
                 {
                     if (newSourceFile.FileName.CompareTo(configuredFiles.Files[index].FileName) == 0 &&
                         newSourceFile.FilePath.CompareTo(configuredFiles.Files[index].FilePath) == 0)
                     {
                         // file already exists in list
                         foundFlag = true;
+                        break;
                     }
                 }
 
