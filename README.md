@@ -21,7 +21,7 @@ Should you decide to open, build and debug the project please follow these steps
 If you plan to open the project in more that one supported version you'll have to install
 the matching Visual Studio SDK for each version of Visual Studio separately.
 <a href="http://www.microsoft.com/en-us/download/details.aspx?id=30668">Here's Visual Studio 2012 SDK</a>
-and <a href="http://www.microsoft.com/en-us/download/details.aspx?id=40758">here's Visual Studio 2013 SDK</a>.
+and <a href="http://www.microsoft.com/en-us/download/details.aspx?id=40758">here's Visual Studio 2013 SDK</a>. Starting with Visual Studio 2015, the <a href="https://msdn.microsoft.com/en-us/library/mt683786.aspx">SDK is an optional feature</a> to install.
 
   * Note: if the Visual Studio instance in which you planned to open the project was running
  while you were installing the SDK you'll have to restart
