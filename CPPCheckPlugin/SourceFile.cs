@@ -64,16 +64,16 @@ namespace VSPackage.CPPCheckPlugin
 			if (String.IsNullOrEmpty(path)|| path.Equals(".") || path.Equals("\\\".\\\""))
 				return;
 
-      bool isAbsolutePath = false;
-      try
-      {
-        isAbsolutePath = System.IO.Path.IsPathRooted(path);
-      }
-      catch (System.ArgumentException)
-      {
-        // seems like an invalid path, ignore
-        return;
-      }
+			bool isAbsolutePath = false;
+			try
+			{
+				isAbsolutePath = System.IO.Path.IsPathRooted(path);
+			}
+			catch (System.ArgumentException)
+			{
+				// seems like an invalid path, ignore
+				return;
+			}
 
 			if (isAbsolutePath) // absolute path
 				_includePaths.Add(cleanPath(path));
