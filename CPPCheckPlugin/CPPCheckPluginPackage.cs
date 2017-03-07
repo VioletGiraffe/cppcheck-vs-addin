@@ -136,7 +136,19 @@ namespace VSPackage.CPPCheckPlugin
 
 		#region Package Members
 
-		protected override void Initialize()
+        void CommandEvents_BeforeExecute(string Guid, int ID, object CustomIn, object CustomOut, ref bool CancelDefault)
+        {
+            if (ID == commandEventIdSave || ID == commandEventIdSaveAll)
+            {
+                if (Properties.Settings.Default.CheckSavedFilesHasValue && Properties.Settings.Default.CheckSavedFiles == true)
+                {
+                    // Stop running analysis to prevent an save dialog popup
+                    stopAnalysis();
+                }
+            }
+        }
+
+        protected override void Initialize()
 		{
 			Debug.WriteLine (string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
 			base.Initialize();
@@ -144,6 +156,9 @@ namespace VSPackage.CPPCheckPlugin
 			_dte = (EnvDTE.DTE)GetService(typeof(SDTE));
             _eventsHandlers = _dte.Events.DocumentEvents;
 			_eventsHandlers.DocumentSaved += documentSaved;
+
+            _commandEventsHandlers = _dte.Events.CommandEvents;
+            _commandEventsHandlers.BeforeExecute += new _dispCommandEvents_BeforeExecuteEventHandler(CommandEvents_BeforeExecute);
 
 			_outputPane = _dte.AddOutputWindowPane("cppcheck analysis output");
 
@@ -712,8 +727,12 @@ namespace VSPackage.CPPCheckPlugin
 
 		private static DTE _dte = null;
 		private DocumentEvents _eventsHandlers = null;
-		private List<ICodeAnalyzer> _analyzers = new List<ICodeAnalyzer>();
+        private CommandEvents _commandEventsHandlers = null;
+        private List<ICodeAnalyzer> _analyzers = new List<ICodeAnalyzer>();
 
 		private static OutputWindowPane _outputPane = null;
-	}
+
+        private const int commandEventIdSave = 331;
+        private const int commandEventIdSaveAll = 224;
+    }
 }
