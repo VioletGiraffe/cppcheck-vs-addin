@@ -135,9 +135,8 @@ namespace VSPackage.CPPCheckPlugin
 
         void CommandEvents_BeforeExecute(string Guid, int ID, object CustomIn, object CustomOut, ref bool CancelDefault)
         {
-            if (ID == 331 || ID == 224)
+            if (ID == commandEventIdSave || ID == commandEventIdSaveAll)
             {
-                // "Save" or "Save All" invoked
                 if (Properties.Settings.Default.CheckSavedFilesHasValue && Properties.Settings.Default.CheckSavedFiles == true)
                 {
                     // Stop running analysis to prevent an save dialog popup
@@ -727,5 +726,8 @@ namespace VSPackage.CPPCheckPlugin
         private List<ICodeAnalyzer> _analyzers = new List<ICodeAnalyzer>();
 
 		private static OutputWindowPane _outputPane = null;
-	}
+
+        private const int commandEventIdSave = 331;
+        private const int commandEventIdSaveAll = 224;
+    }
 }
