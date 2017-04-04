@@ -127,24 +127,27 @@ namespace VSPackage.CPPCheckPlugin
 					cppheckargs += (" --suppress=" + suppression);
 			}
 
-			// We only add include paths once, and then specify a set of files to check
-			HashSet<string> includePaths = new HashSet<string>();
-			foreach (var file in filesToAnalyze)
-			{
-				if (!matchMasksList(file.FilePath, unitedSuppressionsInfo.SkippedFilesMask))
-					includePaths.UnionWith(file.IncludePaths);
-			}
+            if (!(analysisOnSavedFile && Properties.Settings.Default.IgnoreIncludePaths))
+            {
+                // We only add include paths once, and then specify a set of files to check
+                HashSet<string> includePaths = new HashSet<string>();
+                foreach (var file in filesToAnalyze)
+                {
+                    if (!matchMasksList(file.FilePath, unitedSuppressionsInfo.SkippedFilesMask))
+                        includePaths.UnionWith(file.IncludePaths);
+                }
 
-			includePaths.Add(filesToAnalyze[0].BaseProjectPath); // Fix for #60
+                includePaths.Add(filesToAnalyze[0].BaseProjectPath); // Fix for #60
 
-			foreach (string path in includePaths)
-			{
-				if (!matchMasksList(path, unitedSuppressionsInfo.SkippedIncludesMask))
-				{
-					String includeArgument = " -I\"" + path + "\"";
-					cppheckargs = cppheckargs + " " + includeArgument;
-				}
-			}
+                foreach (string path in includePaths)
+                {
+                    if (!matchMasksList(path, unitedSuppressionsInfo.SkippedIncludesMask))
+                    {
+                        String includeArgument = " -I\"" + path + "\"";
+                        cppheckargs = cppheckargs + " " + includeArgument;
+                    }
+                }
+            }
 
 			using (StreamWriter tempFile = new StreamWriter(tempFileName))
 			{

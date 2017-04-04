@@ -53,6 +53,7 @@ namespace VSPackage.CPPCheckPlugin
 			Project_OnlyCheckCurrentConfig.IsChecked = settings.ProjectOnlyCheckCurrentConfig;
 			File_OnlyCheckCurrentConfig.IsChecked = settings.FileOnlyCheckCurrentConfig;
 			ArgumentsEditor.Text = settings.DefaultArguments;
+            IgnoreIncludePaths.IsChecked = settings.IgnoreIncludePaths;
 		}
 
 		private void OnClosed(object o, EventArgs e)
@@ -85,7 +86,19 @@ namespace VSPackage.CPPCheckPlugin
 			Properties.Settings.Default.Save();
 		}
 
-		private void onDefaultArguments(object sender, RoutedEventArgs e)
+        private void ignoreIncludePaths_Unchecked(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.IgnoreIncludePaths = false;
+            Properties.Settings.Default.Save();
+        }
+
+        private void ignoreIncludePaths_Checked(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.IgnoreIncludePaths = true;
+            Properties.Settings.Default.Save();
+        }
+
+        private void onDefaultArguments(object sender, RoutedEventArgs e)
 		{
 			Properties.Settings.Default.DefaultArguments = DefaultArguments;
 			ArgumentsEditor.Text = DefaultArguments;
