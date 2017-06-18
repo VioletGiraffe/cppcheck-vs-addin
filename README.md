@@ -1,4 +1,4 @@
-#Visual Studio integration add-in for Cppcheck
+# Visual Studio integration add-in for Cppcheck
 
 [Cppcheck](http://cppcheck.sourceforge.net/) is a C and C++ source code static analysis tool.
 
@@ -8,12 +8,12 @@ This plugin integrates Cppcheck into Visual Studio and allows:
  * checking the currently selected project in the Solution Explorer (menu -> Tools -> Check current project);
  * convenient message suppression management with options to suppress specific messages, all messages in a given file, specific message types in a given file, message types globally, solution-wide and project-wide.
 
-###Download
+### Download
 Visual Studio 2012, 2013 and 2015 (except Express editions) supported.
 
 **<a href="https://github.com/VioletGiraffe/cppcheck-vs-addin/releases/latest">Get the latest release</a>**
 
-###Contributors
+### Contributors
 
 Should you decide to open, build and debug the project please follow these steps:
 
