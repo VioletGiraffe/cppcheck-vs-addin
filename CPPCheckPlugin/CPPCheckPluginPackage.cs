@@ -121,12 +121,11 @@ namespace VSPackage.CPPCheckPlugin
 
 			foreach (dynamic o in activeProjects)
 			{
-				dynamic project = o.Object;
-				if (!isVisualCppProject(project))
+				if (!isVisualCppProject(o))
 				{
 					return null;
 				}
-				return project;
+				return o.Object;
 			}
 
 			return null;
@@ -289,8 +288,8 @@ namespace VSPackage.CPPCheckPlugin
 			}
 			try
 			{
-				dynamic project = document.ProjectItem.ContainingProject.Object;
-				if (!isVisualCppProject(project))
+				var kind = document.ProjectItem.ContainingProject.Kind;
+				if (!isVisualCppProject(document.ProjectItem.ContainingProject.Kind))
 				{
 					return;
 				}
@@ -304,6 +303,7 @@ namespace VSPackage.CPPCheckPlugin
 					return;
 				}
 
+				dynamic project = document.ProjectItem.ContainingProject.Object;
 				SourceFile sourceForAnalysis = createSourceFile(document.FullName, currentConfig, project);
 				if (sourceForAnalysis == null)
 					return;
@@ -428,7 +428,7 @@ namespace VSPackage.CPPCheckPlugin
                     project = selItem.Project;
                 }
 
-                if (project == null || !isVisualCppProject(project.Object))
+                if (project == null || !isVisualCppProject(project.Kind))
                 {
                     continue;
                 }
@@ -524,13 +524,14 @@ namespace VSPackage.CPPCheckPlugin
 
         private List<SourceFile> getProjectFiles(Project p, Configuration currentConfig)
 		{
-			dynamic project = p.Object;
-			if (!isVisualCppProject(project))
+			if (!isVisualCppProject(p.Kind))
 			{
 				System.Windows.MessageBox.Show("Only C++ projects can be checked.");
 				return null;
 			}
+
 			List<SourceFile> files = new List<SourceFile>();
+			dynamic project = p.Object;
 			dynamic projectFiles = project.Files;
 			foreach (dynamic file in projectFiles)
 			{
@@ -641,7 +642,8 @@ namespace VSPackage.CPPCheckPlugin
 
 		private static SourceFile createSourceFile(string filePath, Configuration targetConfig, dynamic project)
 		{
-			Debug.Assert(isVisualCppProject((object)project));
+			// TODO:
+			//Debug.Assert(isVisualCppProject((object)project));
 			try
 			{
 				var configurationName = targetConfig.ConfigurationName;
@@ -680,9 +682,9 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		private static bool isVisualCppProject(object project)
+		private static bool isVisualCppProject(string kind)
 		{
-			return implementsInterface(project, "Microsoft.VisualStudio.VCProjectEngine.VCProject");
+			return kind.Equals("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}");
 		}
 
 		private static bool implementsInterface(object objectToCheck, String interfaceName)
