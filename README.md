@@ -13,7 +13,7 @@ Visual Studio 2012, 2013 and 2015 (except Express editions) supported.
 
 **<a href="https://github.com/VioletGiraffe/cppcheck-vs-addin/releases/latest">Get the latest release</a>**
 
-NOTE: The add-in does not deploy CppCheck executable. Please, go to [Cppcheck](http://cppcheck.sourceforge.net/) webiste, download the installer and install it before first use of the add-in. The add-in then may prompt for location of the `cppcheck.exe`.
+NOTE: The add-in does not deploy Cppcheck executable. Please, go to [Cppcheck](http://cppcheck.sourceforge.net/) website, download the installer and install it before first use of the add-in. The add-in then may prompt for location of the `cppcheck.exe`.
 
 ### Contributors
 
