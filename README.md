@@ -9,7 +9,7 @@ This plugin integrates Cppcheck into Visual Studio and allows:
  * convenient message suppression management with options to suppress specific messages, all messages in a given file, specific message types in a given file, message types globally, solution-wide and project-wide.
 
 ### Download
-Visual Studio 2012, 2013 and 2015 (except Express editions) supported.
+Visual Studio 2015 and 2017 are supported.
 
 **<a href="https://github.com/VioletGiraffe/cppcheck-vs-addin/releases/latest">Get the latest release</a>**
 
