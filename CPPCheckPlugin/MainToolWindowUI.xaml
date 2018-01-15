@@ -3,15 +3,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
+             xmlns:self="clr-namespace:VSPackage.CPPCheckPlugin"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
-    <Grid Background="{DynamicResource {x:Static vsp:EnvironmentColors.ToolWindowBackgroundBrushKey}}"
+    <Grid Background="{DynamicResource {x:Static self:EnvironmentColorsWrapper.ToolWindowBackgroundBrushKey}}"
           >
         <ListView Margin="0" Name="listView" MouseDoubleClick="onProblemDoubleClick"
                   ScrollViewer.CanContentScroll ="False"
-                  Background="{DynamicResource {x:Static vsp:EnvironmentColors.ToolWindowBackgroundBrushKey}}"
-                  Foreground="{DynamicResource {x:Static vsp:EnvironmentColors.ToolWindowTextBrushKey}}"
+                  Background="{DynamicResource {x:Static self:EnvironmentColorsWrapper.ToolWindowBackgroundBrushKey}}"
+                  Foreground="{DynamicResource {x:Static self:EnvironmentColorsWrapper.ToolWindowTextBrushKey}}"
                   >
             <ListView.Resources>
                 <DataTemplate x:Key="Template">
@@ -73,8 +73,8 @@
                 <GridView>
                     <GridView.ColumnHeaderContainerStyle>
                         <Style TargetType="{x:Type GridViewColumnHeader}">
-                            <Setter Property="Background" Value="{DynamicResource {x:Static vsp:EnvironmentColors.GridHeadingBackgroundBrushKey}}" />
-                            <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:EnvironmentColors.GridHeadingTextBrushKey}}" />
+                            <Setter Property="Background" Value="{DynamicResource {x:Static self:EnvironmentColorsWrapper.GridHeadingBackgroundBrushKey}}" />
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static self:EnvironmentColorsWrapper.GridHeadingTextBrushKey}}" />
                         </Style>
                     </GridView.ColumnHeaderContainerStyle>
                     <GridViewColumn x:Name="SeverityColumn" CellTemplate="{StaticResource Template}" Width ="Auto">
