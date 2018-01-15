@@ -1,0 +1,19 @@
+version: 1.3.{build}
+configuration: Release
+platform: Any CPU
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: '{version}'
+  assembly_file_version: '{version}'
+  assembly_informational_version: '{version}'
+environment:
+  matrix:
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    VisualStudioVersion: 14.0
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    VisualStudioVersion: 15.0
+build:
+  verbosity: minimal
+artifacts:
+- path: .\CPPCheckPlugin\bin\**\*.vsix
