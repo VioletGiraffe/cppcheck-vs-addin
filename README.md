@@ -1,5 +1,7 @@
 # Visual Studio integration add-in for Cppcheck
 
+![](https://ci.appveyor.com/api/projects/status/8qe1iy0ook8rme9o?svg=true)
+
 [Cppcheck](http://cppcheck.sourceforge.net/) is a C and C++ source code static analysis tool.
 
 This plugin integrates Cppcheck into Visual Studio and allows:
