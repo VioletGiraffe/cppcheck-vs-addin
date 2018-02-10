@@ -663,9 +663,10 @@ namespace VSPackage.CPPCheckPlugin
 						String includes = tool.FullIncludePath;
 						String definitions = tool.PreprocessorDefinitions;
 						String macrosToUndefine = tool.UndefinePreprocessorDefinitions;
+
 						String[] includePaths = includes.Split(';');
 						for (int i = 0; i < includePaths.Length; ++i)
-							includePaths[i] = config.Evaluate(includePaths[i]);
+							includePaths[i] = Environment.ExpandEnvironmentVariables(config.Evaluate(includePaths[i])); ;
 
 						sourceForAnalysis.addIncludePaths(includePaths);
 						sourceForAnalysis.addMacros(definitions.Split(';'));
