@@ -17,4 +17,3 @@ namespace VSPackage.CPPCheckPlugin
 		}
 	}
 }
-

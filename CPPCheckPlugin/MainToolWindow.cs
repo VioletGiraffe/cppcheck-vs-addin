@@ -32,12 +32,12 @@ namespace VSPackage.CPPCheckPlugin
 
 		public static MainToolWindow Instance
 		{
-			get{return _instance;}
+			get { return _instance; }
 		}
 
 		public void bringToFront()
 		{
-            /*
+			/*
 			IVsWindowFrame frame = Frame as IVsWindowFrame;
 			if (frame == null)
 				return;
@@ -59,7 +59,7 @@ namespace VSPackage.CPPCheckPlugin
 		public void clear()
 		{
 			_listView.Items.Clear();
-            //_ui.ClearSorting();
+			//_ui.ClearSorting();
 		}
 
 		public bool isEmpty()
@@ -89,11 +89,11 @@ namespace VSPackage.CPPCheckPlugin
 
 		public void displayProblem(Problem problem, bool autoSize)
 		{
-			Application.Current.Dispatcher.BeginInvoke(new Action(()=> 
+			Application.Current.Dispatcher.BeginInvoke(new Action(() =>
 			{
-				_listView.Items.Add(new MainToolWindowUI.ProblemsListItem(problem)); 
-				if(autoSize)
-                    AutoSizeColumns();
+				_listView.Items.Add(new MainToolWindowUI.ProblemsListItem(problem));
+				if (autoSize)
+					AutoSizeColumns();
 			}));
 		}
 

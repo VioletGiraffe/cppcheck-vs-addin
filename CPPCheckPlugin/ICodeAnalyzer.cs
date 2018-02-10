@@ -106,8 +106,8 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			if (MainToolWindow.Instance == null || problems == null)
 				return;
-			
-			foreach(var problem in problems)
+
+			foreach (var problem in problems)
 				MainToolWindow.Instance.displayProblem(problem, false);
 		}
 
@@ -312,7 +312,7 @@ namespace VSPackage.CPPCheckPlugin
 		}
 
 		protected String _projectBasePath = null; // Base path for a project currently being checked
-		protected String _projectName     = null; // Name of a project currently being checked
+		protected String _projectName = null; // Name of a project currently being checked
 
 		private OutputWindowPane _outputPane = null;
 		protected int _numCores;

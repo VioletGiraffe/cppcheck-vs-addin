@@ -53,7 +53,7 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			var enabledSeverities = Properties.Settings.Default.SeveritiesString.Split(',');
 			HashSet<string> suppressions = new HashSet<string>(Properties.Settings.Default.SuppressionsString.Split(','));
-			
+
 			foreach (var severity in mChecks)
 			{
 				severity.Value.scrollView.IsEnabled = false;

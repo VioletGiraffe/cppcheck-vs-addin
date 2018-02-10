@@ -12,12 +12,12 @@ namespace VSPackage.CPPCheckPlugin
 
 		public Problem(ICodeAnalyzer analyzer, SeverityLevel severity, String messageId, String message, String file, int line, String baseProjectPath, String projectName)
 		{
-			_analyzer  = analyzer;
-			_severity  = severity;
+			_analyzer = analyzer;
+			_severity = severity;
 			_messageId = messageId;
-			_message   = message;
-			_file      = file;
-			_line      = line;
+			_message = message;
+			_file = file;
+			_line = line;
 			_baseProjectPath = baseProjectPath;
 			_projectName = projectName;
 		}
@@ -31,7 +31,7 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			get { return _severity; }
 		}
-		
+
 		public String MessageId
 		{
 			get { return _messageId; }
@@ -46,7 +46,7 @@ namespace VSPackage.CPPCheckPlugin
 		// This should be file path relative to project root
 		public String FullFileName
 		{
-			get {  return _file; }
+			get { return _file; }
 		}
 
 		// file name only without path
@@ -60,11 +60,12 @@ namespace VSPackage.CPPCheckPlugin
 
 		public String FilePath
 		{
-			get {
+			get
+			{
 				if (String.IsNullOrWhiteSpace(_file))
 					return _file;
 				else if (_file.Contains(":")) // Absolute path
-					return _file; 
+					return _file;
 				else
 				{
 					if (String.IsNullOrWhiteSpace(_baseProjectPath))

@@ -61,7 +61,7 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			if (String.IsNullOrEmpty(_projectBasePath))
 				return;
-			if (String.IsNullOrEmpty(path)|| path.Equals(".") || path.Equals("\\\".\\\""))
+			else if (String.IsNullOrEmpty(path) || path.Equals(".") || path.Equals("\\\".\\\""))
 				return;
 
 			bool isAbsolutePath = false;
@@ -184,16 +184,22 @@ namespace VSPackage.CPPCheckPlugin
 			string result = path.Replace("\"", "");
 			const string doubleBackSlash = "\\\\";
 			const string singleBackSlash = "\\";
-			if( result.StartsWith( doubleBackSlash )) {
+			if (result.StartsWith(doubleBackSlash))
+			{
 				// UNC path - must preserve the leading double slash
-				result = singleBackSlash + result.Replace( doubleBackSlash, singleBackSlash );
-			} else {
-				result = result.Replace( doubleBackSlash, singleBackSlash );
+				result = singleBackSlash + result.Replace(doubleBackSlash, singleBackSlash);
 			}
+			else
+			{
+				result = result.Replace(doubleBackSlash, singleBackSlash);
+			}
+
 			if (result.EndsWith(singleBackSlash))
 				result = result.Substring(0, result.Length - 1);
+
 			if (result.StartsWith(singleBackSlash) && !result.StartsWith(doubleBackSlash))
 				result = result.Substring(1);
+
 			return result;
 		}
 

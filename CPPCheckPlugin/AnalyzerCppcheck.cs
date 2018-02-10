@@ -12,21 +12,21 @@ namespace VSPackage.CPPCheckPlugin
 	class AnalyzerCppcheck : ICodeAnalyzer
 	{
 		private const string tempFilePrefix = "CPPCheckPlugin";
-		
+
 		public AnalyzerCppcheck()
 		{
 			// Perform some cleanup of old temporary files
 			string tempPath = Path.GetTempPath();
-			
-			try 
+
+			try
 			{
 				// Get all files that have our unique prefix
 				string[] oldFiles = Directory.GetFiles(tempPath, tempFilePrefix + "*");
-				
-				foreach (string file in oldFiles) 
+
+				foreach (string file in oldFiles)
 				{
 					DateTime fileModifiedDate = File.GetLastWriteTime(file);
-					
+
 					if (fileModifiedDate.AddMinutes(120) < DateTime.Now)
 					{
 						// File hasn't been written to in the last 120 minutes, so it must be 
@@ -35,9 +35,9 @@ namespace VSPackage.CPPCheckPlugin
 					}
 				}
 			}
-			catch (System.Exception) {}
+			catch (System.Exception) { }
 		}
-		
+
 		~AnalyzerCppcheck()
 		{
 			cleanupTempFiles();
@@ -78,7 +78,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			return analyzerPath;
 		}
-		
+
 		private string getCPPCheckArgs(ConfiguredFiles configuredFiles, bool analysisOnSavedFile, bool multipleProjects, string tempFileName)
 		{
 			Debug.Assert(_numCores > 0);
@@ -127,27 +127,27 @@ namespace VSPackage.CPPCheckPlugin
 					cppheckargs += (" --suppress=" + suppression);
 			}
 
-            if (!(analysisOnSavedFile && Properties.Settings.Default.IgnoreIncludePaths))
-            {
-                // We only add include paths once, and then specify a set of files to check
-                HashSet<string> includePaths = new HashSet<string>();
-                foreach (var file in filesToAnalyze)
-                {
-                    if (!matchMasksList(file.FilePath, unitedSuppressionsInfo.SkippedFilesMask))
-                        includePaths.UnionWith(file.IncludePaths);
-                }
+			if (!(analysisOnSavedFile && Properties.Settings.Default.IgnoreIncludePaths))
+			{
+				// We only add include paths once, and then specify a set of files to check
+				HashSet<string> includePaths = new HashSet<string>();
+				foreach (var file in filesToAnalyze)
+				{
+					if (!matchMasksList(file.FilePath, unitedSuppressionsInfo.SkippedFilesMask))
+						includePaths.UnionWith(file.IncludePaths);
+				}
 
-                includePaths.Add(filesToAnalyze[0].BaseProjectPath); // Fix for #60
+				includePaths.Add(filesToAnalyze[0].BaseProjectPath); // Fix for #60
 
-                foreach (string path in includePaths)
-                {
-                    if (!matchMasksList(path, unitedSuppressionsInfo.SkippedIncludesMask))
-                    {
-                        String includeArgument = " -I\"" + path + "\"";
-                        cppheckargs = cppheckargs + " " + includeArgument;
-                    }
-                }
-            }
+				foreach (string path in includePaths)
+				{
+					if (!matchMasksList(path, unitedSuppressionsInfo.SkippedIncludesMask))
+					{
+						String includeArgument = " -I\"" + path + "\"";
+						cppheckargs = cppheckargs + " " + includeArgument;
+					}
+				}
+			}
 
 			using (StreamWriter tempFile = new StreamWriter(tempFileName))
 			{
@@ -167,7 +167,7 @@ namespace VSPackage.CPPCheckPlugin
 				// Creating the list of all different macros (no duplicates)
 				HashSet<string> macros = new HashSet<string>();
 				macros.Add("__cplusplus=199711L"); // At least in VS2012, this is still 199711L
-				// Assuming all files passed here are from the same project / same toolset, which should be true, so peeking the first file for global settings
+												   // Assuming all files passed here are from the same project / same toolset, which should be true, so peeking the first file for global settings
 				switch (filesToAnalyze[0].vcCompilerVersion)
 				{
 					case SourceFile.VCCompilerVersion.vc2003:
@@ -239,7 +239,7 @@ namespace VSPackage.CPPCheckPlugin
 			}
 			else if (!cppheckargs.Contains("--force"))
 				cppheckargs += " --force";
-			
+
 			return cppheckargs;
 		}
 
@@ -355,7 +355,7 @@ namespace VSPackage.CPPCheckPlugin
 					return list;
 				}
 			}
-			catch (System.Exception) {}
+			catch (System.Exception) { }
 
 			if (output.StartsWith("Checking "))
 			{
@@ -427,7 +427,7 @@ namespace VSPackage.CPPCheckPlugin
 			_tempFileNamesInUse.Add(name);
 			return name;
 		}
-		
+
 		private Problem _unfinishedProblem = null;
 		private List<string> _tempFileNamesInUse = new List<string>();
 	}
