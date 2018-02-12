@@ -59,11 +59,11 @@ namespace VSPackage.CPPCheckPlugin
 							}
 							else if (currentGroup == "cppcheck_files")
 							{
-								SkippedFilesMask.Add(line);
+								SkippedFilesMask.Add(Environment.ExpandEnvironmentVariables(line));
 							}
 							else if (currentGroup == "cppcheck_includes")
 							{
-								SkippedIncludesMask.Add(line);
+								SkippedIncludesMask.Add(Environment.ExpandEnvironmentVariables(line));
 							}
 						}
 
