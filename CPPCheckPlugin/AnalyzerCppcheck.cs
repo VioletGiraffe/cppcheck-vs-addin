@@ -59,20 +59,16 @@ namespace VSPackage.CPPCheckPlugin
 
 			if (String.IsNullOrEmpty(analyzerPath))
 			{
-				for (; ; )
-				{
-					OpenFileDialog dialog = new OpenFileDialog();
-					dialog.Filter = "cppcheck executable|cppcheck.exe";
-					if (dialog.ShowDialog() != DialogResult.OK)
-						continue;
+				OpenFileDialog dialog = new OpenFileDialog();
+				dialog.Filter = "cppcheck executable|cppcheck.exe";
+				if (dialog.ShowDialog() != DialogResult.OK)
+					return String.Empty;
 
-					analyzerPath = dialog.FileName;
-					if (File.Exists(analyzerPath))
-					{
-						Properties.Settings.Default.CPPcheckPath.Add(analyzerPath);
-						Properties.Settings.Default.Save();
-						break;
-					}
+				analyzerPath = dialog.FileName;
+				if (File.Exists(analyzerPath))
+				{
+					Properties.Settings.Default.CPPcheckPath.Add(analyzerPath);
+					Properties.Settings.Default.Save();
 				}
 			}
 
