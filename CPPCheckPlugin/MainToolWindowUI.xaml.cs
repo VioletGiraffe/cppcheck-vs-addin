@@ -259,6 +259,15 @@ namespace VSPackage.CPPCheckPlugin
 
 			Problem _problem;
 		}
+        private void ListView_SelectionChanged()
+        {
+        }
+        private void ListView_SelectionChanged_1(object sender, SelectionChangedEventArgs e)
+        {
+        }
+        private void ListView_SelectionChanged_2(object sender, SelectionChangedEventArgs e)
+        {
+        }
 	}
 
 	public class DeleteObjectInvoker
