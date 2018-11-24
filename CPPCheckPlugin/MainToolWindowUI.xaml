@@ -5,108 +5,138 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.11.0"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300">
-    <Grid Background="{DynamicResource {x:Static vsp:EnvironmentColors.ToolWindowBackgroundBrushKey}}"
-          >
-        <ListView Margin="0" Name="listView" MouseDoubleClick="onProblemDoubleClick"
-                  ScrollViewer.CanContentScroll ="False"
-                  Background="{DynamicResource {x:Static vsp:EnvironmentColors.ToolWindowBackgroundBrushKey}}"
-                  Foreground="{DynamicResource {x:Static vsp:EnvironmentColors.ToolWindowTextBrushKey}}"
-                  >
-            <ListView.Resources>
-                <DataTemplate x:Key="Template">
-                    <Image Source="{Binding Path=Icon}"/>
-                </DataTemplate>
+             d:DesignHeight="300" d:DesignWidth="400">
 
-                <ContextMenu x:Key="ItemContextMenu">
-                    <MenuItem x:Name="menuItem_suppressThisMessageProjectWide"
+    <ListView Margin="0" Name="listView" MouseDoubleClick="onProblemDoubleClick"
+                  ScrollViewer.CanContentScroll ="False" Background="Transparent">
+
+        <ListView.Resources>
+            <DataTemplate x:Key="Template">
+                <Image Source="{Binding Path=Icon}"/>
+            </DataTemplate>
+
+            <ContextMenu x:Key="ItemContextMenu">
+                <MenuItem x:Name="menuItem_suppressThisMessageProjectWide"
                     Click="menuItem_suppressThisMessageProjectWide"
                     Header="Suppress this specific message for the Project">
-                    </MenuItem>
-                    <MenuItem x:Name="menuItem_suppressThisMessageSolutionWide"
+                </MenuItem>
+                <MenuItem x:Name="menuItem_suppressThisMessageSolutionWide"
                     Click="menuItem_suppressThisMessageSolutionWide"
                     Header="Suppress this specific message for the whole Solution">
-                    </MenuItem>
-                    <MenuItem x:Name="menuItem_suppressThisMessageGlobally"
+                </MenuItem>
+                <MenuItem x:Name="menuItem_suppressThisMessageGlobally"
                     Click="menuItem_suppressThisMessageGlobally"
                     Header="Suppress this specific message Globally">
-                    </MenuItem>
-                    <Separator/>
-                    <MenuItem x:Name="menuItem_suppressThisTypeOfMessageFileWide"
+                </MenuItem>
+                <Separator/>
+                <MenuItem x:Name="menuItem_suppressThisTypeOfMessageFileWide"
                     Click="menuItem_suppressThisTypeOfMessageFileWide"
                     Header="Suppress this type of messages in the whole File">
-                    </MenuItem>
-                    <MenuItem x:Name="menuItem_suppressThisTypeOfMessageProjectWide"
+                </MenuItem>
+                <MenuItem x:Name="menuItem_suppressThisTypeOfMessageProjectWide"
                     Click="menuItem_suppressThisTypeOfMessageProjectWide"
                     Header="Suppress this type of messages in the whole Project">
-                    </MenuItem>
-                    <MenuItem x:Name="menuItem_suppressThisTypeOfMessageSolutionWide"
+                </MenuItem>
+                <MenuItem x:Name="menuItem_suppressThisTypeOfMessageSolutionWide"
                     Click="menuItem_suppressThisTypeOfMessageSolutionWide"
                     Header="Suppress this type of messages in the whole Solution">
-                    </MenuItem>
-                    <MenuItem x:Name="menuItem_suppressThisTypeOfMessageGlobally"
+                </MenuItem>
+                <MenuItem x:Name="menuItem_suppressThisTypeOfMessageGlobally"
                     Click="menuItem_suppressThisTypeOfMessageGlobally"
                     Header="Suppress this type of messages Globally">
-                    </MenuItem>
-                    <Separator/>
-                    <MenuItem x:Name="menuItem_suppressAllMessagesThisFileProjectWide"
+                </MenuItem>
+                <Separator/>
+                <MenuItem x:Name="menuItem_suppressAllMessagesThisFileProjectWide"
                     Click="menuItem_suppressAllMessagesThisFileProjectWide"
                     Header="Suppress all messages from this file in the Project">
-                    </MenuItem>
-                    <MenuItem x:Name="menuItem_suppressAllMessagesThisFileSolutionWide"
+                </MenuItem>
+                <MenuItem x:Name="menuItem_suppressAllMessagesThisFileSolutionWide"
                     Click="menuItem_suppressAllMessagesThisFileSolutionWide"
                     Header="Suppress all messages from this file in the whole Solution">
-                    </MenuItem>
-                    <MenuItem x:Name="menuItem_suppressAllMessagesThisFileGlobally"
+                </MenuItem>
+                <MenuItem x:Name="menuItem_suppressAllMessagesThisFileGlobally"
                     Click="menuItem_suppressAllMessagesThisFileGlobally"
                     Header="Suppress all messages from this file Globally">
-                    </MenuItem>
-                </ContextMenu>
-            </ListView.Resources>
-            <ListView.ItemContainerStyle>
-                <Style TargetType="{x:Type ListViewItem}">
-                    <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"/>
-                    <Setter Property="VerticalContentAlignment" Value="Top"/>
-                </Style>
-            </ListView.ItemContainerStyle>
-            <ListView.View>
-                <GridView>
-                    <GridView.ColumnHeaderContainerStyle>
-                        <Style TargetType="{x:Type GridViewColumnHeader}">
-                            <Setter Property="Background" Value="{DynamicResource {x:Static vsp:EnvironmentColors.GridHeadingBackgroundBrushKey}}" />
-                            <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:EnvironmentColors.GridHeadingTextBrushKey}}" />
-                        </Style>
-                    </GridView.ColumnHeaderContainerStyle>
-                    <GridViewColumn x:Name="SeverityColumn" CellTemplate="{StaticResource Template}" Width ="Auto">
-                        <GridViewColumn.Header>
-                            <GridViewColumnHeader Tag="Severity" Click="problemColumnHeader_Click"></GridViewColumnHeader>
-                        </GridViewColumn.Header>
-                    </GridViewColumn>
-                    <GridViewColumn x:Name="FileNameColumn" DisplayMemberBinding="{Binding FileName}" Width="Auto">
-                        <GridViewColumn.Header>
-                            <GridViewColumnHeader Tag="FileName" Click="problemColumnHeader_Click">File</GridViewColumnHeader>
-                        </GridViewColumn.Header>
-                    </GridViewColumn>
-                    <GridViewColumn x:Name="LineColumn" DisplayMemberBinding="{Binding Line}" Width="Auto">
-                        <GridViewColumn.Header>
-                            <GridViewColumnHeader Tag="Line">Line</GridViewColumnHeader>
-                        </GridViewColumn.Header>
-                    </GridViewColumn>
-                    <GridViewColumn x:Name="MessageColumn" DisplayMemberBinding="{Binding Message}" Width="{Binding ElementName=helperField, Path=ActualWidth}">
-                        <GridViewColumn.Header>
-                            <GridViewColumnHeader Tag="Message" Click="problemColumnHeader_Click">Message</GridViewColumnHeader>
-                        </GridViewColumn.Header>
-                    </GridViewColumn>
-                </GridView>
-            </ListView.View>
-        </ListView>
-        <!--This is the hidden helper Grid which does the resizing -->
-        <Grid Visibility="Hidden">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <!--This is the hidden helper Field which is used to bind to, using the "Fill" column of the helper grid-->
-            <Grid Grid.Column="1" x:Name="helperField"/>
-        </Grid>
-    </Grid>
+                </MenuItem>
+            </ContextMenu>
+        </ListView.Resources>
+        <ListView.ItemContainerStyle>
+            <Style TargetType="{x:Type ListViewItem}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ListViewItem}">
+                            <Border x:Name="Bd"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        Background="{TemplateBinding Background}"
+                                        Padding="{TemplateBinding Padding}"
+                                        SnapsToDevicePixels="true">
+                                <GridViewRowPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                          SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"/>
+                <Setter Property="VerticalContentAlignment" Value="Top"/>
+                <Style.Triggers>
+                    <Trigger Property="IsSelected" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemActiveBrushKey}}" />
+                        <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemActiveTextBrushKey}}" />
+                    </Trigger>
+                    <Trigger Property="IsSelected" Value="False">
+                        <Setter Property="Background" Value="{DynamicResource {x:Static vsp:TreeViewColors.BackgroundBrushKey}}" />
+                        <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:TreeViewColors.BackgroundTextBrushKey}}" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </ListView.ItemContainerStyle>
+        <ListView.View>
+            <GridView>
+                <GridView.ColumnHeaderContainerStyle>
+                    <Style TargetType="{x:Type GridViewColumnHeader}">
+                        <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.DefaultBrushKey}}" />
+                        <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:HeaderColors.DefaultTextBrushKey}}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vsp:HeaderColors.SeparatorLineBrushKey}}"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseOverBrushKey}}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseOverTextBrushKey}}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseDownBrushKey}}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseDownTextBrushKey}}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </GridView.ColumnHeaderContainerStyle>
+                <GridViewColumn x:Name="SeverityColumn" CellTemplate="{StaticResource Template}" Width ="32">
+                    <GridViewColumn.Header>
+                        <GridViewColumnHeader Tag="Severity" Click="problemColumnHeader_Click"></GridViewColumnHeader>
+                    </GridViewColumn.Header>
+                </GridViewColumn>
+                <GridViewColumn x:Name="FileNameColumn" DisplayMemberBinding="{Binding FileName}" Width="Auto">
+                    <GridViewColumn.Header>
+                        <GridViewColumnHeader Tag="FileName" Click="problemColumnHeader_Click">File</GridViewColumnHeader>
+                    </GridViewColumn.Header>
+                </GridViewColumn>
+                <GridViewColumn x:Name="LineColumn" DisplayMemberBinding="{Binding Line}" Width="Auto">
+                    <GridViewColumn.Header>
+                        <GridViewColumnHeader Tag="Line">Line</GridViewColumnHeader>
+                    </GridViewColumn.Header>
+                </GridViewColumn>
+                <GridViewColumn x:Name="MessageColumn" Width="{Binding ElementName=helperField, Path=ActualWidth}">
+                    <GridViewColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock TextWrapping="Wrap" Text="{Binding Message}" />
+                        </DataTemplate>
+                    </GridViewColumn.CellTemplate>
+                    <GridViewColumn.Header>
+                        <GridViewColumnHeader Tag="Message" Click="problemColumnHeader_Click" RenderTransformOrigin="2.065,0.467">Message</GridViewColumnHeader>
+                    </GridViewColumn.Header>
+                </GridViewColumn>
+            </GridView>
+        </ListView.View>
+    </ListView>
 </UserControl>
