@@ -38,8 +38,8 @@ namespace VSPackage.CPPCheckPlugin
 
 		private static int iconSize = 20;
 
-        private GridViewColumnHeader listViewSortCol = null;
-        private SortAdorner listViewSortAdorner = null;
+		private GridViewColumnHeader listViewSortCol = null;
+		private SortAdorner listViewSortAdorner = null;
 
 		public MainToolWindowUI()
 		{
@@ -127,54 +127,54 @@ namespace VSPackage.CPPCheckPlugin
 			return obj as TParent;
 		}
 
-        private void problemColumnHeader_Click(object sender, RoutedEventArgs e)
-        {
-            GridViewColumnHeader column = (sender as GridViewColumnHeader);
-            string sortBy = column.Tag.ToString();
+		private void problemColumnHeader_Click(object sender, RoutedEventArgs e)
+		{
+			GridViewColumnHeader column = (sender as GridViewColumnHeader);
+			string sortBy = column.Tag.ToString();
 
-            ClearSorting();
+			ClearSorting();
 
-            ListSortDirection newDir = ListSortDirection.Ascending;
-            if (listViewSortCol == column && listViewSortAdorner.Direction == newDir)
-            {
-                newDir = ListSortDirection.Descending;
-            }
+			ListSortDirection newDir = ListSortDirection.Ascending;
+			if (listViewSortCol == column && listViewSortAdorner.Direction == newDir)
+			{
+				newDir = ListSortDirection.Descending;
+			}
 
-            listViewSortCol = column;
-            listViewSortAdorner = new SortAdorner(listViewSortCol, newDir);
-            AdornerLayer.GetAdornerLayer(listViewSortCol).Add(listViewSortAdorner);
+			listViewSortCol = column;
+			listViewSortAdorner = new SortAdorner(listViewSortCol, newDir);
+			AdornerLayer.GetAdornerLayer(listViewSortCol).Add(listViewSortAdorner);
 
-            if (sortBy == "Severity")
-            {
-                listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
-                listView.Items.SortDescriptions.Add(new SortDescription("FileName", ListSortDirection.Ascending));
-                listView.Items.SortDescriptions.Add(new SortDescription("Line", ListSortDirection.Ascending));
-            }
-            else if (sortBy == "FileName")
-            {
-                listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
-                listView.Items.SortDescriptions.Add(new SortDescription("Line", ListSortDirection.Ascending));
-            }
-            else if (sortBy == "Message")
-            {
-                listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
-                listView.Items.SortDescriptions.Add(new SortDescription("FileName", ListSortDirection.Ascending));
-                listView.Items.SortDescriptions.Add(new SortDescription("Line", ListSortDirection.Ascending));
-            }
-            else
-            {
-                listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
-            }
-        }
+			if (sortBy == "Severity")
+			{
+				listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
+				listView.Items.SortDescriptions.Add(new SortDescription("FileName", ListSortDirection.Ascending));
+				listView.Items.SortDescriptions.Add(new SortDescription("Line", ListSortDirection.Ascending));
+			}
+			else if (sortBy == "FileName")
+			{
+				listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
+				listView.Items.SortDescriptions.Add(new SortDescription("Line", ListSortDirection.Ascending));
+			}
+			else if (sortBy == "Message")
+			{
+				listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
+				listView.Items.SortDescriptions.Add(new SortDescription("FileName", ListSortDirection.Ascending));
+				listView.Items.SortDescriptions.Add(new SortDescription("Line", ListSortDirection.Ascending));
+			}
+			else
+			{
+				listView.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
+			}
+		}
 
-        public void ClearSorting()
-        {
-            if(listViewSortCol != null)
-            {
-                AdornerLayer.GetAdornerLayer(listViewSortCol).Remove(listViewSortAdorner);
-                listView.Items.SortDescriptions.Clear();
-            }
-        }
+		public void ClearSorting()
+		{
+			if (listViewSortCol != null)
+			{
+				AdornerLayer.GetAdornerLayer(listViewSortCol).Remove(listViewSortAdorner);
+				listView.Items.SortDescriptions.Clear();
+			}
+		}
 
 		public class ProblemsListItem
 		{
@@ -199,10 +199,10 @@ namespace VSPackage.CPPCheckPlugin
 				get { return _problem.Line; }
 			}
 
-            public Problem.SeverityLevel Severity
-            {
-                get { return _problem.Severity; }
-            }
+			public Problem.SeverityLevel Severity
+			{
+				get { return _problem.Severity; }
+			}
 
 			public ImageSource Icon
 			{
@@ -259,15 +259,15 @@ namespace VSPackage.CPPCheckPlugin
 
 			Problem _problem;
 		}
-        private void ListView_SelectionChanged()
-        {
-        }
-        private void ListView_SelectionChanged_1(object sender, SelectionChangedEventArgs e)
-        {
-        }
-        private void ListView_SelectionChanged_2(object sender, SelectionChangedEventArgs e)
-        {
-        }
+		private void ListView_SelectionChanged()
+		{
+		}
+		private void ListView_SelectionChanged_1(object sender, SelectionChangedEventArgs e)
+		{
+		}
+		private void ListView_SelectionChanged_2(object sender, SelectionChangedEventArgs e)
+		{
+		}
 	}
 
 	public class DeleteObjectInvoker
@@ -276,39 +276,39 @@ namespace VSPackage.CPPCheckPlugin
 		public static extern bool DeleteObject(IntPtr hObject);
 	}
 
-    public class SortAdorner : Adorner
-    {
-        private static Geometry ascGeometry = Geometry.Parse("M 0 4 L 3.5 0 L 7 4 Z");
-        private static Geometry descGeometry = Geometry.Parse("M 0 0 L 3.5 4 L 7 0 Z");
+	public class SortAdorner : Adorner
+	{
+		private static Geometry ascGeometry = Geometry.Parse("M 0 4 L 3.5 0 L 7 4 Z");
+		private static Geometry descGeometry = Geometry.Parse("M 0 0 L 3.5 4 L 7 0 Z");
 
-        public ListSortDirection Direction { get; private set; }
+		public ListSortDirection Direction { get; private set; }
 
-        public SortAdorner(UIElement element, ListSortDirection dir)
-            : base(element)
-        {
-            this.Direction = dir;
-        }
+		public SortAdorner(UIElement element, ListSortDirection dir)
+			: base(element)
+		{
+			this.Direction = dir;
+		}
 
-        protected override void OnRender(DrawingContext drawingContext)
-        {
-            base.OnRender(drawingContext);
+		protected override void OnRender(DrawingContext drawingContext)
+		{
+			base.OnRender(drawingContext);
 
-            if (AdornedElement.RenderSize.Width < 20)
-            {
-                return;
-            }
+			if (AdornedElement.RenderSize.Width < 20)
+			{
+				return;
+			}
 
-            TranslateTransform transform = new TranslateTransform(AdornedElement.RenderSize.Width - 15, (AdornedElement.RenderSize.Height - 5) / 2);
-            drawingContext.PushTransform(transform);
+			TranslateTransform transform = new TranslateTransform(AdornedElement.RenderSize.Width - 15, (AdornedElement.RenderSize.Height - 5) / 2);
+			drawingContext.PushTransform(transform);
 
-            Geometry geometry = ascGeometry;
-            if (this.Direction == ListSortDirection.Descending)
-            {
-                geometry = descGeometry;
-            }
-            drawingContext.DrawGeometry(System.Windows.Media.Brushes.Black, null, geometry);
+			Geometry geometry = ascGeometry;
+			if (this.Direction == ListSortDirection.Descending)
+			{
+				geometry = descGeometry;
+			}
+			drawingContext.DrawGeometry(System.Windows.Media.Brushes.Black, null, geometry);
 
-            drawingContext.Pop();
-        }
-    }
+			drawingContext.Pop();
+		}
+	}
 }
