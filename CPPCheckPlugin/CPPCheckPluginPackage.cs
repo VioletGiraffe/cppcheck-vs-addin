@@ -618,6 +618,8 @@ namespace VSPackage.CPPCheckPlugin
 			var configuredFiles = new ConfiguredFiles();
 			configuredFiles.Files = new List<SourceFile> { file };
 			configuredFiles.Configuration = currentConfig;
+
+			System.Threading.Thread.Sleep(750);
 			runAnalysis(new List<ConfiguredFiles> { configuredFiles }, outputPane, true);
 		}
 
