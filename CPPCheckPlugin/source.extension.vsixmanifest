@@ -9,17 +9,16 @@ https://github.com/VioletGiraffe/cppcheck-vs-addin</Description>
         <License>PackageInstallerLicense.txt</License>
     </Metadata>
     <Installation>
-        <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[11.0,17.0)" />
-        <InstallationTarget Id="Microsoft.VisualStudio.Premium" Version="[11.0,17.0)" />
-        <InstallationTarget Id="Microsoft.VisualStudio.Ultimate" Version="[11.0,17.0)" />
+        <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[15.0,17.0)" />
+        <InstallationTarget Id="Microsoft.VisualStudio.Premium" Version="[15.0,17.0)" />
+        <InstallationTarget Id="Microsoft.VisualStudio.Ultimate" Version="[15.0,17.0)" />
     </Installation>
     <Dependencies>
         <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.6,)" />
         <Dependency Id="Microsoft.VisualStudio.MPF" DisplayName="Visual Studio MPF" d:Source="Installed" Version="[11.0,)" />
     </Dependencies>
     <Prerequisites>
-        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[14.0,16.0)" />
-        <Prerequisite Id="Microsoft.VisualStudio.Component.DiagnosticTools" Version="[14.0,16.0)" />
+        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0,17.0)" DisplayName="Visual Studio core editor" />
     </Prerequisites>
     <Assets>
         <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />

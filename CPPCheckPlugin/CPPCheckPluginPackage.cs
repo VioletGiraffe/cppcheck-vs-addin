@@ -10,12 +10,14 @@ using EnvDTE;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using System.Threading;
+using Task = System.Threading.Tasks.Task;
 
 namespace VSPackage.CPPCheckPlugin
 {
-	[PackageRegistration(UseManagedResourcesOnly = true)]
+	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 	[DefaultRegistryRoot(@"Software\Microsoft\VisualStudio\11.0")]
-	[ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExists_string)]
+	[ProvideAutoLoad(VSConstants.UICONTEXT.SolutionExists_string, PackageAutoLoadFlags.BackgroundLoad)]
 	// This attribute is used to register the information needed to show this package
 	// in the Help/About dialog of Visual Studio.
 	[InstalledProductRegistration("#110", "#112", "1.2.0", IconResourceID = 400)]
@@ -23,7 +25,7 @@ namespace VSPackage.CPPCheckPlugin
 	[ProvideMenuResource("Menus.ctmenu", 1)]
 	[ProvideToolWindow(typeof(MainToolWindow), Style = VsDockStyle.Tabbed, Window = Microsoft.VisualStudio.Shell.Interop.ToolWindowGuids.Outputwindow, MultiInstances = false, Transient = false)]
 	[Guid(GuidList.guidCPPCheckPluginPkgString)]
-	public sealed class CPPCheckPluginPackage : Package
+	public sealed class CPPCheckPluginPackage : AsyncPackage
 	{
 		public CPPCheckPluginPackage()
 		{
@@ -139,18 +141,23 @@ namespace VSPackage.CPPCheckPlugin
 			{
 				if (Properties.Settings.Default.CheckSavedFilesHasValue && Properties.Settings.Default.CheckSavedFiles == true)
 				{
-					// Stop running analysis to prevent an save dialog popup
+					// Stop running analysis to prevent a save dialog pop-up
 					stopAnalysis();
 				}
 			}
 		}
 
-		protected override void Initialize()
-		{
-			Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
-			base.Initialize();
+        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+        {
+            // Switches to the UI thread in order to consume some services used in command initialization
+            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-			_dte = (EnvDTE.DTE)GetService(typeof(SDTE));
+			Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
+
+			_dte = await GetServiceAsync(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+            if (_dte == null)
+                return;
+
 			_eventsHandlers = _dte.Events.DocumentEvents;
 			_eventsHandlers.DocumentSaved += documentSaved;
 
@@ -217,8 +224,8 @@ namespace VSPackage.CPPCheckPlugin
 
 			}
 
-			// Creating the tool window
-			FindToolWindow(typeof(MainToolWindow), 0, true);
+            // Creating the tool window
+            FindToolWindow(typeof(MainToolWindow), 0, true);
 		}
 
 		protected override void Dispose(bool disposing)
