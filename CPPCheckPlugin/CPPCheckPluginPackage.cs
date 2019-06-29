@@ -45,10 +45,17 @@ namespace VSPackage.CPPCheckPlugin
 
 		public static async void addTextToOutputWindow(string text)
 		{
-			await Instance.JoinableTaskFactory.SwitchToMainThreadAsync();
+			try
+			{
+				await Instance.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			Assumes.NotNull(Instance._outputPane);
-			Instance._outputPane.OutputString(text);
+				Assumes.NotNull(Instance._outputPane);
+				Instance._outputPane.OutputString(text);
+			}
+			catch (Exception e)
+			{
+				Debug.WriteLine("Exception in addTextToOutputWindow(): " + e.Message);
+			}
 		}
 
 		public static String solutionName()
@@ -511,7 +518,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			Object[] activeProjects = await getActiveProjectsAsync();
 			if (activeProjects != null)
-				await checkProjectsAsync(new Object[1] { activeProjects[0] });
+				_ = checkProjectsAsync(new Object[1] { activeProjects[0] });
 		}
 
 		private async Task checkAllActiveProjectsAsync()
@@ -520,7 +527,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			Object[] activeProjects = await getActiveProjectsAsync();
 			if (activeProjects != null)
-				await checkProjectsAsync(activeProjects);
+				_ = checkProjectsAsync(activeProjects);
 		}
 
 		private async Task checkSelectionsAsync()
@@ -672,12 +679,12 @@ namespace VSPackage.CPPCheckPlugin
 
 		private static async Task<SourceFile> createSourceFileAsync(string filePath, Configuration targetConfig, dynamic project)
 		{
-			await Instance.JoinableTaskFactory.SwitchToMainThreadAsync();
-
 			// TODO:
 			//Debug.Assert(isVisualCppProject((object)project));
 			try
 			{
+				await Instance.JoinableTaskFactory.SwitchToMainThreadAsync();
+
 				var configurationName = targetConfig.ConfigurationName;
 				dynamic config = project.Configurations.Item(configurationName);
 				String toolSetName = config.PlatformToolsetShortName;
@@ -706,6 +713,7 @@ namespace VSPackage.CPPCheckPlugin
 						break;
 					}
 				}
+
 				return sourceForAnalysis;
 			}
 			catch (Exception ex)
