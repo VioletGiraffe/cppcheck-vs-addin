@@ -143,18 +143,21 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void EditProjectSuppressions(object sender, RoutedEventArgs e)
 		{
-			var projectPath = CPPCheckPluginPackage.activeProjectPath();
-			var projectName = CPPCheckPluginPackage.activeProjectName();
-			if (projectPath != "" && projectName != "")
+			CPPCheckPluginPackage.Instance.JoinableTaskFactory.Run(async () =>
 			{
-				var settings = new SuppressionSettingsUI.SuppressionsSettings(
-					ICodeAnalyzer.SuppressionStorage.Project,
-					projectPath,
-					projectName);
-				settings.ShowDialog();
-			}
-			else
-				MessageBox.Show("No C++ project selected in the solution explorer.");
+				var projectPath = await CPPCheckPluginPackage.activeProjectPathAsync();
+				var projectName = await CPPCheckPluginPackage.activeProjectNameAsync();
+				if (projectPath != "" && projectName != "")
+				{
+					var settings = new SuppressionSettingsUI.SuppressionsSettings(
+						ICodeAnalyzer.SuppressionStorage.Project,
+						projectPath,
+						projectName);
+					settings.ShowDialog();
+				}
+				else
+					MessageBox.Show("No C++ project selected in the solution explorer.");
+			});
 		}
 
 		private void MessagesListClick(object sender, RoutedEventArgs e)

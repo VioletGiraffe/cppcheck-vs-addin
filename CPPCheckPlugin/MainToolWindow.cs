@@ -11,6 +11,7 @@ using System.Windows.Input;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Threading;
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -19,9 +20,6 @@ namespace VSPackage.CPPCheckPlugin
 	{
 		public MainToolWindow() : base(null)
 		{
-			Debug.Assert(_instance == null); // Only 1 instance of this tool window makes sense
-			_instance = this;
-
 			_listView = _ui.listView;
 			_ui.EditorRequestedForProblem += openProblemInEditor;
 			_ui.SuppressionRequested += suppressProblem;
@@ -32,7 +30,16 @@ namespace VSPackage.CPPCheckPlugin
 
 		public static MainToolWindow Instance
 		{
-			get { return _instance; }
+			get {
+				var package = CPPCheckPluginPackage.Instance;
+				// Searching for existing window 
+				MainToolWindow window = package.FindToolWindow(typeof(MainToolWindow), 0, false) as MainToolWindow;
+				if (window != null)
+					return window;
+				else
+					// Creating the tool window
+					return package.FindToolWindow(typeof(MainToolWindow), 0, true) as MainToolWindow;
+			}
 		}
 
 		public void bringToFront()
@@ -51,6 +58,8 @@ namespace VSPackage.CPPCheckPlugin
 
 		public void showIfWindowNotCreated()
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			IVsWindowFrame frame = Frame as IVsWindowFrame;
 			if (frame != null && frame.IsVisible() != VSConstants.S_OK)
 				frame.Show();
@@ -89,12 +98,21 @@ namespace VSPackage.CPPCheckPlugin
 
 		public void displayProblem(Problem problem, bool autoSize)
 		{
-			Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+			CPPCheckPluginPackage.Instance.JoinableTaskFactory.Run(async () =>
 			{
-				_listView.Items.Add(new MainToolWindowUI.ProblemsListItem(problem));
-				if (autoSize)
-					AutoSizeColumns();
-			}));
+				try
+				{
+					await CPPCheckPluginPackage.Instance.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+					_listView.Items.Add(new MainToolWindowUI.ProblemsListItem(problem));
+					if (autoSize)
+						AutoSizeColumns();
+				}
+				catch (Exception e)
+				{
+					Debug.WriteLine("Exception occurred in displayProblemAsync:" + e.Message);
+				}
+			});
 		}
 
 		public ICodeAnalyzer.AnalysisType ContentsType
@@ -105,29 +123,34 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void openProblemInEditor(object sender, MainToolWindowUI.OpenProblemInEditorEventArgs e)
 		{
-			Problem problem = e.Problem;
-			IVsUIShellOpenDocument shellOpenDocument = (IVsUIShellOpenDocument)GetService(typeof(IVsUIShellOpenDocument));
-			Debug.Assert(shellOpenDocument != null);
-			Guid guidCodeView = VSConstants.LOGVIEWID.Code_guid;
-			Microsoft.VisualStudio.OLE.Interop.IServiceProvider sp = null;
-			IVsUIHierarchy hierarchy = null;
-			uint itemId = 0;
-			IVsWindowFrame windowFrame = null;
-			if (shellOpenDocument.OpenDocumentViaProject(problem.FilePath, ref guidCodeView, out sp, out hierarchy, out itemId, out windowFrame) != VSConstants.S_OK)
+			CPPCheckPluginPackage.Instance.JoinableTaskFactory.Run(async () =>
 			{
-				Debug.WriteLine("Error opening file " + problem.FilePath);
-				return;
-			}
+				await CPPCheckPluginPackage.Instance.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			Debug.Assert(windowFrame != null);
-			windowFrame.Show();
+				Problem problem = e.Problem;
+				IVsUIShellOpenDocument shellOpenDocument = (IVsUIShellOpenDocument)GetService(typeof(IVsUIShellOpenDocument));
+				Debug.Assert(shellOpenDocument != null);
+				Guid guidCodeView = VSConstants.LOGVIEWID.Code_guid;
+				Microsoft.VisualStudio.OLE.Interop.IServiceProvider sp = null;
+				IVsUIHierarchy hierarchy = null;
+				uint itemId = 0;
+				IVsWindowFrame windowFrame = null;
+				if (shellOpenDocument.OpenDocumentViaProject(problem.FilePath, ref guidCodeView, out sp, out hierarchy, out itemId, out windowFrame) != VSConstants.S_OK)
+				{
+					Debug.WriteLine("Error opening file " + problem.FilePath);
+					return;
+				}
 
-			EnvDTE.DTE dte = (EnvDTE.DTE)GetService(typeof(SDTE));
-			Debug.Assert(dte != null);
-			Debug.Assert(dte.ActiveDocument != null);
-			var selection = (EnvDTE.TextSelection)dte.ActiveDocument.Selection;
-			Debug.Assert(selection != null);
-			selection.GotoLine(problem.Line > 0 ? problem.Line : 1); // Line cannot be 0 here
+				Debug.Assert(windowFrame != null);
+				windowFrame.Show();
+
+				EnvDTE.DTE dte = (EnvDTE.DTE)GetService(typeof(SDTE));
+				Debug.Assert(dte != null);
+				Debug.Assert(dte.ActiveDocument != null);
+				var selection = (EnvDTE.TextSelection)dte.ActiveDocument.Selection;
+				Debug.Assert(selection != null);
+				selection.GotoLine(problem.Line > 0 ? problem.Line : 1); // Line cannot be 0 here
+			});
 		}
 
 		private void suppressProblem(object sender, MainToolWindowUI.SuppresssionRequestedEventArgs e)
@@ -138,6 +161,5 @@ namespace VSPackage.CPPCheckPlugin
 
 		private MainToolWindowUI _ui = new MainToolWindowUI();
 		private ListView _listView = null;
-		private static MainToolWindow _instance = null;
 	}
 }

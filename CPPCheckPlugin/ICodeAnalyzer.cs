@@ -69,7 +69,7 @@ namespace VSPackage.CPPCheckPlugin
 			Dispose(false);
 		}
 
-		public abstract void analyze(List<ConfiguredFiles> configuredFiles, OutputWindowPane outputPane, bool analysisOnSavedFile);
+		public abstract void analyze(List<ConfiguredFiles> configuredFiles, bool analysisOnSavedFile);
 
 		public abstract void suppressProblem(Problem p, SuppressionScope scope);
 
@@ -79,9 +79,8 @@ namespace VSPackage.CPPCheckPlugin
 
 		protected abstract void analysisFinished(string arguments);
 
-		protected void run(string analyzerExePath, List<string> arguments, OutputWindowPane outputPane)
+		protected void run(string analyzerExePath, List<string> arguments)
 		{
-			_outputPane = outputPane;
 			_allArguments = arguments;
 
 			abortThreadIfAny();
@@ -182,11 +181,11 @@ namespace VSPackage.CPPCheckPlugin
 		private void startAnalyzerProcess(string analyzerExePath, string arguments)
 		{
 			System.Diagnostics.Process process = null;
+
 			try
 			{
 				Debug.Assert(!String.IsNullOrEmpty(analyzerExePath));
 				Debug.Assert(!String.IsNullOrEmpty(arguments));
-				Debug.Assert(_outputPane != null);
 
 				process = new System.Diagnostics.Process();
 				process.StartInfo.FileName = analyzerExePath;
@@ -205,7 +204,7 @@ namespace VSPackage.CPPCheckPlugin
 				process.OutputDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
 				process.ErrorDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
 
-				_outputPane.OutputString("Starting analyzer with arguments: " + arguments + "\n");
+				CPPCheckPluginPackage.addTextToOutputWindow("Starting analyzer with arguments: " + arguments + "\n");
 
 				var timer = Stopwatch.StartNew();
 				// Start the process.
@@ -225,7 +224,7 @@ namespace VSPackage.CPPCheckPlugin
 				process.BeginOutputReadLine();
 				process.BeginErrorReadLine();
 				// Wait for analysis completion
-				while (!process.WaitForExit(30))
+				while (!process.WaitForExit(500))
 				{
 					if (_terminateThread)
 					{
@@ -236,11 +235,11 @@ namespace VSPackage.CPPCheckPlugin
 				timer.Stop();
 				analysisFinished(arguments);
 				if (process.ExitCode != 0)
-					_outputPane.OutputString(analyzerExePath + " has exited with code " + process.ExitCode.ToString() + "\n");
+					CPPCheckPluginPackage.addTextToOutputWindow(analyzerExePath + " has exited with code " + process.ExitCode.ToString() + "\n");
 				else
 				{
 					double timeElapsed = Math.Round(timer.Elapsed.TotalSeconds, 3);
-					_outputPane.OutputString("Analysis completed in " + timeElapsed.ToString() + " seconds\n");
+					CPPCheckPluginPackage.addTextToOutputWindow("Analysis completed in " + timeElapsed.ToString() + " seconds\n");
 				}
 				process.Close();
 				process = null;
@@ -275,11 +274,14 @@ namespace VSPackage.CPPCheckPlugin
 				// We got here because the environment is shutting down, the current object was disposed and the thread was aborted.
 				return;
 			}
+
 			String output = outLine.Data;
 			if (!String.IsNullOrEmpty(output))
 			{
 				addProblemsToToolwindow(parseOutput(output));
-				try { _outputPane.OutputString(output + "\n"); }
+				try {
+					CPPCheckPluginPackage.addTextToOutputWindow(output + "\n");
+				}
 				catch (Exception) { }
 			}
 		}
@@ -314,7 +316,6 @@ namespace VSPackage.CPPCheckPlugin
 		protected String _projectBasePath = null; // Base path for a project currently being checked
 		protected String _projectName = null; // Name of a project currently being checked
 
-		private OutputWindowPane _outputPane = null;
 		protected int _numCores;
 
 		private System.Threading.Thread _thread = null;

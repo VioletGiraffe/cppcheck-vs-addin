@@ -162,6 +162,8 @@ namespace VSPackage.CPPCheckPlugin
 				cppheckargs = cppheckargs.Replace("--force", "");
 				// Creating the list of all different macros (no duplicates)
 				HashSet<string> macros = new HashSet<string>();
+				// TODO: handle /Zc:__cplusplus
+				// https://devblogs.microsoft.com/cppblog/msvc-now-correctly-reports-__cplusplus/
 				macros.Add("__cplusplus=199711L"); // At least in VS2012, this is still 199711L
 												   // Assuming all files passed here are from the same project / same toolset, which should be true, so peeking the first file for global settings
 				switch (filesToAnalyze[0].vcCompilerVersion)
@@ -196,18 +198,21 @@ namespace VSPackage.CPPCheckPlugin
 				macros.Add("WIN32");
 				macros.Add("_WIN32");
 
-				if (configuredFiles.is64bitConfiguration())
+				CPPCheckPluginPackage.Instance.JoinableTaskFactory.Run(async () =>
 				{
-					macros.Add("_M_X64");
-					macros.Add("_WIN64");
-				}
-				else
-				{
-					macros.Add("_M_IX86");
-				}
+					if (await configuredFiles.is64bitConfigurationAsync())
+					{
+						macros.Add("_M_X64");
+						macros.Add("_WIN64");
+					}
+					else
+					{
+						macros.Add("_M_IX86");
+					}
 
-				if (configuredFiles.isDebugConfiguration())
-					macros.Add("_DEBUG");
+					if (await configuredFiles.isDebugConfigurationAsync())
+						macros.Add("_DEBUG");
+				});
 
 				foreach (string macro in macros)
 				{
@@ -239,7 +244,7 @@ namespace VSPackage.CPPCheckPlugin
 			return cppheckargs;
 		}
 
-		public override void analyze(List<ConfiguredFiles> allConfiguredFiles, OutputWindowPane outputWindow, bool analysisOnSavedFile)
+		public override void analyze(List<ConfiguredFiles> allConfiguredFiles, bool analysisOnSavedFile)
 		{
 			if (!allConfiguredFiles.Any())
 				return;
@@ -262,7 +267,7 @@ namespace VSPackage.CPPCheckPlugin
 			foreach (var configuredFiles in allConfiguredFiles)
 				cppheckargs.Add(getCPPCheckArgs(configuredFiles, analysisOnSavedFile, allConfiguredFiles.Count > 1, createNewTempFileName()));
 
-			run(cppcheckExePath(), cppheckargs, outputWindow);
+			run(cppcheckExePath(), cppheckargs);
 		}
 
 		public override void suppressProblem(Problem p, SuppressionScope scope)

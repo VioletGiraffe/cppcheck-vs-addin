@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.ComponentModel.Design;
+using Microsoft;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -12,6 +13,9 @@ using System.Linq;
 using System.Windows.Forms;
 using System.Threading;
 using Task = System.Threading.Tasks.Task;
+using System.Threading.Tasks;
+using System.IO;
+using VSPackage.CPPCheckPlugin.Properties;
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -23,87 +27,59 @@ namespace VSPackage.CPPCheckPlugin
 	[InstalledProductRegistration("#110", "#112", "1.2.0", IconResourceID = 400)]
 	// This attribute is needed to let the shell know that this package exposes some menus.
 	[ProvideMenuResource("Menus.ctmenu", 1)]
-	[ProvideToolWindow(typeof(MainToolWindow), Style = VsDockStyle.Tabbed, Window = Microsoft.VisualStudio.Shell.Interop.ToolWindowGuids.Outputwindow, MultiInstances = false, Transient = false)]
+	[ProvideToolWindow(typeof(MainToolWindow), Style = VsDockStyle.Tabbed, Window = ToolWindowGuids.Outputwindow, MultiInstances = false, Transient = false)]
 	[Guid(GuidList.guidCPPCheckPluginPkgString)]
 	public sealed class CPPCheckPluginPackage : AsyncPackage
 	{
 		public CPPCheckPluginPackage()
 		{
+			_instance = this;
+
 			CreateDefaultGlobalSuppressions();
 		}
 
-		private static void CreateDefaultGlobalSuppressions()
+		public static CPPCheckPluginPackage Instance
 		{
-			String globalsuppressionsFilePath = ICodeAnalyzer.suppressionsFilePathByStorage(ICodeAnalyzer.SuppressionStorage.Global);
-			if (!System.IO.File.Exists(globalsuppressionsFilePath))
-			{
-				SuppressionsInfo suppressionsInfo = new SuppressionsInfo();
-				suppressionsInfo.SkippedIncludesMask.Add(".*Microsoft Visual Studio.*");
-				suppressionsInfo.SkippedIncludesMask.Add(".*Microsoft SDKs.*");
-				suppressionsInfo.SkippedIncludesMask.Add(".*Windows Kits.*");
-				suppressionsInfo.SkippedIncludesMask.Add(".*boost.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\ActiveQt.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\Qt$");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtCore.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtDeclarative.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtGui.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtMultimedia.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtNetwork.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtOpenGL.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtOpenVG.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtScript.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtScriptTools.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtSql.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtSvg.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtTest.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtWebKit.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtXml.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtXmlPatterns.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtConcurrent.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtMultimediaWidgets.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtOpenGLExtensions.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtQml.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtQuick.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtSensors.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtWebKitWidgets.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtWidgets.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtZlib.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtV8.*");
-				suppressionsInfo.SkippedIncludesMask.Add(@".*\\mkspecs\\win32-.*");
+			get { return _instance; }
+		}
 
-				suppressionsInfo.SkippedFilesMask.Add("^moc_.*\\.cpp$");
-				suppressionsInfo.SkippedFilesMask.Add("^qrc_.*\\.cpp$");
-				suppressionsInfo.SkippedFilesMask.Add("^ui_.*\\.h$");
+		public static async void addTextToOutputWindow(string text)
+		{
+			await Instance.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				suppressionsInfo.SaveToFile(globalsuppressionsFilePath);
-			}
+			Assumes.NotNull(Instance._outputPane);
+			Instance._outputPane.OutputString(text);
 		}
 
 		public static String solutionName()
 		{
-			try { return System.IO.Path.GetFileNameWithoutExtension(_dte.Solution.FullName); }
-			catch (Exception) { return ""; }
-
+			return _instance.JoinableTaskFactory.Run<string>(async () =>
+			{
+				await _instance.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try { return Path.GetFileNameWithoutExtension(_dte.Solution.FullName); }
+				catch (Exception) { return ""; }
+			});
 		}
 
 		public static String solutionPath()
 		{
-			try { return System.IO.Path.GetDirectoryName(_dte.Solution.FullName); }
-			catch (Exception) { return ""; }
+			return _instance.JoinableTaskFactory.Run<string>(async () =>
+			{
+				await _instance.JoinableTaskFactory.SwitchToMainThreadAsync();
+				try { return Path.GetDirectoryName(_dte.Solution.FullName); }
+				catch (Exception) { return ""; }
+			});
 		}
 
-		public static String activeProjectName()
+		public static async Task<String> activeProjectNameAsync()
 		{
-			var project = activeProject();
-			if (project != null)
-				return project.Name;
-
-			return "";
+			var project = await _instance.activeProjectAsync();
+			return project != null ? project.Name : "";
 		}
 
-		public static String activeProjectPath()
+		public static async Task<string> activeProjectPathAsync()
 		{
-			var project = activeProject();
+			var project = await _instance.activeProjectAsync();
 			if (project != null)
 			{
 				String projectDirectory = project.ProjectDirectory;
@@ -113,8 +89,10 @@ namespace VSPackage.CPPCheckPlugin
 			return "";
 		}
 
-		private static dynamic activeProject()
+		private async Task<dynamic> activeProjectAsync()
 		{
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
+
 			Object[] activeProjects = (Object[])_dte.ActiveSolutionProjects;
 			if (!activeProjects.Any())
 			{
@@ -135,11 +113,11 @@ namespace VSPackage.CPPCheckPlugin
 
 		#region Package Members
 
-		void CommandEvents_BeforeExecute(string Guid, int ID, object CustomIn, object CustomOut, ref bool CancelDefault)
+		private void CommandEvents_BeforeExecute(string Guid, int ID, object CustomIn, object CustomOut, ref bool CancelDefault)
 		{
 			if (ID == commandEventIdSave || ID == commandEventIdSaveAll)
 			{
-				if (Properties.Settings.Default.CheckSavedFilesHasValue && Properties.Settings.Default.CheckSavedFiles == true)
+				if (Settings.Default.CheckSavedFilesHasValue && Settings.Default.CheckSavedFiles == true)
 				{
 					// Stop running analysis to prevent a save dialog pop-up
 					stopAnalysis();
@@ -154,27 +132,29 @@ namespace VSPackage.CPPCheckPlugin
 
 			Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
 
-			_dte = await GetServiceAsync(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
-            if (_dte == null)
-                return;
+			_dte = await GetServiceAsync(typeof(DTE)) as DTE;
+			Assumes.Present(_dte);
+			if (_dte == null)
+				return;
 
 			_eventsHandlers = _dte.Events.DocumentEvents;
-			_eventsHandlers.DocumentSaved += documentSaved;
+			_eventsHandlers.DocumentSaved += documentSavedSync;
 
 			_commandEventsHandlers = _dte.Events.CommandEvents;
 			_commandEventsHandlers.BeforeExecute += new _dispCommandEvents_BeforeExecuteEventHandler(CommandEvents_BeforeExecute);
 
-			_outputPane = _dte.AddOutputWindowPane("cppcheck analysis output");
+			var outputWindow = (OutputWindow)_dte.Windows.Item(EnvDTE.Constants.vsWindowKindOutput).Object;
+			_outputPane = outputWindow.OutputWindowPanes.Add("cppcheck analysis output");
 
 			AnalyzerCppcheck cppcheckAnalayzer = new AnalyzerCppcheck();
 			cppcheckAnalayzer.ProgressUpdated += checkProgressUpdated;
 			_analyzers.Add(cppcheckAnalayzer);
 
-			if (String.IsNullOrEmpty(Properties.Settings.Default.DefaultArguments))
-				Properties.Settings.Default.DefaultArguments = CppcheckSettings.DefaultArguments;
+			if (String.IsNullOrEmpty(Settings.Default.DefaultArguments))
+				Settings.Default.DefaultArguments = CppcheckSettings.DefaultArguments;
 
 			// Add our command handlers for menu (commands must exist in the .vsct file)
-			OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+			OleMenuCommandService mcs = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
 			if (null != mcs)
 			{
 				// Create the command for the menu item.
@@ -223,9 +203,6 @@ namespace VSPackage.CPPCheckPlugin
 
 
 			}
-
-            // Creating the tool window
-            FindToolWindow(typeof(MainToolWindow), 0, true);
 		}
 
 		protected override void Dispose(bool disposing)
@@ -255,17 +232,29 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void onCheckCurrentProjectRequested(object sender, EventArgs e)
 		{
-			checkFirstActiveProject();
+			JoinableTaskFactory.Run(async () =>
+			{
+				await JoinableTaskFactory.SwitchToMainThreadAsync();
+				await checkFirstActiveProjectAsync();
+			});
 		}
 
 		private void onCheckAllProjectsRequested(object sender, EventArgs e)
 		{
-			checkAllActiveProjects();
+			JoinableTaskFactory.Run(async () =>
+			{
+				await JoinableTaskFactory.SwitchToMainThreadAsync();
+				await checkAllActiveProjectsAsync();
+			});
 		}
 
 		private void onCheckSelectionsRequested(object sender, EventArgs e)
 		{
-			checkSelections();
+			JoinableTaskFactory.Run(async () =>
+			{
+				await JoinableTaskFactory.SwitchToMainThreadAsync();
+				await checkSelectionsAsync();
+			});
 		}
 
 		private void onStopCheckRequested(object sender, EventArgs e)
@@ -279,12 +268,22 @@ namespace VSPackage.CPPCheckPlugin
 			settings.ShowDialog();
 		}
 
-		private void documentSaved(Document document)
+		private void documentSavedSync(Document document)
 		{
+			JoinableTaskFactory.Run(async () =>
+			{
+				await documentSavedAsync(document);
+			});
+		}
+
+		private async Task documentSavedAsync(Document document)
+		{
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
+
 			if (document == null || document.Language != "C/C++")
 				return;
 
-			if (Properties.Settings.Default.CheckSavedFilesHasValue && Properties.Settings.Default.CheckSavedFiles == false)
+			if (Settings.Default.CheckSavedFilesHasValue && Settings.Default.CheckSavedFiles == false)
 				return;
 
 			if (document.ActiveWindow == null)
@@ -311,28 +310,28 @@ namespace VSPackage.CPPCheckPlugin
 				}
 
 				dynamic project = document.ProjectItem.ContainingProject.Object;
-				SourceFile sourceForAnalysis = createSourceFile(document.FullName, currentConfig, project);
+				SourceFile sourceForAnalysis = await createSourceFileAsync(document.FullName, currentConfig, project);
 				if (sourceForAnalysis == null)
 					return;
 
-				if (!Properties.Settings.Default.CheckSavedFilesHasValue)
+				if (!Settings.Default.CheckSavedFilesHasValue)
 				{
 					askCheckSavedFiles();
 
-					if (!Properties.Settings.Default.CheckSavedFiles)
+					if (!Settings.Default.CheckSavedFiles)
 						return;
 				}
 
 				MainToolWindow.Instance.showIfWindowNotCreated();
 				MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.DocumentSavedAnalysis;
-				runSavedFileAnalysis(sourceForAnalysis, currentConfig, _outputPane);
+				runSavedFileAnalysis(sourceForAnalysis, currentConfig);
 			}
-			catch (System.Exception ex)
+			catch (Exception ex)
 			{
 				if (_outputPane != null)
 				{
 					_outputPane.Clear();
-					_outputPane.OutputString("Exception occurred in cppcheck add-in: " + ex.Message);
+					addTextToOutputWindow("Exception occurred in cppcheck add-in: " + ex.Message);
 				}
 				DebugTracer.Trace(ex);
 			}
@@ -341,11 +340,13 @@ namespace VSPackage.CPPCheckPlugin
 		public static void askCheckSavedFiles()
 		{
 			DialogResult reply = MessageBox.Show("Do you want to start analysis any time a file is saved? It will clear previous analysis results.\nYou can change this behavior in cppcheck settings.", "Cppcheck: start analysis when file is saved?", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
-			Properties.Settings.Default.CheckSavedFiles = (reply == DialogResult.Yes);
+			Settings.Default.CheckSavedFiles = (reply == DialogResult.Yes);
 		}
 
-		private Object[] getActiveProjects()
+		private async Task<object[]> getActiveProjectsAsync()
 		{
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
+
 			Object[] activeProjects = (Object[])_dte.ActiveSolutionProjects;
 			if (!activeProjects.Any())
 			{
@@ -372,24 +373,20 @@ namespace VSPackage.CPPCheckPlugin
 				if (newSourceFile == null)
 					continue;
 
-				bool foundFlag = false;
 				for (int index = 0; index < configuredFiles.Files.Count; index++)
 				{
 					if (newSourceFile.FileName.CompareTo(configuredFiles.Files[index].FileName) == 0 &&
 						newSourceFile.FilePath.CompareTo(configuredFiles.Files[index].FilePath) == 0)
 					{
 						// file already exists in list
-						foundFlag = true;
-						break;
+						return;
 					}
 				}
 
-				if (!foundFlag)
-				{
-					configuredFiles.Files.Add(newSourceFile);
-					string projectName = project.Name;
-					_outputPane.OutputString("Will check: " + projectName + " | " + newSourceFile.FilePath + "/" + newSourceFile.FileName);
-				}
+
+				configuredFiles.Files.Add(newSourceFile);
+				//string projectName = project.Name;
+				//_outputPane.OutputString("Will check: " + projectName + " | " + newSourceFile.FilePath + "/" + newSourceFile.FileName);
 			}
 		}
 
@@ -410,15 +407,21 @@ namespace VSPackage.CPPCheckPlugin
 					if (file != null)
 					{
 						// document selected
-						SourceFile sourceFile = createSourceFile(file.FullPath, configuration, project.Object);
-						addEntry(configuredFiles, sourceFile, project);
+						_instance.JoinableTaskFactory.Run(async () =>
+						{
+							await _instance.JoinableTaskFactory.SwitchToMainThreadAsync();
+							SourceFile sourceFile = await createSourceFileAsync(file.FullPath, configuration, project.Object);
+							addEntry(configuredFiles, sourceFile, project);
+						});
 					}
 				}
 			}
 		}
 
-		private List<ConfiguredFiles> getActiveSelections()
+		private async Task<List<ConfiguredFiles>> getActiveSelectionsAsync()
 		{
+			await _instance.JoinableTaskFactory.SwitchToMainThreadAsync();
+
 			Dictionary<Project, ConfiguredFiles> confMap = new Dictionary<Project, ConfiguredFiles>();
 
 			foreach (SelectedItem selItem in _dte.SelectedItems)
@@ -440,7 +443,7 @@ namespace VSPackage.CPPCheckPlugin
 					continue;
 				}
 
-				Configuration configuration = getConfiguration(project);
+				Configuration configuration = await getConfigurationAsync(project);
 
 				if (!confMap.ContainsKey(project))
 				{
@@ -461,7 +464,7 @@ namespace VSPackage.CPPCheckPlugin
 				if (selItem.ProjectItem == null)
 				{
 					// project selected
-					List<SourceFile> projectSourceFileList = getProjectFiles(project, configuration);
+					List<SourceFile> projectSourceFileList = await getProjectFilesAsync(project, configuration);
 					foreach (SourceFile projectSourceFile in projectSourceFileList)
 						addEntry(currentConfiguredFiles, projectSourceFileList, project);
 				}
@@ -483,7 +486,7 @@ namespace VSPackage.CPPCheckPlugin
 						if (file != null)
 						{
 							// document selected
-							SourceFile sourceFile = createSourceFile(file.FullPath, configuration, project.Object);
+							SourceFile sourceFile = createSourceFileAsync(file.FullPath, configuration, project.Object);
 							addEntry(currentConfiguredFiles, sourceFile, project);
 						}
 					}
@@ -502,35 +505,43 @@ namespace VSPackage.CPPCheckPlugin
 			return configuredFilesList;
 		}
 
-		private void checkFirstActiveProject()
+		private async Task checkFirstActiveProjectAsync()
 		{
-			Object[] activeProjects = getActiveProjects();
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			Object[] activeProjects = await getActiveProjectsAsync();
 			if (activeProjects != null)
-				checkProjects(new Object[1] { activeProjects[0] });
+				await checkProjectsAsync(new Object[1] { activeProjects[0] });
 		}
 
-		private void checkAllActiveProjects()
+		private async Task checkAllActiveProjectsAsync()
 		{
-			Object[] activeProjects = getActiveProjects();
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			Object[] activeProjects = await getActiveProjectsAsync();
 			if (activeProjects != null)
-				checkProjects(activeProjects);
+				await checkProjectsAsync(activeProjects);
 		}
 
-		private void checkSelections()
+		private async Task checkSelectionsAsync()
 		{
-			List<ConfiguredFiles> configuredFilesList = getActiveSelections();
+			List<ConfiguredFiles> configuredFilesList = await getActiveSelectionsAsync();
+
+			await _instance.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 			MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.ProjectAnalysis;
 			MainToolWindow.Instance.showIfWindowNotCreated();
 
 			if (configuredFilesList.Count > 0)
 			{
-				runAnalysis(configuredFilesList, _outputPane, false);
+				runAnalysis(configuredFilesList, false);
 			}
 		}
 
-		private List<SourceFile> getProjectFiles(Project p, Configuration currentConfig)
+		private async Task<List<SourceFile>> getProjectFilesAsync(Project p, Configuration currentConfig)
 		{
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
+
 			if (!isVisualCppProject(p.Kind))
 			{
 				System.Windows.MessageBox.Show("Only C++ projects can be checked.");
@@ -545,7 +556,7 @@ namespace VSPackage.CPPCheckPlugin
 				if (isCppFile(file))
 				{
 					String fileName = file.Name;
-					SourceFile f = createSourceFile(file.FullPath, currentConfig, project);
+					SourceFile f = await createSourceFileAsync(file.FullPath, currentConfig, project);
 					if (f != null)
 						files.Add(f);
 				}
@@ -553,8 +564,10 @@ namespace VSPackage.CPPCheckPlugin
 			return files;
 		}
 
-		private Configuration getConfiguration(Project project)
+		private async Task<Configuration> getConfigurationAsync(Project project)
 		{
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
+
 			try
 			{
 				return project.ConfigurationManager.ActiveConfiguration;
@@ -565,20 +578,21 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		private void checkProjects(Object[] activeProjects)
+		private async Task checkProjectsAsync(Object[] activeProjects)
 		{
 			Debug.Assert(activeProjects.Any());
 
 			List<ConfiguredFiles> allConfiguredFiles = new List<ConfiguredFiles>();
 			foreach (dynamic o in activeProjects)
 			{
-				Configuration configuration = getConfiguration(o);
+				Configuration configuration = await getConfigurationAsync(o);
 				if (configuration == null)
 				{
 					MessageBox.Show("Cannot perform check - no valid configuration selected", "Cppcheck error");
 					return;
 				}
-				dynamic projectFiles = getProjectFiles(o, configuration);
+
+				dynamic projectFiles = await getProjectFilesAsync(o, configuration);
 				if (projectFiles == null)
 					continue;
 
@@ -588,29 +602,39 @@ namespace VSPackage.CPPCheckPlugin
 				allConfiguredFiles.Add(configuredFiles);
 			}
 
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
+
 			MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.ProjectAnalysis;
 			MainToolWindow.Instance.showIfWindowNotCreated();
-			runAnalysis(allConfiguredFiles, _outputPane, false);
+
+			runAnalysis(allConfiguredFiles, false);
 		}
 
 		private static bool isCppFile(dynamic file)
 		{
-			// Checking file.FileType == eFileType.eFileTypeCppCode...
-			// Automatic property binding fails with VS2013 because there the FileType property
-			// is *explicitly implemented* and so only accessible via the declaring interface.
-			// Using Reflection to get to the interface and access the property directly instead.
-			Type fileObjectType = file.GetType();
-			var vcFileInterface = fileObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCFile");
-			var fileTypeValue = vcFileInterface.GetProperty("FileType").GetValue((object)file);
-			Type fileTypeEnumType = fileTypeValue.GetType();
-			Debug.Assert(fileTypeEnumType.FullName == "Microsoft.VisualStudio.VCProjectEngine.eFileType");
-			var fileTypeEnumValue = Enum.GetName(fileTypeEnumType, fileTypeValue);
-			var fileTypeCppCodeConstant = "eFileTypeCppCode";
-			// First check the enum contains the value we're looking for
-			Debug.Assert(Enum.GetNames(fileTypeEnumType).Contains(fileTypeCppCodeConstant));
-			if (fileTypeEnumValue == fileTypeCppCodeConstant)
-				return true;
-			return false;
+			try {
+				// Checking file.FileType == eFileType.eFileTypeCppCode...
+				// Automatic property binding fails with VS2013 because there the FileType property
+				// is *explicitly implemented* and so only accessible via the declaring interface.
+				// Using Reflection to get to the interface and access the property directly instead.
+				Type fileObjectType = file.GetType();
+				var vcFileInterface = fileObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCFile");
+				var fileTypeValue = vcFileInterface.GetProperty("FileType").GetValue((object)file);
+				Type fileTypeEnumType = fileTypeValue.GetType();
+				Debug.Assert(fileTypeEnumType.FullName == "Microsoft.VisualStudio.VCProjectEngine.eFileType");
+				var fileTypeEnumValue = Enum.GetName(fileTypeEnumType, fileTypeValue);
+				var fileTypeCppCodeConstant = "eFileTypeCppCode";
+				// First check the enum contains the value we're looking for
+				Debug.Assert(Enum.GetNames(fileTypeEnumType).Contains(fileTypeCppCodeConstant));
+				if (fileTypeEnumValue == fileTypeCppCodeConstant)
+					return true;
+				return false;
+			}
+			catch (Exception e)
+			{
+				Debug.WriteLine("Exception in isCppFile for " + ((Object)file).ToString() + "\n" + e.Message);
+				return false;
+			}
 		}
 
 		private static bool isFilter(dynamic checkObject)
@@ -618,7 +642,7 @@ namespace VSPackage.CPPCheckPlugin
 			return implementsInterface(checkObject, "Microsoft.VisualStudio.VCProjectEngine.VCFilter");
 		}
 
-		private void runSavedFileAnalysis(SourceFile file, Configuration currentConfig, OutputWindowPane outputPane)
+		private void runSavedFileAnalysis(SourceFile file, Configuration currentConfig)
 		{
 			Debug.Assert(currentConfig != null);
 
@@ -627,7 +651,7 @@ namespace VSPackage.CPPCheckPlugin
 			configuredFiles.Configuration = currentConfig;
 
 			System.Threading.Thread.Sleep(750);
-			runAnalysis(new List<ConfiguredFiles> { configuredFiles }, outputPane, true);
+			runAnalysis(new List<ConfiguredFiles> { configuredFiles }, true);
 		}
 
 		public void stopAnalysis()
@@ -638,19 +662,18 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		private void runAnalysis(List<ConfiguredFiles> configuredFiles, OutputWindowPane outputPane, bool analysisOnSavedFile)
+		private void runAnalysis(List<ConfiguredFiles> configuredFiles, bool analysisOnSavedFile)
 		{
-			Debug.Assert(outputPane != null);
-			// outputPane.Clear();
-
 			foreach (var analyzer in _analyzers)
 			{
-				analyzer.analyze(configuredFiles, outputPane, analysisOnSavedFile);
+				analyzer.analyze(configuredFiles, analysisOnSavedFile);
 			}
 		}
 
-		private static SourceFile createSourceFile(string filePath, Configuration targetConfig, dynamic project)
+		private static async Task<SourceFile> createSourceFileAsync(string filePath, Configuration targetConfig, dynamic project)
 		{
+			await Instance.JoinableTaskFactory.SwitchToMainThreadAsync();
+
 			// TODO:
 			//Debug.Assert(isVisualCppProject((object)project));
 			try
@@ -685,7 +708,7 @@ namespace VSPackage.CPPCheckPlugin
 				}
 				return sourceForAnalysis;
 			}
-			catch (System.Exception ex)
+			catch (Exception ex)
 			{
 				DebugTracer.Trace(ex);
 				return null;
@@ -704,11 +727,14 @@ namespace VSPackage.CPPCheckPlugin
 			return requestedInterface != null;
 		}
 
-		private void checkProgressUpdated(object sender, ICodeAnalyzer.ProgressEvenArgs e)
+		private async void checkProgressUpdated(object sender, ICodeAnalyzer.ProgressEvenArgs e)
 		{
 			int progress = e.Progress;
 			if (progress == 0)
 				progress = 1; // statusBar.Progress won't display a progress bar with 0%
+
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
+
 			EnvDTE.StatusBar statusBar = _dte.StatusBar;
 			if (statusBar != null)
 			{
@@ -725,13 +751,63 @@ namespace VSPackage.CPPCheckPlugin
 				else
 				{
 					label = "cppcheck analysis completed";
+
 					statusBar.Progress(true, label, progress, 100);
-					System.Threading.Tasks.Task.Run(async delegate
+
+					_ = System.Threading.Tasks.Task.Run(async delegate
 					{
 						await System.Threading.Tasks.Task.Delay(5000);
+						await JoinableTaskFactory.SwitchToMainThreadAsync();
 						statusBar.Progress(false, label, 100, 100);
-					});
+					 });
 				}
+			}
+		}
+
+		private static void CreateDefaultGlobalSuppressions()
+		{
+			String globalsuppressionsFilePath = ICodeAnalyzer.suppressionsFilePathByStorage(ICodeAnalyzer.SuppressionStorage.Global);
+			if (!File.Exists(globalsuppressionsFilePath))
+			{
+				SuppressionsInfo suppressionsInfo = new SuppressionsInfo();
+				suppressionsInfo.SkippedIncludesMask.Add(".*Microsoft Visual Studio.*");
+				suppressionsInfo.SkippedIncludesMask.Add(".*Microsoft SDKs.*");
+				suppressionsInfo.SkippedIncludesMask.Add(".*Windows Kits.*");
+				suppressionsInfo.SkippedIncludesMask.Add(".*boost.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\ActiveQt.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\Qt$");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtCore.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtDeclarative.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtGui.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtMultimedia.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtNetwork.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtOpenGL.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtOpenVG.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtScript.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtScriptTools.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtSql.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtSvg.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtTest.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtWebKit.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtXml.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtXmlPatterns.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtConcurrent.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtMultimediaWidgets.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtOpenGLExtensions.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtQml.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtQuick.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtSensors.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtWebKitWidgets.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtWidgets.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtZlib.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\include\\QtV8.*");
+				suppressionsInfo.SkippedIncludesMask.Add(@".*\\mkspecs\\win32-.*");
+
+				suppressionsInfo.SkippedFilesMask.Add("^moc_.*\\.cpp$");
+				suppressionsInfo.SkippedFilesMask.Add("^qrc_.*\\.cpp$");
+				suppressionsInfo.SkippedFilesMask.Add("^ui_.*\\.h$");
+
+				suppressionsInfo.SaveToFile(globalsuppressionsFilePath);
 			}
 		}
 
@@ -740,9 +816,11 @@ namespace VSPackage.CPPCheckPlugin
 		private CommandEvents _commandEventsHandlers = null;
 		private List<ICodeAnalyzer> _analyzers = new List<ICodeAnalyzer>();
 
-		private static OutputWindowPane _outputPane = null;
+		private OutputWindowPane _outputPane = null;
 
 		private const int commandEventIdSave = 331;
 		private const int commandEventIdSaveAll = 224;
+
+		private static CPPCheckPluginPackage _instance = null;
 	}
 }

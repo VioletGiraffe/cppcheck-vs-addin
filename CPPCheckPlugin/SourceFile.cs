@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -216,13 +217,15 @@ namespace VSPackage.CPPCheckPlugin
 		public List<SourceFile> Files;
 		public EnvDTE.Configuration Configuration;
 
-		public bool is64bitConfiguration()
+		public async Task<bool> is64bitConfigurationAsync()
 		{
+			await CPPCheckPluginPackage.Instance.JoinableTaskFactory.SwitchToMainThreadAsync();
 			return Configuration.ConfigurationName.Contains("64");
 		}
 
-		public bool isDebugConfiguration()
+		public async Task<bool> isDebugConfigurationAsync()
 		{
+			await CPPCheckPluginPackage.Instance.JoinableTaskFactory.SwitchToMainThreadAsync();
 			return Configuration.ConfigurationName.ToLower().Contains("debug");
 		}
 	}
