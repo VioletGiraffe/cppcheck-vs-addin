@@ -9,7 +9,7 @@ namespace VSPackage.CPPCheckPlugin
 {
 	public class SourceFile
 	{
-		public enum VCCompilerVersion { vc2003, vc2005, vc2008, vc2010, vc2012, vc2013, vcFuture };
+		public enum VCCompilerVersion { vc2003, vc2005, vc2008, vc2010, vc2012, vc2013, vc2015, vc2017, vc2019, vcFuture };
 
 		public SourceFile(string fullPath, string projectBasePath, string projectName, string vcCompilerName)
 		{
@@ -49,6 +49,15 @@ namespace VSPackage.CPPCheckPlugin
 						break;
 					case 2013:
 						_compilerVersion = VCCompilerVersion.vc2013;
+						break;
+					case 2015:
+						_compilerVersion = VCCompilerVersion.vc2015;
+						break;
+					case 2017:
+						_compilerVersion = VCCompilerVersion.vc2017;
+						break;
+					case 2019:
+						_compilerVersion = VCCompilerVersion.vc2019;
 						break;
 					default:
 						_compilerVersion = VCCompilerVersion.vcFuture;

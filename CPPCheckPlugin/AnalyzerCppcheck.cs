@@ -186,8 +186,14 @@ namespace VSPackage.CPPCheckPlugin
 					case SourceFile.VCCompilerVersion.vc2013:
 						macros.Add("_MSC_VER=1800");
 						break;
-					case SourceFile.VCCompilerVersion.vcFuture:
+					case SourceFile.VCCompilerVersion.vc2015:
 						macros.Add("_MSC_VER=1900");
+						break;
+					case SourceFile.VCCompilerVersion.vc2017:
+						macros.Add("_MSC_VER=1916");
+						break;
+					case SourceFile.VCCompilerVersion.vc2019:
+						macros.Add("_MSC_VER=1920");
 						break;
 				}
 

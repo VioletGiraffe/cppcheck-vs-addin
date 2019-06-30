@@ -242,7 +242,7 @@ namespace VSPackage.CPPCheckPlugin
 			JoinableTaskFactory.Run(async () =>
 			{
 				await JoinableTaskFactory.SwitchToMainThreadAsync();
-				await checkFirstActiveProjectAsync();
+				_ = checkFirstActiveProjectAsync();
 			});
 		}
 
@@ -251,7 +251,10 @@ namespace VSPackage.CPPCheckPlugin
 			JoinableTaskFactory.Run(async () =>
 			{
 				await JoinableTaskFactory.SwitchToMainThreadAsync();
-				await checkAllActiveProjectsAsync();
+
+				Object[] activeProjects = await getActiveProjectsAsync();
+				if (activeProjects != null)
+					_ = checkProjectsAsync(activeProjects);
 			});
 		}
 
@@ -259,8 +262,17 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			JoinableTaskFactory.Run(async () =>
 			{
-				await JoinableTaskFactory.SwitchToMainThreadAsync();
-				await checkSelectionsAsync();
+				List<ConfiguredFiles> configuredFilesList = await getActiveSelectionsAsync();
+
+				await _instance.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.ProjectAnalysis;
+				MainToolWindow.Instance.showIfWindowNotCreated();
+
+				if (configuredFilesList.Count > 0)
+				{
+					runAnalysis(configuredFilesList, false);
+				}
 			});
 		}
 
@@ -279,69 +291,64 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			JoinableTaskFactory.Run(async () =>
 			{
-				await documentSavedAsync(document);
-			});
-		}
+				await JoinableTaskFactory.SwitchToMainThreadAsync();
 
-		private async Task documentSavedAsync(Document document)
-		{
-			await JoinableTaskFactory.SwitchToMainThreadAsync();
+				if (document == null || document.Language != "C/C++")
+					return;
 
-			if (document == null || document.Language != "C/C++")
-				return;
+				if (Settings.Default.CheckSavedFilesHasValue && Settings.Default.CheckSavedFiles == false)
+					return;
 
-			if (Settings.Default.CheckSavedFilesHasValue && Settings.Default.CheckSavedFiles == false)
-				return;
-
-			if (document.ActiveWindow == null)
-			{
-				// We get here when new files are being created and added to the project and
-				// then trying to obtain document.ProjectItem yields an exception. Will just skip this.
-				return;
-			}
-			try
-			{
-				var kind = document.ProjectItem.ContainingProject.Kind;
-				if (!isVisualCppProject(document.ProjectItem.ContainingProject.Kind))
+				if (document.ActiveWindow == null)
 				{
+					// We get here when new files are being created and added to the project and
+					// then trying to obtain document.ProjectItem yields an exception. Will just skip this.
 					return;
 				}
-
-				Configuration currentConfig = null;
-				try { currentConfig = document.ProjectItem.ConfigurationManager.ActiveConfiguration; }
-				catch (Exception) { currentConfig = null; }
-				if (currentConfig == null)
+				try
 				{
-					MessageBox.Show("Cannot perform check - no valid configuration selected", "Cppcheck error");
-					return;
-				}
-
-				dynamic project = document.ProjectItem.ContainingProject.Object;
-				SourceFile sourceForAnalysis = await createSourceFileAsync(document.FullName, currentConfig, project);
-				if (sourceForAnalysis == null)
-					return;
-
-				if (!Settings.Default.CheckSavedFilesHasValue)
-				{
-					askCheckSavedFiles();
-
-					if (!Settings.Default.CheckSavedFiles)
+					var kind = document.ProjectItem.ContainingProject.Kind;
+					if (!isVisualCppProject(document.ProjectItem.ContainingProject.Kind))
+					{
 						return;
-				}
+					}
 
-				MainToolWindow.Instance.showIfWindowNotCreated();
-				MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.DocumentSavedAnalysis;
-				runSavedFileAnalysis(sourceForAnalysis, currentConfig);
-			}
-			catch (Exception ex)
-			{
-				if (_outputPane != null)
-				{
-					_outputPane.Clear();
-					addTextToOutputWindow("Exception occurred in cppcheck add-in: " + ex.Message);
+					Configuration currentConfig = null;
+					try { currentConfig = document.ProjectItem.ConfigurationManager.ActiveConfiguration; }
+					catch (Exception) { currentConfig = null; }
+					if (currentConfig == null)
+					{
+						MessageBox.Show("Cannot perform check - no valid configuration selected", "Cppcheck error");
+						return;
+					}
+
+					dynamic project = document.ProjectItem.ContainingProject.Object;
+					SourceFile sourceForAnalysis = await createSourceFileAsync(document.FullName, currentConfig, project);
+					if (sourceForAnalysis == null)
+						return;
+
+					if (!Settings.Default.CheckSavedFilesHasValue)
+					{
+						askCheckSavedFiles();
+
+						if (!Settings.Default.CheckSavedFiles)
+							return;
+					}
+
+					MainToolWindow.Instance.showIfWindowNotCreated();
+					MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.DocumentSavedAnalysis;
+					runSavedFileAnalysis(sourceForAnalysis, currentConfig);
 				}
-				DebugTracer.Trace(ex);
-			}
+				catch (Exception ex)
+				{
+					if (_outputPane != null)
+					{
+						_outputPane.Clear();
+						addTextToOutputWindow("Exception occurred in cppcheck add-in: " + ex.Message);
+					}
+					DebugTracer.Trace(ex);
+				}
+			});
 		}
 
 		public static void askCheckSavedFiles()
@@ -520,30 +527,6 @@ namespace VSPackage.CPPCheckPlugin
 			Object[] activeProjects = await getActiveProjectsAsync();
 			if (activeProjects != null)
 				_ = checkProjectsAsync(new Object[1] { activeProjects[0] });
-		}
-
-		private async Task checkAllActiveProjectsAsync()
-		{
-			await JoinableTaskFactory.SwitchToMainThreadAsync();
-
-			Object[] activeProjects = await getActiveProjectsAsync();
-			if (activeProjects != null)
-				_ = checkProjectsAsync(activeProjects);
-		}
-
-		private async Task checkSelectionsAsync()
-		{
-			List<ConfiguredFiles> configuredFilesList = await getActiveSelectionsAsync();
-
-			await _instance.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-			MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.ProjectAnalysis;
-			MainToolWindow.Instance.showIfWindowNotCreated();
-
-			if (configuredFilesList.Count > 0)
-			{
-				runAnalysis(configuredFilesList, false);
-			}
 		}
 
 		private async Task<List<SourceFile>> getProjectFilesAsync(Project p, Configuration currentConfig)
@@ -767,7 +750,11 @@ namespace VSPackage.CPPCheckPlugin
 					{
 						await System.Threading.Tasks.Task.Delay(5000);
 						await JoinableTaskFactory.SwitchToMainThreadAsync();
-						statusBar.Progress(false, label, 100, 100);
+						try
+						{
+							statusBar.Progress(false, label, 100, 100);
+						}
+						catch (Exception) { }
 					 });
 				}
 			}
