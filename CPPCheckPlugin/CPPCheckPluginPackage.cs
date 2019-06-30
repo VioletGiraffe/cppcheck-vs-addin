@@ -106,13 +106,13 @@ namespace VSPackage.CPPCheckPlugin
 				return null;
 			}
 
-			foreach (dynamic o in activeProjects)
+			foreach (dynamic project in activeProjects)
 			{
-				if (!isVisualCppProject(o))
+				if (!isVisualCppProject(project.Kind))
 				{
 					return null;
 				}
-				return o.Object;
+				return project.Object;
 			}
 
 			return null;
