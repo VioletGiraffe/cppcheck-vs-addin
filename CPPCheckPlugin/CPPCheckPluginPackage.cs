@@ -610,15 +610,29 @@ namespace VSPackage.CPPCheckPlugin
 				// Using Reflection to get to the interface and access the property directly instead.
 				Type fileObjectType = file.GetType();
 				var vcFileInterface = fileObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCFile");
-				var fileTypeValue = vcFileInterface.GetProperty("FileType").GetValue((object)file);
-				Type fileTypeEnumType = fileTypeValue.GetType();
-				Debug.Assert(fileTypeEnumType.FullName == "Microsoft.VisualStudio.VCProjectEngine.eFileType");
-				var fileTypeEnumValue = Enum.GetName(fileTypeEnumType, fileTypeValue);
-				var fileTypeCppCodeConstant = "eFileTypeCppCode";
-				// First check the enum contains the value we're looking for
-				Debug.Assert(Enum.GetNames(fileTypeEnumType).Contains(fileTypeCppCodeConstant));
-				if (fileTypeEnumValue == fileTypeCppCodeConstant)
-					return true;
+                if (vcFileInterface == null)
+                {
+                    // We failed to get the interface so we can't lookup the real file type, and are left
+                    // with the option of hard-coding the value of eFileTypeCppCode, hoping that it won't
+                    // be changed in future versions.
+                    const int eFileTypeCppCode = 0;
+                    if (file.FileType == eFileTypeCppCode)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    var fileTypeValue = vcFileInterface.GetProperty("FileType").GetValue((object)file);
+                    Type fileTypeEnumType = fileTypeValue.GetType();
+                    Debug.Assert(fileTypeEnumType.FullName == "Microsoft.VisualStudio.VCProjectEngine.eFileType");
+                    var fileTypeEnumValue = Enum.GetName(fileTypeEnumType, fileTypeValue);
+                    var fileTypeCppCodeConstant = "eFileTypeCppCode";
+                    // First check the enum contains the value we're looking for
+                    Debug.Assert(Enum.GetNames(fileTypeEnumType).Contains(fileTypeCppCodeConstant));
+                    if (fileTypeEnumValue == fileTypeCppCodeConstant)
+                        return true;
+                }
 				return false;
 			}
 			catch (Exception e)
@@ -669,10 +683,29 @@ namespace VSPackage.CPPCheckPlugin
 			{
 				await Instance.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				var configurationName = targetConfig.ConfigurationName;
+                String configurationName = targetConfig.ConfigurationName;
 				dynamic config = project.Configurations.Item(configurationName);
-				String toolSetName = config.PlatformToolsetShortName;
-				if (String.IsNullOrEmpty(toolSetName))
+                String toolSetName = "Win32";
+                if(config == null)
+                {
+                    String targetConfigName = string.Format("{0}|{1}", configurationName, targetConfig.PlatformName);
+                    foreach (dynamic cfg in project.Configurations)
+                    {
+                        String configName = cfg.Name.ToString() as String;
+                        if (configName == targetConfigName)
+                        {
+                            config = cfg;
+                            toolSetName = targetConfig.PlatformName;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    toolSetName = config.PlatformToolsetShortName;
+                }
+
+                if (String.IsNullOrEmpty(toolSetName))
 					toolSetName = config.PlatformToolsetFriendlyName;
 				String projectDirectory = project.ProjectDirectory;
 				String projectName = project.Name;
