@@ -501,7 +501,7 @@ namespace VSPackage.CPPCheckPlugin
 						if (file != null)
 						{
 							// document selected
-							SourceFile sourceFile = createSourceFileAsync(file.FullPath, configuration, project.Object);
+							SourceFile sourceFile = await createSourceFileAsync(file.FullPath, configuration, project.Object);
 							addEntry(currentConfiguredFiles, sourceFile, project);
 						}
 					}
