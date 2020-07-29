@@ -41,3 +41,8 @@ jobs:
       run: msbuild $env:Solution_Name /t:Build /p:Configuration=$env:Configuration
       env:
         Configuration: ${{ matrix.configuration }}
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cppcheck-vs-addin
+        path: .\CPPCheckPlugin\bin\**\*.vsix
