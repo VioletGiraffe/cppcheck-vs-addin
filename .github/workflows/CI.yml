@@ -34,6 +34,9 @@ jobs:
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@2008f912f56e61277eefaac6d1888b750582aa16
 
+    - name: Nuget
+      run: nuget restore
+
     - name: Build the application
       run: msbuild $env:Solution_Name /t:Build /p:Configuration=$env:Configuration
       env:
