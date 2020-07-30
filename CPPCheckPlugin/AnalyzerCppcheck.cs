@@ -155,7 +155,7 @@ namespace VSPackage.CPPCheckPlugin
 			{
 				foreach (SourceFile file in filesToAnalyze)
 				{
-					if (!matchMasksList(file.FileName, unitedSuppressionsInfo.SkippedFilesMask))
+					if (!matchMasksList(file.FilePath, unitedSuppressionsInfo.SkippedFilesMask))
 						tempFile.WriteLine(file.FilePath);
 				}
 			}
