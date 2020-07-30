@@ -204,7 +204,7 @@ namespace VSPackage.CPPCheckPlugin
 				process.OutputDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
 				process.ErrorDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
 
-				CPPCheckPluginPackage.addTextToOutputWindow("Starting analyzer with arguments: " + arguments + "\n");
+				_ = CPPCheckPluginPackage.AddTextToOutputWindowAsync("Starting analyzer with arguments: " + arguments + "\n");
 
 				var timer = Stopwatch.StartNew();
 				// Start the process.
@@ -235,11 +235,11 @@ namespace VSPackage.CPPCheckPlugin
 				timer.Stop();
 				analysisFinished(arguments);
 				if (process.ExitCode != 0)
-					CPPCheckPluginPackage.addTextToOutputWindow(analyzerExePath + " has exited with code " + process.ExitCode.ToString() + "\n");
+					_ = CPPCheckPluginPackage.AddTextToOutputWindowAsync(analyzerExePath + " has exited with code " + process.ExitCode.ToString() + "\n");
 				else
 				{
 					double timeElapsed = Math.Round(timer.Elapsed.TotalSeconds, 3);
-					CPPCheckPluginPackage.addTextToOutputWindow("Analysis completed in " + timeElapsed.ToString() + " seconds\n");
+					_ = CPPCheckPluginPackage.AddTextToOutputWindowAsync("Analysis completed in " + timeElapsed.ToString() + " seconds\n");
 				}
 				process.Close();
 				process = null;
@@ -280,7 +280,7 @@ namespace VSPackage.CPPCheckPlugin
 			{
 				addProblemsToToolwindow(parseOutput(output));
 				try {
-					CPPCheckPluginPackage.addTextToOutputWindow(output + "\n");
+					_ = CPPCheckPluginPackage.AddTextToOutputWindowAsync(output + "\n");
 				}
 				catch (Exception) { }
 			}

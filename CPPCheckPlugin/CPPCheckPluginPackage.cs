@@ -47,7 +47,7 @@ namespace VSPackage.CPPCheckPlugin
 			get { return _instance; }
 		}
 
-		public static async void addTextToOutputWindow(string text)
+		public static async Task AddTextToOutputWindowAsync(string text)
 		{
 			try
 			{
@@ -332,7 +332,7 @@ namespace VSPackage.CPPCheckPlugin
 					if (_outputPane != null)
 					{
 						_outputPane.Clear();
-						addTextToOutputWindow("Exception occurred in cppcheck add-in: " + ex.Message);
+						_ = AddTextToOutputWindowAsync("Exception occurred in cppcheck add-in: " + ex.Message);
 					}
 					DebugTracer.Trace(ex);
 				}
