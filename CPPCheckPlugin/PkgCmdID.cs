@@ -11,8 +11,8 @@ namespace VSPackage.CPPCheckPlugin
         public const uint cmdidStopCppcheck = 0x103;
         public const uint cmdidSettings = 0x104;
         
-        public const uint cmdidCheckProjectCppcheck1 = 0x100;
-        public const uint cmdidCheckProjectsCppcheck = 0x100;
-        public const uint cmdidCheckMultiItemCppcheck1 = 0x100;
+        public const uint cmdidCheckProjectCppcheck1 = 0x105;
+        public const uint cmdidCheckProjectsCppcheck = 0x106;
+        public const uint cmdidCheckMultiItemCppcheck1 = 0x107;
     };
 }

@@ -222,20 +222,64 @@ namespace VSPackage.CPPCheckPlugin
 		private VCCompilerVersion _compilerVersion;
 	}
 
-	public class ConfiguredFiles {
-		public List<SourceFile> Files;
-		public EnvDTE.Configuration Configuration;
+	public class SourceFilesWithConfiguration {
+		public IEnumerable<SourceFile> Files
+		{
+			get { return _files.Values; }
+		}
+
+		public EnvDTE.Configuration Configuration
+		{
+			get { return _configuration; }
+			set
+			{
+				Debug.Assert(_configuration == null);
+				Debug.Assert(value != null);
+				_configuration = value;
+			}
+		}
+
+		public void addFileIfDoesntExistAlready(SourceFile file)
+		{
+			if (file == null)
+			{
+				Debug.Fail("file is null!");
+				return;
+			}
+
+			_files[file.FilePath] = file;
+		}
+
+		public void addMultipleFilesWithoutDuplicates(IEnumerable<SourceFile> files)
+		{
+			if (files == null)
+			{
+				Debug.Fail("files list is null!");
+				return;
+			}
+
+			foreach (var file in files)
+				addFileIfDoesntExistAlready(file);
+		}
 
 		public async Task<bool> is64bitConfigurationAsync()
 		{
 			await CPPCheckPluginPackage.Instance.JoinableTaskFactory.SwitchToMainThreadAsync();
-			return Configuration.ConfigurationName.Contains("64");
+			return _configuration.PlatformName.Contains("64");
 		}
 
 		public async Task<bool> isDebugConfigurationAsync()
 		{
 			await CPPCheckPluginPackage.Instance.JoinableTaskFactory.SwitchToMainThreadAsync();
-			return Configuration.ConfigurationName.ToLower().Contains("debug");
+			return _configuration.ConfigurationName.ToLower().Contains("debug");
 		}
+
+		public bool Any()
+		{
+			return _files.Count != 0;
+		}
+
+		private Dictionary<string /* full path */, SourceFile> _files = new Dictionary<string, SourceFile>();
+		private EnvDTE.Configuration _configuration;
 	}
 }

@@ -10,12 +10,16 @@ using Microsoft.VisualStudio.Shell;
 using EnvDTE;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using System.Threading;
-using Task = System.Threading.Tasks.Task;
 using System.Threading.Tasks;
 using System.IO;
 using VSPackage.CPPCheckPlugin.Properties;
+using Microsoft.VisualStudio.VCProjectEngine;
+using Microsoft.VisualStudio.VCProject;
+
+using Task = System.Threading.Tasks.Task;
+using System.Windows.Forms;
+
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -58,7 +62,7 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		public static String solutionName()
+		public static string solutionName()
 		{
 			return _instance.JoinableTaskFactory.Run<string>(async () =>
 			{
@@ -68,7 +72,7 @@ namespace VSPackage.CPPCheckPlugin
 			});
 		}
 
-		public static String solutionPath()
+		public static string solutionPath()
 		{
 			return _instance.JoinableTaskFactory.Run<string>(async () =>
 			{
@@ -78,44 +82,25 @@ namespace VSPackage.CPPCheckPlugin
 			});
 		}
 
-		public static async Task<String> activeProjectNameAsync()
+		public static async Task<string> activeProjectNameAsync()
 		{
-			var project = await _instance.activeProjectAsync();
-			return project != null ? project.Name : "";
+			var projects = await _instance.findSelectedCppProjectsAsync();
+			Assumes.NotNull(projects);
+			return projects.Any() ? (projects.First() as dynamic).Name : "";
 		}
 
 		public static async Task<string> activeProjectPathAsync()
 		{
-			var project = await _instance.activeProjectAsync();
-			if (project != null)
+			var projects = await _instance.findSelectedCppProjectsAsync();
+			Assumes.NotNull(projects);
+
+			if (projects.Any())
 			{
-				String projectDirectory = project.ProjectDirectory;
+				string projectDirectory = (projects.First() as dynamic).ProjectDirectory;
 				return projectDirectory.Replace("\"", "");
 			}
 
 			return "";
-		}
-
-		private async Task<dynamic> activeProjectAsync()
-		{
-			await JoinableTaskFactory.SwitchToMainThreadAsync();
-
-			Object[] activeProjects = (Object[])_dte.ActiveSolutionProjects;
-			if (!activeProjects.Any())
-			{
-				return null;
-			}
-
-			foreach (dynamic project in activeProjects)
-			{
-				if (!isVisualCppProject(project.Kind))
-				{
-					return null;
-				}
-				return project.Object;
-			}
-
-			return null;
 		}
 
 		#region Package Members
@@ -157,7 +142,7 @@ namespace VSPackage.CPPCheckPlugin
 			cppcheckAnalayzer.ProgressUpdated += checkProgressUpdated;
 			_analyzers.Add(cppcheckAnalayzer);
 
-			if (String.IsNullOrEmpty(Settings.Default.DefaultArguments))
+			if (string.IsNullOrEmpty(Settings.Default.DefaultArguments))
 				Settings.Default.DefaultArguments = CppcheckSettings.DefaultArguments;
 
 			// Add our command handlers for menu (commands must exist in the .vsct file)
@@ -207,8 +192,6 @@ namespace VSPackage.CPPCheckPlugin
 					MenuCommand selectionsMenuItem = new MenuCommand(onCheckSelectionsRequested, selectionsMenuCommandID);
 					mcs.AddCommand(selectionsMenuItem);
 				}
-
-
 			}
 		}
 
@@ -250,11 +233,16 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			JoinableTaskFactory.Run(async () =>
 			{
-				await JoinableTaskFactory.SwitchToMainThreadAsync();
+				var cppProjects = await findAllCppProjectsAsync();
+				Assumes.NotNull(cppProjects);
 
-				Object[] activeProjects = await getActiveProjectsAsync();
-				if (activeProjects != null)
-					_ = checkProjectsAsync(activeProjects);
+				if (cppProjects.Any())
+					_ = checkProjectsAsync(cppProjects);
+				else
+				{
+					await JoinableTaskFactory.SwitchToMainThreadAsync();
+					MessageBox.Show("No C++ projects found in the solution - nothing to check.");
+				}
 			});
 		}
 
@@ -262,16 +250,15 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			JoinableTaskFactory.Run(async () =>
 			{
-				List<ConfiguredFiles> configuredFilesList = await getActiveSelectionsAsync();
+				var cppProjects = await findSelectedCppProjectsAsync();
+				Assumes.NotNull(cppProjects);
 
-				await _instance.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.ProjectAnalysis;
-				MainToolWindow.Instance.showIfWindowNotCreated();
-
-				if (configuredFilesList.Count > 0)
+				if (cppProjects.Any())
+					_ = checkProjectsAsync(cppProjects);
+				else
 				{
-					runAnalysis(configuredFilesList, false);
+					await JoinableTaskFactory.SwitchToMainThreadAsync();
+					MessageBox.Show("No C++ projects selected - nothing to check.");
 				}
 			});
 		}
@@ -308,7 +295,7 @@ namespace VSPackage.CPPCheckPlugin
 				try
 				{
 					var kind = document.ProjectItem.ContainingProject.Kind;
-					if (!isVisualCppProject(document.ProjectItem.ContainingProject.Kind))
+					if (!isVisualCppProjectKind(document.ProjectItem.ContainingProject.Kind))
 					{
 						return;
 					}
@@ -322,7 +309,8 @@ namespace VSPackage.CPPCheckPlugin
 						return;
 					}
 
-					dynamic project = document.ProjectItem.ContainingProject.Object;
+					//dynamic project = document.ProjectItem.ContainingProject.Object;
+					Project project = document.ProjectItem.ContainingProject;
 					SourceFile sourceForAnalysis = await createSourceFileAsync(document.FullName, currentConfig, project);
 					if (sourceForAnalysis == null)
 						return;
@@ -358,201 +346,96 @@ namespace VSPackage.CPPCheckPlugin
 			Settings.Default.Save();
 		}
 
-		private async Task<object[]> getActiveProjectsAsync()
+		private async Task<List<Project>> findSelectedCppProjectsAsync()
 		{
 			await JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			Object[] activeProjects = (Object[])_dte.ActiveSolutionProjects;
-			if (!activeProjects.Any())
+			var cppProjects = new List<Project>();
+			foreach (dynamic project in _dte.ActiveSolutionProjects as Object[])
 			{
-				System.Windows.MessageBox.Show("No project selected in Solution Explorer - nothing to check.");
-				return null;
+				if (isVisualCppProjectKind(project.Kind))
+					cppProjects.Add(project);
 			}
-			return activeProjects;
+
+			//System.Windows.MessageBox.Show("No project selected in Solution Explorer - nothing to check.");
+			return cppProjects;
 		}
 
-		private static void addEntry(ConfiguredFiles configuredFiles, SourceFile sourceFile, Project project)
+		private async Task<List<Project>> findAllCppProjectsAsync()
 		{
-			if (sourceFile != null)
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			var cppProjects = new List<Project>();
+			foreach (Project project in _dte.Solution.Projects)
 			{
-				List<SourceFile> sourceFileList = new List<SourceFile>();
-				sourceFileList.Add(sourceFile);
-				addEntry(configuredFiles, sourceFileList, project);
+				if (isVisualCppProjectKind(project.Kind))
+					cppProjects.Add(project);
 			}
+
+			return cppProjects;
 		}
 
-		private static void addEntry(ConfiguredFiles configuredFiles, List<SourceFile> sourceFileList, Project project)
+		// Looks at the project item. If it's a supported file type it's added to the list, and if it's a filter it keeps digging into it.
+		private async Task scanProjectItemForSourceFilesAsync(ProjectItem item, SourceFilesWithConfiguration configuredFiles, Configuration configuration, Project project)
 		{
-			foreach (SourceFile newSourceFile in sourceFileList)
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			var itemType = await getTypeOfProjectItemAsync(item);
+
+			if (itemType == ProjectItemType.folder)
 			{
-				if (newSourceFile == null)
-					continue;
-
-				for (int index = 0; index < configuredFiles.Files.Count; index++)
+				foreach (ProjectItem subItem in item.ProjectItems)
 				{
-					if (newSourceFile.FileName.CompareTo(configuredFiles.Files[index].FileName) == 0 &&
-						newSourceFile.FilePath.CompareTo(configuredFiles.Files[index].FilePath) == 0)
-					{
-						// file already exists in list
-						return;
-					}
+					await scanProjectItemForSourceFilesAsync(subItem, configuredFiles, configuration, project);
 				}
-
-
-				configuredFiles.Files.Add(newSourceFile);
-				//string projectName = project.Name;
-				//_outputPane.OutputString("Will check: " + projectName + " | " + newSourceFile.FilePath + "/" + newSourceFile.FileName);
 			}
-		}
-
-		private static void scanFilter(dynamic filter, List<SourceFile> sourceFileList, ConfiguredFiles configuredFiles,
-			Configuration configuration, Project project)
-		{
-			foreach (dynamic item in filter.Items)
+			else if (itemType == ProjectItemType.headerFile || itemType == ProjectItemType.cFile || itemType == ProjectItemType.cppFile)
 			{
-				if (isFilter(item))
+				var document = item.Document;
+				if (document == null)
 				{
-					scanFilter(item, sourceFileList, configuredFiles, configuration, project);
+					Debug.Fail("isCppFileAsync(item) is true, but item.Document is null!");
+					return;
 				}
-				else if (isCppFile(item))
-				{
-					dynamic file = item.ProjectItem.Object;
 
-					// non project selected
-					if (file != null)
-					{
-						// document selected
-						_instance.JoinableTaskFactory.Run(async () =>
-						{
-							await _instance.JoinableTaskFactory.SwitchToMainThreadAsync();
-							SourceFile sourceFile = await createSourceFileAsync(file.FullPath, configuration, project.Object);
-							addEntry(configuredFiles, sourceFile, project);
-						});
-					}
-				}
+				SourceFile sourceFile = await createSourceFileAsync(document.FullName, configuration, project);
+				configuredFiles.addFileIfDoesntExistAlready(sourceFile);
 			}
 		}
 
-		private async Task<List<ConfiguredFiles>> getActiveSelectionsAsync()
+		private async Task<SourceFilesWithConfiguration> getAllSupportedFilesFromProjectAsync(Project project)
 		{
-			await _instance.JoinableTaskFactory.SwitchToMainThreadAsync();
+			var sourceFiles = new SourceFilesWithConfiguration();
+			sourceFiles.Configuration = await getConfigurationAsync(project);
 
-			Dictionary<Project, ConfiguredFiles> confMap = new Dictionary<Project, ConfiguredFiles>();
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			foreach (SelectedItem selItem in _dte.SelectedItems)
+			foreach (ProjectItem item in project.ProjectItems)
 			{
-				Project project = null;
-
-				if (project == null && selItem.ProjectItem != null)
+				ProjectItemType itemType = await getTypeOfProjectItemAsync(item);
+				if (itemType == ProjectItemType.cFile || itemType == ProjectItemType.cppFile || itemType == ProjectItemType.headerFile)
 				{
-					project = selItem.ProjectItem.ContainingProject;
-				}
 
-				if (project == null)
-				{
-					project = selItem.Project;
-				}
-
-				if (project == null || !isVisualCppProject(project.Kind))
-				{
-					continue;
-				}
-
-				Configuration configuration = await getConfigurationAsync(project);
-
-				if (!confMap.ContainsKey(project))
-				{
-					// create new Map key entry for project
-					ConfiguredFiles configuredFiles = new ConfiguredFiles();
-					confMap.Add(project, configuredFiles);
-					configuredFiles.Files = new List<SourceFile>();
-					configuredFiles.Configuration = configuration;
-				}
-
-				ConfiguredFiles currentConfiguredFiles = confMap[project];
-
-				if (currentConfiguredFiles == null)
-				{
-					continue;
-				}
-
-				if (selItem.ProjectItem == null)
-				{
-					// project selected
-					List<SourceFile> projectSourceFileList = await getProjectFilesAsync(project, configuration);
-					foreach (SourceFile projectSourceFile in projectSourceFileList)
-						addEntry(currentConfiguredFiles, projectSourceFileList, project);
-				}
-				else
-				{
-					dynamic projectItem = selItem.ProjectItem.Object;
-
-					if (isFilter(projectItem))
-					{
-						List<SourceFile> sourceFileList = new List<SourceFile>();
-						scanFilter(projectItem, sourceFileList, currentConfiguredFiles, configuration, project);
-						addEntry(currentConfiguredFiles, sourceFileList, project);
-					}
-					else if (isCppFile(projectItem))
-					{
-						dynamic file = selItem.ProjectItem.Object;
-
-						// non project selected
-						if (file != null)
-						{
-							// document selected
-							SourceFile sourceFile = createSourceFileAsync(file.FullPath, configuration, project.Object);
-							addEntry(currentConfiguredFiles, sourceFile, project);
-						}
-					}
+					//List<SourceFile> projectSourceFileList = await getProjectFilesAsync(project, configuration);
+					//foreach (SourceFile projectSourceFile in projectSourceFileList)
+					//	addEntry(currentConfiguredFiles, projectSourceFileList, project);
 				}
 			}
 
-			List<ConfiguredFiles> configuredFilesList = new List<ConfiguredFiles>();
-			foreach (ConfiguredFiles configuredFiles in confMap.Values)
-			{
-				if (configuredFiles.Files.Any())
-				{
-					configuredFilesList.Add(configuredFiles);
-				}
-			}
-
-			return configuredFilesList;
+			return sourceFiles;
 		}
 
 		private async Task checkFirstActiveProjectAsync()
 		{
 			await JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			Object[] activeProjects = await getActiveProjectsAsync();
-			if (activeProjects != null)
-				_ = checkProjectsAsync(new Object[1] { activeProjects[0] });
-		}
+			var activeProjects = await findSelectedCppProjectsAsync();
+			Assumes.NotNull(activeProjects);
 
-		private async Task<List<SourceFile>> getProjectFilesAsync(Project p, Configuration currentConfig)
-		{
-			await JoinableTaskFactory.SwitchToMainThreadAsync();
-
-			if (!isVisualCppProject(p.Kind))
-			{
-				System.Windows.MessageBox.Show("Only C++ projects can be checked.");
-				return null;
-			}
-
-			List<SourceFile> files = new List<SourceFile>();
-			dynamic project = p.Object;
-			dynamic projectFiles = project.Files;
-			foreach (dynamic file in projectFiles)
-			{
-				if (isCppFile(file))
-				{
-					String fileName = file.Name;
-					SourceFile f = await createSourceFileAsync(file.FullPath, currentConfig, project);
-					if (f != null)
-						files.Add(f);
-				}
-			}
-			return files;
+			if (activeProjects.Any())
+				_ = checkProjectsAsync(new List<Project> { activeProjects.First() });
+			else
+				MessageBox.Show("No project selected in Solution Explorer - nothing to check.");
 		}
 
 		private async Task<Configuration> getConfigurationAsync(Project project)
@@ -569,80 +452,78 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		private async Task checkProjectsAsync(Object[] activeProjects)
+		private async Task checkProjectsAsync(List<Project> projects)
 		{
-			Debug.Assert(activeProjects.Any());
+			Debug.Assert(projects.Any());
 
-			List<ConfiguredFiles> allConfiguredFiles = new List<ConfiguredFiles>();
-			foreach (dynamic o in activeProjects)
+			List<SourceFilesWithConfiguration> allConfiguredFiles = new List<SourceFilesWithConfiguration>();
+			foreach (var project in projects)
 			{
-				Configuration configuration = await getConfigurationAsync(o);
-				if (configuration == null)
+				await JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				Configuration config = await getConfigurationAsync(project);
+				if (config == null)
 				{
-					MessageBox.Show("Cannot perform check - no valid configuration selected", "Cppcheck error");
-					return;
+					MessageBox.Show("No valid configuration in project " + project.Name);
+					continue;
 				}
 
-				dynamic projectFiles = await getProjectFilesAsync(o, configuration);
-				if (projectFiles == null)
-					continue;
+				SourceFilesWithConfiguration sourceFiles = new SourceFilesWithConfiguration();
+				sourceFiles.Configuration = config;
 
-				ConfiguredFiles configuredFiles = new ConfiguredFiles();
-				configuredFiles.Files = projectFiles;
-				configuredFiles.Configuration = configuration;
-				allConfiguredFiles.Add(configuredFiles);
+				foreach (ProjectItem projectItem in project.ProjectItems)
+				{
+					await scanProjectItemForSourceFilesAsync(projectItem, sourceFiles, config, project);
+				}
+
+				allConfiguredFiles.Add(sourceFiles);
 			}
 
-			await JoinableTaskFactory.SwitchToMainThreadAsync();
+			_ = JoinableTaskFactory.RunAsync(async () => {
+				await JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.ProjectAnalysis;
-			MainToolWindow.Instance.showIfWindowNotCreated();
+				MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.ProjectAnalysis;
+				MainToolWindow.Instance.showIfWindowNotCreated();
+			});
 
 			runAnalysis(allConfiguredFiles, false);
 		}
 
-		private static bool isCppFile(dynamic file)
+		private async Task<ProjectItemType> getTypeOfProjectItemAsync(ProjectItem item)
 		{
-			try {
-				// Checking file.FileType == eFileType.eFileTypeCppCode...
-				// Automatic property binding fails with VS2013 because there the FileType property
-				// is *explicitly implemented* and so only accessible via the declaring interface.
-				// Using Reflection to get to the interface and access the property directly instead.
-				Type fileObjectType = file.GetType();
-				var vcFileInterface = fileObjectType.GetInterface("Microsoft.VisualStudio.VCProjectEngine.VCFile");
-				var fileTypeValue = vcFileInterface.GetProperty("FileType").GetValue((object)file);
-				Type fileTypeEnumType = fileTypeValue.GetType();
-				Debug.Assert(fileTypeEnumType.FullName == "Microsoft.VisualStudio.VCProjectEngine.eFileType");
-				var fileTypeEnumValue = Enum.GetName(fileTypeEnumType, fileTypeValue);
-				var fileTypeCppCodeConstant = "eFileTypeCppCode";
-				// First check the enum contains the value we're looking for
-				Debug.Assert(Enum.GetNames(fileTypeEnumType).Contains(fileTypeCppCodeConstant));
-				if (fileTypeEnumValue == fileTypeCppCodeConstant)
-					return true;
-				return false;
-			}
-			catch (Exception e)
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
+			var document = item.Document;
+			if (document == null)
 			{
-				Debug.WriteLine("Exception in isCppFile for " + ((Object)file).ToString() + "\n" + e.Message);
-				return false;
+				if (item.Collection != null)
+					return ProjectItemType.folder;
+				else
+					return ProjectItemType.other;
 			}
-		}
 
-		private static bool isFilter(dynamic checkObject)
-		{
-			return implementsInterface(checkObject, "Microsoft.VisualStudio.VCProjectEngine.VCFilter");
+			switch (document.Kind)
+			{
+				case "{8E7B96A8-E33D-11D0-A6D5-00C04FB67F6A}":
+					return ProjectItemType.cppFile;
+				default:
+					return ProjectItemType.other;
+			}
 		}
 
 		private void runSavedFileAnalysis(SourceFile file, Configuration currentConfig)
 		{
 			Debug.Assert(currentConfig != null);
 
-			var configuredFiles = new ConfiguredFiles();
-			configuredFiles.Files = new List<SourceFile> { file };
+			var configuredFiles = new SourceFilesWithConfiguration();
+			configuredFiles.addFileIfDoesntExistAlready(file);
 			configuredFiles.Configuration = currentConfig;
 
-			System.Threading.Thread.Sleep(750);
-			runAnalysis(new List<ConfiguredFiles> { configuredFiles }, true);
+			_ = System.Threading.Tasks.Task.Run(async delegate
+			{
+				await System.Threading.Tasks.Task.Delay(750);
+				await JoinableTaskFactory.SwitchToMainThreadAsync();
+				runAnalysis(new List<SourceFilesWithConfiguration> { configuredFiles }, true);
+			});
 		}
 
 		public void stopAnalysis()
@@ -653,7 +534,7 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		private void runAnalysis(List<ConfiguredFiles> configuredFiles, bool analysisOnSavedFile)
+		private void runAnalysis(List<SourceFilesWithConfiguration> configuredFiles, bool analysisOnSavedFile)
 		{
 			foreach (var analyzer in _analyzers)
 			{
@@ -661,40 +542,42 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		private static async Task<SourceFile> createSourceFileAsync(string filePath, Configuration targetConfig, dynamic project)
+		private static async Task<SourceFile> createSourceFileAsync(string filePath, Configuration configuration, Project project)
 		{
-			// TODO:
-			//Debug.Assert(isVisualCppProject((object)project));
 			try
 			{
 				await Instance.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				var configurationName = targetConfig.ConfigurationName;
-				dynamic config = project.Configurations.Item(configurationName);
-				String toolSetName = config.PlatformToolsetShortName;
-				if (String.IsNullOrEmpty(toolSetName))
-					toolSetName = config.PlatformToolsetFriendlyName;
-				String projectDirectory = project.ProjectDirectory;
-				String projectName = project.Name;
-				SourceFile sourceForAnalysis = new SourceFile(filePath, projectDirectory, projectName, toolSetName);
-				dynamic toolsCollection = config.Tools;
+				Debug.Assert(isVisualCppProjectKind(project.Kind));
+				
+				VCProject vcProject = project.Object as VCProject;
+				VCConfiguration vcconfig = vcProject.ActiveConfiguration;
+
+				string toolSetName = ((dynamic)vcconfig).PlatformToolsetFriendlyName;
+
+				string projectDirectory = vcProject.ProjectDirectory;
+				string projectName = project.Name;
+				SourceFile sourceForAnalysis = null;
+				dynamic toolsCollection = vcconfig.Tools;
 				foreach (var tool in toolsCollection)
 				{
 					// Project-specific includes
 					if (implementsInterface(tool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
 					{
-						String includes = tool.FullIncludePath;
-						String definitions = tool.PreprocessorDefinitions;
-						String macrosToUndefine = tool.UndefinePreprocessorDefinitions;
+						if (sourceForAnalysis == null)
+							sourceForAnalysis = new SourceFile(filePath, projectDirectory, projectName, toolSetName);
 
-						String[] includePaths = includes.Split(';');
+						string includes = tool.FullIncludePath;
+						string definitions = tool.PreprocessorDefinitions;
+						string macrosToUndefine = tool.UndefinePreprocessorDefinitions;
+
+						string[] includePaths = includes.Split(';');
 						for (int i = 0; i < includePaths.Length; ++i)
-							includePaths[i] = Environment.ExpandEnvironmentVariables(config.Evaluate(includePaths[i])); ;
+							includePaths[i] = Environment.ExpandEnvironmentVariables(vcconfig.Evaluate(includePaths[i])); ;
 
 						sourceForAnalysis.addIncludePaths(includePaths);
 						sourceForAnalysis.addMacros(definitions.Split(';'));
 						sourceForAnalysis.addMacrosToUndefine(macrosToUndefine.Split(';'));
-						break;
 					}
 				}
 
@@ -707,12 +590,12 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		private static bool isVisualCppProject(string kind)
+		private static bool isVisualCppProjectKind(string kind)
 		{
 			return kind.Equals("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}");
 		}
 
-		private static bool implementsInterface(object objectToCheck, String interfaceName)
+		private static bool implementsInterface(object objectToCheck, string interfaceName)
 		{
 			Type objectType = objectToCheck.GetType();
 			var requestedInterface = objectType.GetInterface(interfaceName);
@@ -730,7 +613,7 @@ namespace VSPackage.CPPCheckPlugin
 			EnvDTE.StatusBar statusBar = _dte.StatusBar;
 			if (statusBar != null)
 			{
-				String label = "";
+				string label = "";
 				if (progress < 100)
 				{
 					if (e.FilesChecked == 0 || e.TotalFilesNumber == 0)
@@ -762,7 +645,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		private static void CreateDefaultGlobalSuppressions()
 		{
-			String globalsuppressionsFilePath = ICodeAnalyzer.suppressionsFilePathByStorage(ICodeAnalyzer.SuppressionStorage.Global);
+			string globalsuppressionsFilePath = ICodeAnalyzer.suppressionsFilePathByStorage(ICodeAnalyzer.SuppressionStorage.Global);
 			if (!File.Exists(globalsuppressionsFilePath))
 			{
 				SuppressionsInfo suppressionsInfo = new SuppressionsInfo();
@@ -806,6 +689,8 @@ namespace VSPackage.CPPCheckPlugin
 				suppressionsInfo.SaveToFile(globalsuppressionsFilePath);
 			}
 		}
+
+		enum ProjectItemType { cppFile, cFile, headerFile, folder, other };
 
 		private static DTE _dte = null;
 		private DocumentEvents _eventsHandlers = null;

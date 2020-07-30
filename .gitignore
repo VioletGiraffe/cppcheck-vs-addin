@@ -6,3 +6,4 @@ CPPCheckPlugin/obj
 CPPCheckPlugin.csproj.user
 storage.ide
 packages
+.vs/*

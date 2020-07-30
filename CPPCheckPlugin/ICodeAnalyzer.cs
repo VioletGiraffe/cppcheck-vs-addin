@@ -69,7 +69,7 @@ namespace VSPackage.CPPCheckPlugin
 			Dispose(false);
 		}
 
-		public abstract void analyze(List<ConfiguredFiles> configuredFiles, bool analysisOnSavedFile);
+		public abstract void analyze(List<SourceFilesWithConfiguration> configuredFiles, bool analysisOnSavedFile);
 
 		public abstract void suppressProblem(Problem p, SuppressionScope scope);
 

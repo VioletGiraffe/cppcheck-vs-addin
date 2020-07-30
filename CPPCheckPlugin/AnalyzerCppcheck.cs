@@ -75,8 +75,14 @@ namespace VSPackage.CPPCheckPlugin
 			return analyzerPath;
 		}
 
-		private string getCPPCheckArgs(ConfiguredFiles configuredFiles, bool analysisOnSavedFile, bool multipleProjects, string tempFileName)
+		private string getCPPCheckArgs(SourceFilesWithConfiguration configuredFiles, bool analysisOnSavedFile, bool multipleProjects, string tempFileName)
 		{
+			if (!configuredFiles.Any())
+			{
+				Debug.Fail("Empty files list!");
+				return "";
+			}
+
 			Debug.Assert(_numCores > 0);
 			String cppheckargs = Properties.Settings.Default.DefaultArguments;
 
@@ -102,16 +108,16 @@ namespace VSPackage.CPPCheckPlugin
 
 			Debug.Assert(projectPaths.Count == 1);
 			_projectBasePath = projectPaths.First();
-			_projectName = filesToAnalyze[0].ProjectName;
+			_projectName = filesToAnalyze.First().ProjectName;
 
 			// Creating the list of all different suppressions (no duplicates)
 			foreach (var path in projectPaths)
 			{
-				unitedSuppressionsInfo.UnionWith(readSuppressions(SuppressionStorage.Project, path, filesToAnalyze[0].ProjectName));
+				unitedSuppressionsInfo.UnionWith(readSuppressions(SuppressionStorage.Project, path, filesToAnalyze.First().ProjectName));
 			}
 
 			if (!multipleProjects)
-				cppheckargs += (" --relative-paths=\"" + filesToAnalyze[0].BaseProjectPath + "\"");
+				cppheckargs += (" --relative-paths=\"" + filesToAnalyze.First().BaseProjectPath + "\"");
 			cppheckargs += (" -j " + _numCores.ToString());
 			if (Properties.Settings.Default.InconclusiveChecksEnabled)
 				cppheckargs += " --inconclusive ";
@@ -133,7 +139,7 @@ namespace VSPackage.CPPCheckPlugin
 						includePaths.UnionWith(file.IncludePaths);
 				}
 
-				includePaths.Add(filesToAnalyze[0].BaseProjectPath); // Fix for #60
+				includePaths.Add(filesToAnalyze.First().BaseProjectPath); // Fix for #60
 
 				foreach (string path in includePaths)
 				{
@@ -166,7 +172,7 @@ namespace VSPackage.CPPCheckPlugin
 				// https://devblogs.microsoft.com/cppblog/msvc-now-correctly-reports-__cplusplus/
 				macros.Add("__cplusplus=199711L"); // At least in VS2012, this is still 199711L
 												   // Assuming all files passed here are from the same project / same toolset, which should be true, so peeking the first file for global settings
-				switch (filesToAnalyze[0].vcCompilerVersion)
+				switch (filesToAnalyze.First().vcCompilerVersion)
 				{
 					case SourceFile.VCCompilerVersion.vc2003:
 						macros.Add("_MSC_VER=1310");
@@ -193,7 +199,8 @@ namespace VSPackage.CPPCheckPlugin
 						macros.Add("_MSC_VER=1916");
 						break;
 					case SourceFile.VCCompilerVersion.vc2019:
-						macros.Add("_MSC_VER=1920");
+						macros.Add("_MSC_VER=1926");
+						macros.Add("_MSC_FULL_VER=192628808");
 						break;
 				}
 
@@ -250,14 +257,14 @@ namespace VSPackage.CPPCheckPlugin
 			return cppheckargs;
 		}
 
-		public override void analyze(List<ConfiguredFiles> allConfiguredFiles, bool analysisOnSavedFile)
+		public override void analyze(List<SourceFilesWithConfiguration> allConfiguredFiles, bool analysisOnSavedFile)
 		{
 			if (!allConfiguredFiles.Any())
 				return;
 			else
 			{
 				bool validFilesQueuedForCheck = false;
-				foreach (ConfiguredFiles files in allConfiguredFiles)
+				foreach (SourceFilesWithConfiguration files in allConfiguredFiles)
 					if (files.Files.Any())
 					{
 						validFilesQueuedForCheck = true;
