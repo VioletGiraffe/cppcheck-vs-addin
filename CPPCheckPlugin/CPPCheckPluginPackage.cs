@@ -380,10 +380,12 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			await JoinableTaskFactory.SwitchToMainThreadAsync();
 
+			Debug.WriteLine("Scanning project item \"" + item.Name + "\"...");
 			var itemType = await getTypeOfProjectItemAsync(item);
 
 			if (itemType == ProjectItemType.folder)
 			{
+				Debug.WriteLine("It's a folder, enumerating it.");
 				foreach (ProjectItem subItem in item.ProjectItems)
 				{
 					await scanProjectItemForSourceFilesAsync(subItem, configuredFiles, configuration, project);
@@ -391,16 +393,15 @@ namespace VSPackage.CPPCheckPlugin
 			}
 			else if (itemType == ProjectItemType.headerFile || itemType == ProjectItemType.cFile || itemType == ProjectItemType.cppFile)
 			{
-				var document = item.Document;
-				if (document == null)
-				{
-					Debug.Fail("isCppFileAsync(item) is true, but item.Document is null!");
-					return;
-				}
-
-				SourceFile sourceFile = await createSourceFileAsync(document.FullName, configuration, project);
+				Debug.WriteLine("It's a C/C++ source file.");
+				Debug.Assert(item.FileCount >= 1);
+				var filePath = item.FileNames[1];
+				Debug.Assert(!String.IsNullOrEmpty(filePath));
+				SourceFile sourceFile = await createSourceFileAsync(filePath, configuration, project);
 				configuredFiles.addFileIfDoesntExistAlready(sourceFile);
 			}
+			else
+				Debug.WriteLine("It's something else, skipping it.");
 		}
 
 		private async Task<SourceFilesWithConfiguration> getAllSupportedFilesFromProjectAsync(Project project)
@@ -471,6 +472,8 @@ namespace VSPackage.CPPCheckPlugin
 				SourceFilesWithConfiguration sourceFiles = new SourceFilesWithConfiguration();
 				sourceFiles.Configuration = config;
 
+				await AddTextToOutputWindowAsync("Looking for C++ source files in the project \"" + project.Name + "\"\n");
+
 				foreach (ProjectItem projectItem in project.ProjectItems)
 				{
 					await scanProjectItemForSourceFilesAsync(projectItem, sourceFiles, config, project);
@@ -492,19 +495,21 @@ namespace VSPackage.CPPCheckPlugin
 		private async Task<ProjectItemType> getTypeOfProjectItemAsync(ProjectItem item)
 		{
 			await JoinableTaskFactory.SwitchToMainThreadAsync();
-			var document = item.Document;
-			if (document == null)
-			{
-				if (item.Collection != null)
-					return ProjectItemType.folder;
-				else
-					return ProjectItemType.other;
-			}
 
-			switch (document.Kind)
+			Debug.WriteLine(item.Name + ": " + item.Kind);
+			
+			switch (item.Kind)
 			{
 				case "{8E7B96A8-E33D-11D0-A6D5-00C04FB67F6A}":
 					return ProjectItemType.cppFile;
+				case "{6BB5F8EE-4483-11D3-8BCF-00C04F8EC28C}":
+				{
+					if (item.Name.ToLower().EndsWith(".vcxproj.filters"))
+						return ProjectItemType.other; // ???
+					return ProjectItemType.cppFile;
+				}
+				case "{6BB5F8F0-4483-11D3-8BCF-00C04F8EC28C}":
+					return ProjectItemType.folder;
 				default:
 					return ProjectItemType.other;
 			}
@@ -553,7 +558,12 @@ namespace VSPackage.CPPCheckPlugin
 				VCProject vcProject = project.Object as VCProject;
 				VCConfiguration vcconfig = vcProject.ActiveConfiguration;
 
-				string toolSetName = ((dynamic)vcconfig).PlatformToolsetFriendlyName;
+				String configurationName = configuration.ConfigurationName;
+				dynamic config = ((dynamic)project.Object).Configurations.Item(configurationName);
+
+				// TODO: This no longer works, why?
+				// string toolSetName = ((dynamic)vcconfig).PlatformToolsetFriendlyName;
+				string toolSetName = null;
 
 				string projectDirectory = vcProject.ProjectDirectory;
 				string projectName = project.Name;

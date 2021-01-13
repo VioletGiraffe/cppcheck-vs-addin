@@ -17,52 +17,50 @@ namespace VSPackage.CPPCheckPlugin
 			_projectBasePath = cleanPath(projectBasePath);
 			_projectName = projectName;
 
-			// Parsing the number
-			String vcToolsNumberString = Regex.Match(vcCompilerName, @"\d+").Value;
-			int vcToolsNumber = Int32.Parse(vcToolsNumberString);
 
 			if (string.IsNullOrEmpty(vcCompilerName)) // Temporary workaround for #27
 			{
 				Debug.WriteLine("Couldn't extract VC tools name from project properties");
-				_compilerVersion = VCCompilerVersion.vc2012;
+				_compilerVersion = VCCompilerVersion.vc2019;
+				return;
 			}
-			else if (vcToolsNumber < 2003) // an even older version, still setting to vc2003 for now
-				_compilerVersion = VCCompilerVersion.vc2003;
-			else
+
+			// Parsing the number
+			String vcToolsNumberString = Regex.Match(vcCompilerName, @"\d+").Value;
+			int vcToolsNumber = Int32.Parse(vcToolsNumberString);
+
+			switch (vcToolsNumber)
 			{
-				switch (vcToolsNumber)
-				{
-					case 2003:
-						_compilerVersion = VCCompilerVersion.vc2003;
-						break;
-					case 2005:
-						_compilerVersion = VCCompilerVersion.vc2005;
-						break;
-					case 2008:
-						_compilerVersion = VCCompilerVersion.vc2008;
-						break;
-					case 2010:
-						_compilerVersion = VCCompilerVersion.vc2010;
-						break;
-					case 2012:
-						_compilerVersion = VCCompilerVersion.vc2012;
-						break;
-					case 2013:
-						_compilerVersion = VCCompilerVersion.vc2013;
-						break;
-					case 2015:
-						_compilerVersion = VCCompilerVersion.vc2015;
-						break;
-					case 2017:
-						_compilerVersion = VCCompilerVersion.vc2017;
-						break;
-					case 2019:
-						_compilerVersion = VCCompilerVersion.vc2019;
-						break;
-					default:
-						_compilerVersion = VCCompilerVersion.vcFuture;
-						break;
-				}
+				case 2003:
+					_compilerVersion = VCCompilerVersion.vc2003;
+					break;
+				case 2005:
+					_compilerVersion = VCCompilerVersion.vc2005;
+					break;
+				case 2008:
+					_compilerVersion = VCCompilerVersion.vc2008;
+					break;
+				case 2010:
+					_compilerVersion = VCCompilerVersion.vc2010;
+					break;
+				case 2012:
+					_compilerVersion = VCCompilerVersion.vc2012;
+					break;
+				case 2013:
+					_compilerVersion = VCCompilerVersion.vc2013;
+					break;
+				case 2015:
+					_compilerVersion = VCCompilerVersion.vc2015;
+					break;
+				case 2017:
+					_compilerVersion = VCCompilerVersion.vc2017;
+					break;
+				case 2019:
+					_compilerVersion = VCCompilerVersion.vc2019;
+					break;
+				default:
+					_compilerVersion = VCCompilerVersion.vcFuture;
+					break;
 			}
 		}
 
