@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 using System.IO;
 using VSPackage.CPPCheckPlugin.Properties;
 using Microsoft.VisualStudio.VCProjectEngine;
-using Microsoft.VisualStudio.VCProject;
 
 using Task = System.Threading.Tasks.Task;
 using System.Windows.Forms;
@@ -391,15 +390,21 @@ namespace VSPackage.CPPCheckPlugin
 			}
 			else if (itemType == ProjectItemType.headerFile || itemType == ProjectItemType.cFile || itemType == ProjectItemType.cppFile)
 			{
-				var document = item.Document;
-				if (document == null)
+				var itemName = item.Name;
+
+				if (item.FileCount == 0)
 				{
-					Debug.Fail("isCppFileAsync(item) is true, but item.Document is null!");
+					Debug.Fail("isCppFileAsync(item) is true, but item.FileCount is null!");
 					return;
 				}
 
-				SourceFile sourceFile = await createSourceFileAsync(document.FullName, configuration, project);
-				configuredFiles.addFileIfDoesntExistAlready(sourceFile);
+				var itemFileName = item.FileNames[1];
+				if (!configuredFiles.Exists(itemFileName))
+				{
+					// Don't bother rebuilding the entire definition if it already exists.
+					SourceFile sourceFile = await createSourceFileAsync(itemFileName, configuration, project);
+					configuredFiles.addOrUpdateFile(sourceFile);
+				}
 			}
 		}
 
@@ -492,19 +497,29 @@ namespace VSPackage.CPPCheckPlugin
 		private async Task<ProjectItemType> getTypeOfProjectItemAsync(ProjectItem item)
 		{
 			await JoinableTaskFactory.SwitchToMainThreadAsync();
-			var document = item.Document;
-			if (document == null)
-			{
-				if (item.Collection != null)
-					return ProjectItemType.folder;
-				else
-					return ProjectItemType.other;
-			}
+			var itemKind = item.Kind;
+			var itemName = item.Name;
 
-			switch (document.Kind)
+			switch (itemKind)
 			{
+				case VSConstants.ItemTypeGuid.PhysicalFolder_string:
+				case VSConstants.ItemTypeGuid.VirtualFolder_string:
+					return ProjectItemType.folder;
+
 				case "{8E7B96A8-E33D-11D0-A6D5-00C04FB67F6A}":
-					return ProjectItemType.cppFile;
+				case VSConstants.ItemTypeGuid.PhysicalFile_string:
+					var codeModel = item.FileCodeModel;
+					if (codeModel != null)
+                    {
+                        switch (codeModel.Language)
+                        {
+							case CodeModelLanguageConstants.vsCMLanguageVC:
+								return ProjectItemType.cppFile;
+						}
+                    }
+
+					return ProjectItemType.other;
+
 				default:
 					return ProjectItemType.other;
 			}
@@ -515,7 +530,7 @@ namespace VSPackage.CPPCheckPlugin
 			Debug.Assert(currentConfig != null);
 
 			var configuredFiles = new SourceFilesWithConfiguration();
-			configuredFiles.addFileIfDoesntExistAlready(file);
+			configuredFiles.addOrUpdateFile(file);
 			configuredFiles.Configuration = currentConfig;
 
 			_ = System.Threading.Tasks.Task.Run(async delegate
@@ -542,6 +557,39 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
+		private static void recursiveAddToolDetails(SourceFile sourceForAnalysis, VCConfiguration vcconfig, dynamic subPropertySheets, VCCLCompilerTool tool)
+        {
+			string macrosToUndefine = tool.UndefinePreprocessorDefinitions;
+
+			string[] definitions = tool.PreprocessorDefinitions.Split(';');
+			bool bInheritDefs = definitions.Contains("\\\"$(INHERIT)\\\"");
+			for (int i = 0; i < definitions.Length; ++i)
+			{
+				definitions[i] = Environment.ExpandEnvironmentVariables(vcconfig.Evaluate(definitions[i]));
+			}
+
+			sourceForAnalysis.addMacros(definitions);
+			sourceForAnalysis.addMacrosToUndefine(macrosToUndefine.Split(';'));
+
+			if (bInheritDefs)
+			{
+				foreach (var propSheet in subPropertySheets)
+				{
+					var test = propSheet.Name;
+
+					dynamic toolsCollection = propSheet.Tools;
+					foreach (var subTool in toolsCollection)
+					{
+						// Project-specific includes
+						if (implementsInterface(subTool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
+						{
+							recursiveAddToolDetails(sourceForAnalysis, vcconfig, propSheet.PropertySheets, subTool);
+						}
+					}
+				}
+			}
+		}
+
 		private static async Task<SourceFile> createSourceFileAsync(string filePath, Configuration configuration, Project project)
 		{
 			try
@@ -564,20 +612,17 @@ namespace VSPackage.CPPCheckPlugin
 					// Project-specific includes
 					if (implementsInterface(tool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
 					{
-						if (sourceForAnalysis == null)
-							sourceForAnalysis = new SourceFile(filePath, projectDirectory, projectName, toolSetName);
+						sourceForAnalysis = new SourceFile(filePath, projectDirectory, projectName, toolSetName);
 
 						string includes = tool.FullIncludePath;
-						string definitions = tool.PreprocessorDefinitions;
-						string macrosToUndefine = tool.UndefinePreprocessorDefinitions;
-
 						string[] includePaths = includes.Split(';');
 						for (int i = 0; i < includePaths.Length; ++i)
-							includePaths[i] = Environment.ExpandEnvironmentVariables(vcconfig.Evaluate(includePaths[i])); ;
-
+						{
+							includePaths[i] = Environment.ExpandEnvironmentVariables(vcconfig.Evaluate(includePaths[i]));
+						}
 						sourceForAnalysis.addIncludePaths(includePaths);
-						sourceForAnalysis.addMacros(definitions.Split(';'));
-						sourceForAnalysis.addMacrosToUndefine(macrosToUndefine.Split(';'));
+
+						recursiveAddToolDetails(sourceForAnalysis, vcconfig, vcconfig.PropertySheets, tool);
 					}
 				}
 
@@ -592,7 +637,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		private static bool isVisualCppProjectKind(string kind)
 		{
-			return kind.Equals("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}");
+			return kind.Equals(VSConstants.UICONTEXT.VCProject_string);
 		}
 
 		private static bool implementsInterface(object objectToCheck, string interfaceName)

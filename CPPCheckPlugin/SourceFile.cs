@@ -105,7 +105,10 @@ namespace VSPackage.CPPCheckPlugin
 
 		public void addMacro(string macro)
 		{
-			_activeMacros.Add(macro);
+			if (!String.IsNullOrEmpty(macro))
+            {
+				_activeMacros.Add(macro);
+			}
 		}
 
 		public void addMacros(IEnumerable<string> macros)
@@ -118,7 +121,10 @@ namespace VSPackage.CPPCheckPlugin
 
 		public void addMacroToUndefine(string macro)
 		{
-			_macrosToUndefine.Add(macro);
+			if (!String.IsNullOrEmpty(macro))
+			{
+				_macrosToUndefine.Add(macro);
+			}
 		}
 
 		public void addMacrosToUndefine(IEnumerable<string> macros)
@@ -239,7 +245,12 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		public void addFileIfDoesntExistAlready(SourceFile file)
+		public bool Exists(string filePath)
+        {
+			return _files.ContainsKey(filePath);
+        }
+
+		public void addOrUpdateFile(SourceFile file)
 		{
 			if (file == null)
 			{
@@ -259,7 +270,7 @@ namespace VSPackage.CPPCheckPlugin
 			}
 
 			foreach (var file in files)
-				addFileIfDoesntExistAlready(file);
+				addOrUpdateFile(file);
 		}
 
 		public async Task<bool> is64bitConfigurationAsync()
