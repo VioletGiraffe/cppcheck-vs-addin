@@ -404,6 +404,7 @@ namespace VSPackage.CPPCheckPlugin
 					// Don't bother rebuilding the entire definition if it already exists.
 					SourceFile sourceFile = await createSourceFileAsync(itemFileName, configuration, project);
 					configuredFiles.addOrUpdateFile(sourceFile);
+					scanProgressUpdated(configuredFiles.Count());
 				}
 			}
 		}
@@ -491,6 +492,7 @@ namespace VSPackage.CPPCheckPlugin
 				MainToolWindow.Instance.showIfWindowNotCreated();
 			});
 
+			scanProgressUpdated(-1);
 			runAnalysis(allConfiguredFiles, false);
 		}
 
@@ -645,6 +647,30 @@ namespace VSPackage.CPPCheckPlugin
 			Type objectType = objectToCheck.GetType();
 			var requestedInterface = objectType.GetInterface(interfaceName);
 			return requestedInterface != null;
+		}
+
+		private async void scanProgressUpdated(int filesScanned)
+		{
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			EnvDTE.StatusBar statusBar = _dte.StatusBar;
+			if (statusBar != null)
+			{
+				try
+				{
+					if (filesScanned >= 0)
+					{
+						string label = "cppcheck scanning for files (" + filesScanned + ")";
+
+						statusBar.Text = label;
+					}
+					else
+					{
+						statusBar.Clear();
+					}
+				}
+				catch (Exception ex) { }
+			}
 		}
 
 		private async void checkProgressUpdated(object sender, ICodeAnalyzer.ProgressEvenArgs e)

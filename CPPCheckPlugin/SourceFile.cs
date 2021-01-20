@@ -245,6 +245,11 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
+		public int Count()
+        {
+			return _files.Count;
+        }
+
 		public bool Exists(string filePath)
         {
 			return _files.ContainsKey(filePath);
