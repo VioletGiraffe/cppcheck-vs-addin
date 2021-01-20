@@ -508,14 +508,30 @@ namespace VSPackage.CPPCheckPlugin
 
 				case "{8E7B96A8-E33D-11D0-A6D5-00C04FB67F6A}":
 				case VSConstants.ItemTypeGuid.PhysicalFile_string:
-					var codeModel = item.FileCodeModel;
-					if (codeModel != null)
+					if (item.ConfigurationManager != null)
                     {
-                        switch (codeModel.Language)
-                        {
-							case CodeModelLanguageConstants.vsCMLanguageVC:
-								return ProjectItemType.cppFile;
+						try
+						{
+							VCFile vcFile = item.Object as VCFile;
+							VCProject vcProject = item.ContainingProject.Object as VCProject;
+							VCFileConfiguration fileConfig = vcFile.FileConfigurations.Item(vcProject.ActiveConfiguration.Name);
+
+							if (!fileConfig.ExcludedFromBuild)
+							{
+								var codeModel = item.FileCodeModel;
+								if (codeModel != null)
+								{
+									switch (codeModel.Language)
+									{
+										case CodeModelLanguageConstants.vsCMLanguageVC:
+											return ProjectItemType.cppFile;
+									}
+								}
+							}
 						}
+						catch (Exception)
+                        {
+                        }
                     }
 
 					return ProjectItemType.other;
