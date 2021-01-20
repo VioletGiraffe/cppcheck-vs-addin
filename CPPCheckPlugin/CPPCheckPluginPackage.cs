@@ -506,8 +506,6 @@ namespace VSPackage.CPPCheckPlugin
 			});
 
 			runAnalysis(allConfiguredFiles, false);
-
-			setMenuState(false);
 		}
 
 		private async Task<ProjectItemType> getTypeOfProjectItemAsync(ProjectItem item)
