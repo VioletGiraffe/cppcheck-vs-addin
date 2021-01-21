@@ -34,6 +34,8 @@ namespace VSPackage.CPPCheckPlugin
 	[Guid(GuidList.guidCPPCheckPluginPkgString)]
 	public sealed class CPPCheckPluginPackage : AsyncPackage
 	{
+		private int completedFileCount = 0, lastAnalyzerTotalFiles = 0;
+
 		public CPPCheckPluginPackage()
 		{
 			_instance = this;
@@ -484,7 +486,41 @@ namespace VSPackage.CPPCheckPlugin
 					await scanProjectItemForSourceFilesAsync(projectItem, sourceFiles, config, project);
 				}
 
-				allConfiguredFiles.Add(sourceFiles);
+				// Although we're using the same base configuration, it's possible for each file to override that.
+				// Group files into separate configs based on actual parameters. We'll be iterating in reverse order so
+				// reverse the list first to keep the final order the same.
+				List<SourceFile> allSourceFiles = sourceFiles.Files.ToList();
+				allSourceFiles.Reverse();
+
+				while (allSourceFiles.Any())
+                {
+					SourceFilesWithConfiguration newConfig = new SourceFilesWithConfiguration();
+					newConfig.Configuration = config;
+
+					SourceFile templateFile = allSourceFiles.Last();
+					newConfig.addOrUpdateFile(templateFile);
+					allSourceFiles.RemoveAt(allSourceFiles.Count - 1);
+
+					for (int i = allSourceFiles.Count - 1; i >= 0; i--)
+					{
+						SourceFile otherFile = allSourceFiles[i];
+
+						if (otherFile.Macros.All(templateFile.Macros.Contains) && templateFile.Macros.All(otherFile.Macros.Contains) &&
+							otherFile.MacrosToUndefine.All(templateFile.MacrosToUndefine.Contains) && templateFile.MacrosToUndefine.All(otherFile.MacrosToUndefine.Contains)  &&
+							otherFile.IncludePaths.All(templateFile.IncludePaths.Contains) && templateFile.IncludePaths.All(otherFile.IncludePaths.Contains) &&
+							otherFile.ProjectName == templateFile.ProjectName
+							)
+                        {
+							newConfig.addOrUpdateFile(otherFile);
+							allSourceFiles.RemoveAt(i);
+						}
+					}
+
+					if (newConfig.Any())
+                    {
+						allConfiguredFiles.Add(newConfig);
+                    }
+				}
 			}
 
 			_ = JoinableTaskFactory.RunAsync(async () => {
@@ -572,8 +608,11 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void runAnalysis(List<SourceFilesWithConfiguration> configuredFiles, bool analysisOnSavedFile)
 		{
+			completedFileCount = 0;
+
 			foreach (var analyzer in _analyzers)
 			{
+				lastAnalyzerTotalFiles = 0;
 				analyzer.analyze(configuredFiles, analysisOnSavedFile);
 			}
 		}
@@ -714,15 +753,24 @@ namespace VSPackage.CPPCheckPlugin
 					if (e.FilesChecked == 0 || e.TotalFilesNumber == 0)
 						label = "cppcheck analysis in progress...";
 					else
-						label = "cppcheck analysis in progress (" + e.FilesChecked + " out of " + e.TotalFilesNumber + " files checked)";
+						label = "cppcheck analysis in progress (" + (completedFileCount + e.FilesChecked) + " out of " + (completedFileCount + e.TotalFilesNumber) + " files checked)";
+
+					lastAnalyzerTotalFiles = e.TotalFilesNumber;
 
 					statusBar.Progress(true, label, progress, 100);
 				}
 				else
 				{
 					label = "cppcheck analysis completed";
+					completedFileCount += lastAnalyzerTotalFiles;
+					lastAnalyzerTotalFiles = 0;
 
-					statusBar.Progress(true, label, progress, 100);
+					try
+					{
+						// This raises an exception during shutdown.
+						statusBar.Progress(true, label, progress, 100);
+					}
+					catch (Exception) { }
 
 					_ = System.Threading.Tasks.Task.Run(async delegate
 					{

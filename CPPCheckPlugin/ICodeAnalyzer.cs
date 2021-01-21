@@ -175,7 +175,13 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			_terminateThread = false;
 			foreach (var arguments in _allArguments)
-				startAnalyzerProcess(analyzerExePath, arguments);
+			{
+				// Don't start subsequent processes if we've been requested to cancel.
+				if (!_terminateThread)
+				{
+					startAnalyzerProcess(analyzerExePath, arguments);
+				}
+			}
 		}
 
 		private void startAnalyzerProcess(string analyzerExePath, string arguments)
@@ -204,7 +210,7 @@ namespace VSPackage.CPPCheckPlugin
 				process.OutputDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
 				process.ErrorDataReceived += new DataReceivedEventHandler(this.analyzerOutputHandler);
 
-				_ = CPPCheckPluginPackage.AddTextToOutputWindowAsync("Starting analyzer with arguments: " + arguments + "\n");
+				_ = CPPCheckPluginPackage.AddTextToOutputWindowAsync("Starting analyzer with arguments: \"" + analyzerExePath + "\" " + arguments + "\n");
 
 				var timer = Stopwatch.StartNew();
 				// Start the process.

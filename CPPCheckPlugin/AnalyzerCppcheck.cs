@@ -75,7 +75,7 @@ namespace VSPackage.CPPCheckPlugin
 			return analyzerPath;
 		}
 
-		private string getCPPCheckArgs(SourceFilesWithConfiguration configuredFiles, bool analysisOnSavedFile, bool multipleProjects, string tempFileName)
+		private string getCPPCheckArgs(SourceFilesWithConfiguration configuredFiles, bool analysisOnSavedFile, string tempFileName)
 		{
 			if (!configuredFiles.Any())
 			{
@@ -116,8 +116,7 @@ namespace VSPackage.CPPCheckPlugin
 				unitedSuppressionsInfo.UnionWith(readSuppressions(SuppressionStorage.Project, path, filesToAnalyze.First().ProjectName));
 			}
 
-			if (!multipleProjects)
-				cppheckargs += (" --relative-paths=\"" + filesToAnalyze.First().BaseProjectPath + "\"");
+			cppheckargs += (" --relative-paths=\"" + _projectBasePath + "\"");
 			cppheckargs += (" -j " + _numCores.ToString());
 			if (Properties.Settings.Default.InconclusiveChecksEnabled)
 				cppheckargs += " --inconclusive ";
@@ -278,7 +277,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			List<string> cppheckargs = new List<string>();
 			foreach (var configuredFiles in allConfiguredFiles)
-				cppheckargs.Add(getCPPCheckArgs(configuredFiles, analysisOnSavedFile, allConfiguredFiles.Count > 1, createNewTempFileName()));
+				cppheckargs.Add(getCPPCheckArgs(configuredFiles, analysisOnSavedFile, createNewTempFileName()));
 
 			run(cppcheckExePath(), cppheckargs);
 		}
