@@ -310,7 +310,7 @@ namespace VSPackage.CPPCheckPlugin
 
 					//dynamic project = document.ProjectItem.ContainingProject.Object;
 					Project project = document.ProjectItem.ContainingProject;
-					SourceFile sourceForAnalysis = await createSourceFileAsync(document.FullName, currentConfig, project);
+					SourceFile sourceForAnalysis = await createSourceFileAsync(document.ProjectItem);
 					if (sourceForAnalysis == null)
 						return;
 
@@ -402,8 +402,11 @@ namespace VSPackage.CPPCheckPlugin
 				if (!configuredFiles.Exists(itemFileName))
 				{
 					// Don't bother rebuilding the entire definition if it already exists.
-					SourceFile sourceFile = await createSourceFileAsync(itemFileName, configuration, project);
-					configuredFiles.addOrUpdateFile(sourceFile);
+					SourceFile sourceFile = await createSourceFileAsync(item);
+					if (sourceFile != null)
+					{
+						configuredFiles.addOrUpdateFile(sourceFile);
+					}
 				}
 			}
 		}
@@ -518,12 +521,14 @@ namespace VSPackage.CPPCheckPlugin
 
 							if (!fileConfig.ExcludedFromBuild)
 							{
-								var codeModel = item.FileCodeModel;
-								if (codeModel != null)
+								if (item.FileCodeModel != null && item.FileCodeModel.Language == CodeModelLanguageConstants.vsCMLanguageVC)
 								{
-									switch (codeModel.Language)
-									{
-										case CodeModelLanguageConstants.vsCMLanguageVC:
+                                    switch (vcFile.ItemType)
+                                    {
+										case "ClInclude":
+											return ProjectItemType.headerFile;
+
+										case "ClCompile":
 											return ProjectItemType.cppFile;
 									}
 								}
@@ -573,72 +578,101 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-		private static void recursiveAddToolDetails(SourceFile sourceForAnalysis, VCConfiguration vcconfig, dynamic subPropertySheets, VCCLCompilerTool tool)
+		private static void recursiveAddToolDetails(SourceFile sourceForAnalysis, VCConfiguration projectConfig, VCCLCompilerTool tool, dynamic propertySheets, ref bool bInheritDefs, ref bool bInheritUndefs)
         {
-			string macrosToUndefine = tool.UndefinePreprocessorDefinitions;
-
-			string[] definitions = tool.PreprocessorDefinitions.Split(';');
-			bool bInheritDefs = definitions.Contains("\\\"$(INHERIT)\\\"");
-			for (int i = 0; i < definitions.Length; ++i)
-			{
-				definitions[i] = Environment.ExpandEnvironmentVariables(vcconfig.Evaluate(definitions[i]));
-			}
-
-			sourceForAnalysis.addMacros(definitions);
-			sourceForAnalysis.addMacrosToUndefine(macrosToUndefine.Split(';'));
-
+			// TODO: If the special keyword "\\\"$(INHERIT)\\\"" appears, we should inherit at that specific point.
 			if (bInheritDefs)
 			{
-				foreach (var propSheet in subPropertySheets)
+				string[] macrosToDefine = tool.PreprocessorDefinitions.Split(';');
+				bInheritDefs = !macrosToDefine.Contains("\\\"$(NOINHERIT)\\\"");
+				for (int i = 0; i < macrosToDefine.Length; ++i)
 				{
-					var test = propSheet.Name;
+					macrosToDefine[i] = Environment.ExpandEnvironmentVariables(projectConfig.Evaluate(macrosToDefine[i]));
+				}
 
-					dynamic toolsCollection = propSheet.Tools;
-					foreach (var subTool in toolsCollection)
+				sourceForAnalysis.addMacros(macrosToDefine);
+			}
+
+			if (bInheritUndefs)
+			{
+				string[] macrosToUndefine = tool.UndefinePreprocessorDefinitions.Split(';');
+				bInheritUndefs = !macrosToUndefine.Contains("\\\"$(NOINHERIT)\\\"");
+				for (int i = 0; i < macrosToUndefine.Length; ++i)
+				{
+					macrosToUndefine[i] = Environment.ExpandEnvironmentVariables(projectConfig.Evaluate(macrosToUndefine[i]));
+				}
+
+				sourceForAnalysis.addMacrosToUndefine(macrosToUndefine);
+			}
+
+			if (propertySheets != null && (bInheritDefs || bInheritUndefs))
+			{
+				// Scan any inherited property sheets.
+				foreach (var propSheet in propertySheets)
+				{
+					VCCLCompilerTool propSheetTool = (VCCLCompilerTool)propSheet.Tools.Item("VCCLCompilerTool");
+					if (propSheetTool != null)
 					{
-						// Project-specific includes
-						if (implementsInterface(subTool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
-						{
-							recursiveAddToolDetails(sourceForAnalysis, vcconfig, propSheet.PropertySheets, subTool);
-						}
+						// When looping over the inherited property sheets, don't allow rules to filter back up the way.
+						bool bInheritDefs1 = bInheritDefs, bInheritUndefs1 = bInheritUndefs;
+						recursiveAddToolDetails(sourceForAnalysis, projectConfig, propSheetTool, propSheet.PropertySheets, ref bInheritDefs1, ref bInheritUndefs1);
 					}
 				}
 			}
 		}
 
-		private static async Task<SourceFile> createSourceFileAsync(string filePath, Configuration configuration, Project project)
+		private static async Task<SourceFile> createSourceFileAsync(ProjectItem item)
 		{
 			try
 			{
 				await Instance.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				Debug.Assert(isVisualCppProjectKind(project.Kind));
-				
-				VCProject vcProject = project.Object as VCProject;
+				Debug.Assert(isVisualCppProjectKind(item.ContainingProject.Kind));
+
+				VCFile vcFile = item.Object as VCFile;
+				VCProject vcProject = item.ContainingProject.Object as VCProject;
 				VCConfiguration vcconfig = vcProject.ActiveConfiguration;
+				VCFileConfiguration fileConfig = vcFile.FileConfigurations.Item(vcconfig.Name);
 
 				string toolSetName = ((dynamic)vcconfig).PlatformToolsetFriendlyName;
 
 				string projectDirectory = vcProject.ProjectDirectory;
-				string projectName = project.Name;
+				string projectName = vcProject.Name;
 				SourceFile sourceForAnalysis = null;
-				dynamic toolsCollection = vcconfig.Tools;
-				foreach (var tool in toolsCollection)
-				{
-					// Project-specific includes
-					if (implementsInterface(tool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
-					{
-						sourceForAnalysis = new SourceFile(filePath, projectDirectory, projectName, toolSetName);
 
-						string includes = tool.FullIncludePath;
-						string[] includePaths = includes.Split(';');
+				if (item.FileCount > 0)
+				{
+					bool bInheritDefs = true, bInheritUndefs = true;
+					string[] includePaths = { };
+
+					// Do the file-level first in case it disables inheritance. Include files don't have file-level config.
+					if (implementsInterface(fileConfig.Tool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
+					{
+						sourceForAnalysis = new SourceFile(item.FileNames[1], projectDirectory, projectName, toolSetName);
+						includePaths = fileConfig.Tool.FullIncludePath.Split(';');
+
+						// Other details may be gathered from the file, project or any inherited property sheets.
+						recursiveAddToolDetails(sourceForAnalysis, vcconfig, fileConfig.Tool, null, ref bInheritDefs, ref bInheritUndefs);
+					}
+
+					// Now get the full include path
+					VCCLCompilerTool projectTool = (VCCLCompilerTool)vcconfig.Tools.Item("VCCLCompilerTool");
+					if (projectTool != null && implementsInterface(projectTool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
+					{
+						if (sourceForAnalysis == null)
+						{
+							sourceForAnalysis = new SourceFile(item.FileNames[1], projectDirectory, projectName, toolSetName);
+							includePaths = projectTool.FullIncludePath.Split(';');
+						}
+
+						// Take the full include path from file level, which is already fully resolved.
 						for (int i = 0; i < includePaths.Length; ++i)
 						{
 							includePaths[i] = Environment.ExpandEnvironmentVariables(vcconfig.Evaluate(includePaths[i]));
 						}
 						sourceForAnalysis.addIncludePaths(includePaths);
 
-						recursiveAddToolDetails(sourceForAnalysis, vcconfig, vcconfig.PropertySheets, tool);
+						recursiveAddToolDetails(sourceForAnalysis, vcconfig, projectTool, vcconfig.PropertySheets, ref bInheritDefs, ref bInheritUndefs);
 					}
 				}
 
