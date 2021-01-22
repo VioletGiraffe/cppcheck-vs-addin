@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 using System.IO;
 using VSPackage.CPPCheckPlugin.Properties;
 using Microsoft.VisualStudio.VCProjectEngine;
-using Microsoft.VisualStudio.VCProject;
 
 using Task = System.Threading.Tasks.Task;
 using System.Windows.Forms;
@@ -411,12 +410,22 @@ namespace VSPackage.CPPCheckPlugin
 			}
 			else if (itemType == ProjectItemType.headerFile || itemType == ProjectItemType.cFile || itemType == ProjectItemType.cppFile)
 			{
-				Debug.WriteLine("It's a C/C++ source file.");
-				Debug.Assert(item.FileCount >= 1);
-				var filePath = item.FileNames[1];
-				Debug.Assert(!String.IsNullOrEmpty(filePath));
-				SourceFile sourceFile = await createSourceFileAsync(filePath, configuration, project);
-				configuredFiles.addFileIfDoesntExistAlready(sourceFile);
+				var itemName = item.Name;
+
+				if (item.FileCount == 0)
+				{
+					Debug.Fail("isCppFileAsync(item) is true, but item.FileCount is null!");
+					return;
+				}
+
+				var itemFileName = item.FileNames[1];
+				if (!configuredFiles.Exists(itemFileName))
+				{
+					// Don't bother rebuilding the entire definition if it already exists.
+					SourceFile sourceFile = await createSourceFileAsync(itemFileName, configuration, project);
+					configuredFiles.addOrUpdateFile(sourceFile);
+					scanProgressUpdated(configuredFiles.Count());
+				}
 			}
 			else
 				Debug.WriteLine("It's something else, skipping it.");
@@ -508,27 +517,36 @@ namespace VSPackage.CPPCheckPlugin
 				MainToolWindow.Instance.showIfWindowNotCreated();
 			});
 
+			scanProgressUpdated(-1);
 			runAnalysis(allConfiguredFiles, false);
 		}
 
 		private async Task<ProjectItemType> getTypeOfProjectItemAsync(ProjectItem item)
 		{
 			await JoinableTaskFactory.SwitchToMainThreadAsync();
+			var itemKind = item.Kind;
+			var itemName = item.Name;
 
-			Debug.WriteLine(item.Name + ": " + item.Kind);
-			
-			switch (item.Kind)
+			switch (itemKind)
 			{
-				case "{8E7B96A8-E33D-11D0-A6D5-00C04FB67F6A}":
-					return ProjectItemType.cppFile;
-				case "{6BB5F8EE-4483-11D3-8BCF-00C04F8EC28C}":
-				{
-					if (item.Name.ToLower().EndsWith(".vcxproj.filters"))
-						return ProjectItemType.other; // ???
-					return ProjectItemType.cppFile;
-				}
-				case "{6BB5F8F0-4483-11D3-8BCF-00C04F8EC28C}":
+				case VSConstants.ItemTypeGuid.PhysicalFolder_string:
+				case VSConstants.ItemTypeGuid.VirtualFolder_string:
 					return ProjectItemType.folder;
+
+				case "{8E7B96A8-E33D-11D0-A6D5-00C04FB67F6A}":
+				case VSConstants.ItemTypeGuid.PhysicalFile_string:
+					var codeModel = item.FileCodeModel;
+					if (codeModel != null)
+                    {
+                        switch (codeModel.Language)
+                        {
+							case CodeModelLanguageConstants.vsCMLanguageVC:
+								return ProjectItemType.cppFile;
+						}
+                    }
+
+					return ProjectItemType.other;
+
 				default:
 					return ProjectItemType.other;
 			}
@@ -539,7 +557,7 @@ namespace VSPackage.CPPCheckPlugin
 			Debug.Assert(currentConfig != null);
 
 			var configuredFiles = new SourceFilesWithConfiguration();
-			configuredFiles.addFileIfDoesntExistAlready(file);
+			configuredFiles.addOrUpdateFile(file);
 			configuredFiles.Configuration = currentConfig;
 
 			_ = System.Threading.Tasks.Task.Run(async delegate
@@ -563,6 +581,39 @@ namespace VSPackage.CPPCheckPlugin
 			foreach (var analyzer in _analyzers)
 			{
 				analyzer.analyze(configuredFiles, analysisOnSavedFile);
+			}
+		}
+
+		private static void recursiveAddToolDetails(SourceFile sourceForAnalysis, VCConfiguration vcconfig, dynamic subPropertySheets, VCCLCompilerTool tool)
+        {
+			string macrosToUndefine = tool.UndefinePreprocessorDefinitions;
+
+			string[] definitions = tool.PreprocessorDefinitions.Split(';');
+			bool bInheritDefs = definitions.Contains("\\\"$(INHERIT)\\\"");
+			for (int i = 0; i < definitions.Length; ++i)
+			{
+				definitions[i] = Environment.ExpandEnvironmentVariables(vcconfig.Evaluate(definitions[i]));
+			}
+
+			sourceForAnalysis.addMacros(definitions);
+			sourceForAnalysis.addMacrosToUndefine(macrosToUndefine.Split(';'));
+
+			if (bInheritDefs)
+			{
+				foreach (var propSheet in subPropertySheets)
+				{
+					var test = propSheet.Name;
+
+					dynamic toolsCollection = propSheet.Tools;
+					foreach (var subTool in toolsCollection)
+					{
+						// Project-specific includes
+						if (implementsInterface(subTool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
+						{
+							recursiveAddToolDetails(sourceForAnalysis, vcconfig, propSheet.PropertySheets, subTool);
+						}
+					}
+				}
 			}
 		}
 
@@ -593,20 +644,17 @@ namespace VSPackage.CPPCheckPlugin
 					// Project-specific includes
 					if (implementsInterface(tool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
 					{
-						if (sourceForAnalysis == null)
-							sourceForAnalysis = new SourceFile(filePath, projectDirectory, projectName, toolSetName);
+						sourceForAnalysis = new SourceFile(filePath, projectDirectory, projectName, toolSetName);
 
 						string includes = tool.FullIncludePath;
-						string definitions = tool.PreprocessorDefinitions;
-						string macrosToUndefine = tool.UndefinePreprocessorDefinitions;
-
 						string[] includePaths = includes.Split(';');
 						for (int i = 0; i < includePaths.Length; ++i)
-							includePaths[i] = Environment.ExpandEnvironmentVariables(vcconfig.Evaluate(includePaths[i])); ;
-
+						{
+							includePaths[i] = Environment.ExpandEnvironmentVariables(vcconfig.Evaluate(includePaths[i]));
+						}
 						sourceForAnalysis.addIncludePaths(includePaths);
-						sourceForAnalysis.addMacros(definitions.Split(';'));
-						sourceForAnalysis.addMacrosToUndefine(macrosToUndefine.Split(';'));
+
+						recursiveAddToolDetails(sourceForAnalysis, vcconfig, vcconfig.PropertySheets, tool);
 					}
 				}
 
@@ -621,7 +669,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		private static bool isVisualCppProjectKind(string kind)
 		{
-			return kind.Equals("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}");
+			return kind.Equals(VSConstants.UICONTEXT.VCProject_string);
 		}
 
 		private static bool implementsInterface(object objectToCheck, string interfaceName)
@@ -629,6 +677,30 @@ namespace VSPackage.CPPCheckPlugin
 			Type objectType = objectToCheck.GetType();
 			var requestedInterface = objectType.GetInterface(interfaceName);
 			return requestedInterface != null;
+		}
+
+		private async void scanProgressUpdated(int filesScanned)
+		{
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			EnvDTE.StatusBar statusBar = _dte.StatusBar;
+			if (statusBar != null)
+			{
+				try
+				{
+					if (filesScanned >= 0)
+					{
+						string label = "cppcheck scanning for files (" + filesScanned + ")";
+
+						statusBar.Text = label;
+					}
+					else
+					{
+						statusBar.Clear();
+					}
+				}
+				catch (Exception ex) { }
+			}
 		}
 
 		private async void checkProgressUpdated(object sender, ICodeAnalyzer.ProgressEvenArgs e)
