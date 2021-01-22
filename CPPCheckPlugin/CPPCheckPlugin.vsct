@@ -34,7 +34,7 @@
     group; your package should define its own command set in order to avoid collisions  
     with command ids defined by other packages. -->
 
-    
+
     <!-- In this section you can define new menu groups. A menu group is a container for 
          other menus or buttons (commands); from a visual point of view you can see the 
          group as the part of a menu contained between two lines. The parent of a group 
@@ -68,9 +68,9 @@
       <Group guid="guidCPPCheckPluginMultiItemCmdSet" id="MyMultiItemMenuGroup" priority="0x0600">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
       </Group>
-      
+
     </Groups>
-    
+
     <!--Buttons section. -->
     <!--This section defines the elements the user can interact with, like a menu command or a button 
         or combo box in a toolbar. -->
@@ -90,7 +90,7 @@
           <ButtonText>Check current project with cppcheck</ButtonText>
         </Strings>
       </Button>
-      
+
       <Button guid="guidCPPCheckPluginCmdSet" id="cmdidCheckMultiItemCppcheck" priority="0x0100" type="Button">
         <Parent guid="guidCPPCheckPluginCmdSet" id="MyMenuGroup" />
         <Icon guid="guidImages" id="bmpPic1" />
@@ -132,7 +132,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidCPPCheckPluginMultiItemCmdSet" id="cmdidCheckMultiItemCppcheck" priority="0x0100" type="Button">
+      <Button guid="guidCPPCheckPluginMultiItemCmdSet" id="cmdidCheckMultiItemCppcheck1" priority="0x0100" type="Button">
         <Parent guid="guidCPPCheckPluginMultiItemCmdSet" id="MyMultiItemMenuGroup" />
         <Icon guid="guidImages" id="bmpPic1" />
         <Strings>
@@ -141,7 +141,7 @@
       </Button>
 
     </Buttons>
-   
+
     <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
     <Bitmaps>
       <!--  The bitmap id is defined in a way that is a little bit different from the others: 
@@ -150,16 +150,16 @@
             inside a button definition. An important aspect of this declaration is that the element id 
             must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
       <Bitmap guid="guidImages" href="Resources\Images.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows"/>
-      
+
     </Bitmaps>
- 
+
   </Commands>
 
 
   <Symbols>
     <!-- This is the package guid. -->
     <GuidSymbol name="guidCPPCheckPluginPkg" value="{127d8bd3-8cd7-491a-9a63-9b4e89118da9}" />
-    
+
     <!-- This is the guid used to group the menu commands together -->
     <GuidSymbol name="guidCPPCheckPluginCmdSet" value="{7fcb87ef-4f0c-4713-8217-5bef43dc0de4}">
 
@@ -169,20 +169,20 @@
       <IDSymbol name="cmdidStopCppcheck" value="0x0103" />
       <IDSymbol name="cmdidSettings" value="0x0104" />
     </GuidSymbol>
-    
+
     <GuidSymbol name="guidCPPCheckPluginProjectCmdSet" value="{9019df3f-c4aa-499b-b46a-0bcb43d006db}">
       <IDSymbol name="MyProjectMenuGroup" value="0x1022" />
-      <IDSymbol name="cmdidCheckProjectCppcheck1" value="0x0100" />
+      <IDSymbol name="cmdidCheckProjectCppcheck1" value="0x0105" />
     </GuidSymbol>
 
     <GuidSymbol name="guidCPPCheckPluginMultiProjectCmdSet" value="{a21f0125-e59b-4ac6-8db6-fc01601237d7}">
       <IDSymbol name="MyMultiProjectMenuGroup" value="0x1023" />
-      <IDSymbol name="cmdidCheckProjectsCppcheck" value="0x0100" />
+      <IDSymbol name="cmdidCheckProjectsCppcheck" value="0x0106" />
     </GuidSymbol>
 
     <GuidSymbol name="guidCPPCheckPluginMultiItemCmdSet" value="{6db8495c-52d3-45d8-ba02-09a3938aa893}">
       <IDSymbol name="MyMultiItemMenuGroup" value="0x1023" />
-      <IDSymbol name="cmdidCheckMultiItemCppcheck" value="0x0100" />
+      <IDSymbol name="cmdidCheckMultiItemCppcheck1" value="0x0107" />
     </GuidSymbol>
 
     <GuidSymbol name="guidImages" value="{c0a853da-1933-420e-ac21-cbca10f4542c}" >
@@ -193,7 +193,7 @@
       <IDSymbol name="bmpPicArrows" value="5" />
       <IDSymbol name="bmpPicStrikethrough" value="6" />
     </GuidSymbol>
-    
+
   </Symbols>
 
 </CommandTable>

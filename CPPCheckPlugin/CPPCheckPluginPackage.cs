@@ -104,6 +104,22 @@ namespace VSPackage.CPPCheckPlugin
 
 		#region Package Members
 
+		MenuCommand menuCheckCurrentProject, menuCheckCurrentProjectContext, menuCheckCurrentProjectsContext;
+		MenuCommand menuShowSettingsWindow;
+		MenuCommand menuCancelCheck;
+		MenuCommand menuCheckSelections, checkMultiSelections;
+
+		private void setMenuState(bool bBusy)
+		{
+			menuCheckCurrentProject.Enabled = !bBusy;
+			menuCheckCurrentProjectContext.Enabled = !bBusy;
+			menuCheckCurrentProjectsContext.Enabled = !bBusy;
+			menuShowSettingsWindow.Enabled = !bBusy;
+			menuCancelCheck.Enabled = bBusy;
+			menuCheckSelections.Enabled = !bBusy;
+			checkMultiSelections.Enabled = !bBusy;
+		}
+
 		private void CommandEvents_BeforeExecute(string Guid, int ID, object CustomIn, object CustomOut, ref bool CancelDefault)
 		{
 			if (ID == commandEventIdSave || ID == commandEventIdSaveAll)
@@ -151,46 +167,48 @@ namespace VSPackage.CPPCheckPlugin
 				// Create the command for the menu item.
 				{
 					CommandID menuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidCheckProjectCppcheck);
-					MenuCommand menuItem = new MenuCommand(onCheckCurrentProjectRequested, menuCommandID);
-					mcs.AddCommand(menuItem);
+					menuCheckCurrentProject = new MenuCommand(onCheckCurrentProjectRequested, menuCommandID);
+					mcs.AddCommand(menuCheckCurrentProject);
 				}
 
 				{
 					// Create the command for the settings window
 					CommandID settingsWndCmdId = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidSettings);
-					MenuCommand menuSettings = new MenuCommand(onSettingsWindowRequested, settingsWndCmdId);
-					mcs.AddCommand(menuSettings);
+					menuShowSettingsWindow = new MenuCommand(onSettingsWindowRequested, settingsWndCmdId);
+					mcs.AddCommand(menuShowSettingsWindow);
 				}
 
 				{
 					CommandID stopCheckMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidStopCppcheck);
-					MenuCommand stopCheckMenuItem = new MenuCommand(onStopCheckRequested, stopCheckMenuCommandID);
-					mcs.AddCommand(stopCheckMenuItem);
+					menuCancelCheck = new MenuCommand(onStopCheckRequested, stopCheckMenuCommandID);
+					mcs.AddCommand(menuCancelCheck);
 				}
 
 				{
 					CommandID selectionsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidCheckMultiItemCppcheck);
-					MenuCommand selectionsMenuItem = new MenuCommand(onCheckSelectionsRequested, selectionsMenuCommandID);
-					mcs.AddCommand(selectionsMenuItem);
+					menuCheckSelections = new MenuCommand(onCheckSelectionsRequested, selectionsMenuCommandID);
+					mcs.AddCommand(menuCheckSelections);
 				}
 
 				{
 					CommandID projectMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginProjectCmdSet, (int)PkgCmdIDList.cmdidCheckProjectCppcheck1);
-					MenuCommand projectMenuItem = new MenuCommand(onCheckCurrentProjectRequested, projectMenuCommandID);
-					mcs.AddCommand(projectMenuItem);
+					menuCheckCurrentProjectContext = new MenuCommand(onCheckCurrentProjectRequested, projectMenuCommandID);
+					mcs.AddCommand(menuCheckCurrentProjectContext);
 				}
 
 				{
 					CommandID projectsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginMultiProjectCmdSet, (int)PkgCmdIDList.cmdidCheckProjectsCppcheck);
-					MenuCommand projectsMenuItem = new MenuCommand(onCheckAllProjectsRequested, projectsMenuCommandID);
-					mcs.AddCommand(projectsMenuItem);
+					menuCheckCurrentProjectsContext = new MenuCommand(onCheckAllProjectsRequested, projectsMenuCommandID);
+					mcs.AddCommand(menuCheckCurrentProjectsContext);
 				}
 
 				{
 					CommandID selectionsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginMultiItemProjectCmdSet, (int)PkgCmdIDList.cmdidCheckMultiItemCppcheck1);
-					MenuCommand selectionsMenuItem = new MenuCommand(onCheckSelectionsRequested, selectionsMenuCommandID);
-					mcs.AddCommand(selectionsMenuItem);
+					checkMultiSelections = new MenuCommand(onCheckSelectionsRequested, selectionsMenuCommandID);
+					mcs.AddCommand(checkMultiSelections);
 				}
+
+				setMenuState(false);
 			}
 		}
 
@@ -379,10 +397,12 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			await JoinableTaskFactory.SwitchToMainThreadAsync();
 
+			Debug.WriteLine("Scanning project item \"" + item.Name + "\"...");
 			var itemType = await getTypeOfProjectItemAsync(item);
 
 			if (itemType == ProjectItemType.folder)
 			{
+				Debug.WriteLine("It's a folder, enumerating it.");
 				foreach (ProjectItem subItem in item.ProjectItems)
 				{
 					await scanProjectItemForSourceFilesAsync(subItem, configuredFiles, configuration, project);
@@ -407,6 +427,8 @@ namespace VSPackage.CPPCheckPlugin
 					scanProgressUpdated(configuredFiles.Count());
 				}
 			}
+			else
+				Debug.WriteLine("It's something else, skipping it.");
 		}
 
 		private async Task<SourceFilesWithConfiguration> getAllSupportedFilesFromProjectAsync(Project project)
@@ -461,6 +483,7 @@ namespace VSPackage.CPPCheckPlugin
 		private async Task checkProjectsAsync(List<Project> projects)
 		{
 			Debug.Assert(projects.Any());
+			setMenuState(true);
 
 			List<SourceFilesWithConfiguration> allConfiguredFiles = new List<SourceFilesWithConfiguration>();
 			foreach (var project in projects)
@@ -476,6 +499,8 @@ namespace VSPackage.CPPCheckPlugin
 
 				SourceFilesWithConfiguration sourceFiles = new SourceFilesWithConfiguration();
 				sourceFiles.Configuration = config;
+
+				await AddTextToOutputWindowAsync("Looking for C++ source files in the project \"" + project.Name + "\"\n");
 
 				foreach (ProjectItem projectItem in project.ProjectItems)
 				{
@@ -603,7 +628,12 @@ namespace VSPackage.CPPCheckPlugin
 				VCProject vcProject = project.Object as VCProject;
 				VCConfiguration vcconfig = vcProject.ActiveConfiguration;
 
-				string toolSetName = ((dynamic)vcconfig).PlatformToolsetFriendlyName;
+				String configurationName = configuration.ConfigurationName;
+				dynamic config = ((dynamic)project.Object).Configurations.Item(configurationName);
+
+				// TODO: This no longer works, why?
+				// string toolSetName = ((dynamic)vcconfig).PlatformToolsetFriendlyName;
+				string toolSetName = null;
 
 				string projectDirectory = vcProject.ProjectDirectory;
 				string projectName = project.Name;
@@ -710,6 +740,8 @@ namespace VSPackage.CPPCheckPlugin
 						}
 						catch (Exception) { }
 					 });
+
+					setMenuState(false);
 				}
 			}
 		}
