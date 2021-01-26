@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -34,6 +34,8 @@ namespace VSPackage.CPPCheckPlugin
 	[Guid(GuidList.guidCPPCheckPluginPkgString)]
 	public sealed class CPPCheckPluginPackage : AsyncPackage
 	{
+		private int completedFileCount = 0, lastAnalyzerTotalFiles = 0;
+
 		public CPPCheckPluginPackage()
 		{
 			_instance = this;
@@ -328,7 +330,7 @@ namespace VSPackage.CPPCheckPlugin
 
 					//dynamic project = document.ProjectItem.ContainingProject.Object;
 					Project project = document.ProjectItem.ContainingProject;
-					SourceFile sourceForAnalysis = await createSourceFileAsync(document.FullName, currentConfig, project);
+					SourceFile sourceForAnalysis = await createSourceFileAsync(document.ProjectItem);
 					if (sourceForAnalysis == null)
 						return;
 
@@ -397,12 +399,10 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			await JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			Debug.WriteLine("Scanning project item \"" + item.Name + "\"...");
 			var itemType = await getTypeOfProjectItemAsync(item);
 
 			if (itemType == ProjectItemType.folder)
 			{
-				Debug.WriteLine("It's a folder, enumerating it.");
 				foreach (ProjectItem subItem in item.ProjectItems)
 				{
 					await scanProjectItemForSourceFilesAsync(subItem, configuredFiles, configuration, project);
@@ -422,13 +422,14 @@ namespace VSPackage.CPPCheckPlugin
 				if (!configuredFiles.Exists(itemFileName))
 				{
 					// Don't bother rebuilding the entire definition if it already exists.
-					SourceFile sourceFile = await createSourceFileAsync(itemFileName, configuration, project);
-					configuredFiles.addOrUpdateFile(sourceFile);
-					scanProgressUpdated(configuredFiles.Count());
+					SourceFile sourceFile = await createSourceFileAsync(item);
+					if (sourceFile != null)
+					{
+						configuredFiles.addOrUpdateFile(sourceFile);
+						scanProgressUpdated(configuredFiles.Count());
+					}
 				}
 			}
-			else
-				Debug.WriteLine("It's something else, skipping it.");
 		}
 
 		private async Task<SourceFilesWithConfiguration> getAllSupportedFilesFromProjectAsync(Project project)
@@ -500,14 +501,46 @@ namespace VSPackage.CPPCheckPlugin
 				SourceFilesWithConfiguration sourceFiles = new SourceFilesWithConfiguration();
 				sourceFiles.Configuration = config;
 
-				await AddTextToOutputWindowAsync("Looking for C++ source files in the project \"" + project.Name + "\"\n");
-
 				foreach (ProjectItem projectItem in project.ProjectItems)
 				{
 					await scanProjectItemForSourceFilesAsync(projectItem, sourceFiles, config, project);
 				}
 
-				allConfiguredFiles.Add(sourceFiles);
+				// Although we're using the same base configuration, it's possible for each file to override that.
+				// Group files into separate configs based on actual parameters. We'll be iterating in reverse order so
+				// reverse the list first to keep the final order the same.
+				List<SourceFile> allSourceFiles = sourceFiles.Files.ToList();
+				allSourceFiles.Reverse();
+
+				while (allSourceFiles.Any())
+                {
+					SourceFilesWithConfiguration newConfig = new SourceFilesWithConfiguration();
+					newConfig.Configuration = config;
+
+					SourceFile templateFile = allSourceFiles.Last();
+					newConfig.addOrUpdateFile(templateFile);
+					allSourceFiles.RemoveAt(allSourceFiles.Count - 1);
+
+					for (int i = allSourceFiles.Count - 1; i >= 0; i--)
+					{
+						SourceFile otherFile = allSourceFiles[i];
+
+						if (otherFile.Macros.All(templateFile.Macros.Contains) && templateFile.Macros.All(otherFile.Macros.Contains) &&
+							otherFile.MacrosToUndefine.All(templateFile.MacrosToUndefine.Contains) && templateFile.MacrosToUndefine.All(otherFile.MacrosToUndefine.Contains)  &&
+							otherFile.IncludePaths.All(templateFile.IncludePaths.Contains) && templateFile.IncludePaths.All(otherFile.IncludePaths.Contains) &&
+							otherFile.ProjectName == templateFile.ProjectName
+							)
+                        {
+							newConfig.addOrUpdateFile(otherFile);
+							allSourceFiles.RemoveAt(i);
+						}
+					}
+
+					if (newConfig.Any())
+                    {
+						allConfiguredFiles.Add(newConfig);
+                    }
+				}
 			}
 
 			_ = JoinableTaskFactory.RunAsync(async () => {
@@ -535,14 +568,32 @@ namespace VSPackage.CPPCheckPlugin
 
 				case "{8E7B96A8-E33D-11D0-A6D5-00C04FB67F6A}":
 				case VSConstants.ItemTypeGuid.PhysicalFile_string:
-					var codeModel = item.FileCodeModel;
-					if (codeModel != null)
+					if (item.ConfigurationManager != null)
                     {
-                        switch (codeModel.Language)
-                        {
-							case CodeModelLanguageConstants.vsCMLanguageVC:
-								return ProjectItemType.cppFile;
+						try
+						{
+							VCFile vcFile = item.Object as VCFile;
+							VCProject vcProject = item.ContainingProject.Object as VCProject;
+							VCFileConfiguration fileConfig = vcFile.FileConfigurations.Item(vcProject.ActiveConfiguration.Name);
+
+							if (!fileConfig.ExcludedFromBuild)
+							{
+								if (item.FileCodeModel != null && item.FileCodeModel.Language == CodeModelLanguageConstants.vsCMLanguageVC)
+								{
+                                    switch (vcFile.ItemType)
+                                    {
+										case "ClInclude":
+											return ProjectItemType.headerFile;
+
+										case "ClCompile":
+											return ProjectItemType.cppFile;
+									}
+								}
+							}
 						}
+						catch (Exception)
+                        {
+                        }
                     }
 
 					return ProjectItemType.other;
@@ -578,83 +629,110 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void runAnalysis(List<SourceFilesWithConfiguration> configuredFiles, bool analysisOnSavedFile)
 		{
+			completedFileCount = 0;
+
 			foreach (var analyzer in _analyzers)
 			{
+				lastAnalyzerTotalFiles = 0;
 				analyzer.analyze(configuredFiles, analysisOnSavedFile);
 			}
 		}
 
-		private static void recursiveAddToolDetails(SourceFile sourceForAnalysis, VCConfiguration vcconfig, dynamic subPropertySheets, VCCLCompilerTool tool)
+		private static void recursiveAddToolDetails(SourceFile sourceForAnalysis, VCConfiguration projectConfig, VCCLCompilerTool tool, dynamic propertySheets, ref bool bInheritDefs, ref bool bInheritUndefs)
         {
-			string macrosToUndefine = tool.UndefinePreprocessorDefinitions;
-
-			string[] definitions = tool.PreprocessorDefinitions.Split(';');
-			bool bInheritDefs = definitions.Contains("\\\"$(INHERIT)\\\"");
-			for (int i = 0; i < definitions.Length; ++i)
-			{
-				definitions[i] = Environment.ExpandEnvironmentVariables(vcconfig.Evaluate(definitions[i]));
-			}
-
-			sourceForAnalysis.addMacros(definitions);
-			sourceForAnalysis.addMacrosToUndefine(macrosToUndefine.Split(';'));
-
+			// TODO: If the special keyword "\\\"$(INHERIT)\\\"" appears, we should inherit at that specific point.
 			if (bInheritDefs)
 			{
-				foreach (var propSheet in subPropertySheets)
+				string[] macrosToDefine = tool.PreprocessorDefinitions.Split(';');
+				bInheritDefs = !macrosToDefine.Contains("\\\"$(NOINHERIT)\\\"");
+				for (int i = 0; i < macrosToDefine.Length; ++i)
 				{
-					var test = propSheet.Name;
+					macrosToDefine[i] = Environment.ExpandEnvironmentVariables(projectConfig.Evaluate(macrosToDefine[i]));
+				}
 
-					dynamic toolsCollection = propSheet.Tools;
-					foreach (var subTool in toolsCollection)
+				sourceForAnalysis.addMacros(macrosToDefine);
+			}
+
+			if (bInheritUndefs)
+			{
+				string[] macrosToUndefine = tool.UndefinePreprocessorDefinitions.Split(';');
+				bInheritUndefs = !macrosToUndefine.Contains("\\\"$(NOINHERIT)\\\"");
+				for (int i = 0; i < macrosToUndefine.Length; ++i)
+				{
+					macrosToUndefine[i] = Environment.ExpandEnvironmentVariables(projectConfig.Evaluate(macrosToUndefine[i]));
+				}
+
+				sourceForAnalysis.addMacrosToUndefine(macrosToUndefine);
+			}
+
+			if (propertySheets != null && (bInheritDefs || bInheritUndefs))
+			{
+				// Scan any inherited property sheets.
+				foreach (var propSheet in propertySheets)
+				{
+					VCCLCompilerTool propSheetTool = (VCCLCompilerTool)propSheet.Tools.Item("VCCLCompilerTool");
+					if (propSheetTool != null)
 					{
-						// Project-specific includes
-						if (implementsInterface(subTool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
-						{
-							recursiveAddToolDetails(sourceForAnalysis, vcconfig, propSheet.PropertySheets, subTool);
-						}
+						// When looping over the inherited property sheets, don't allow rules to filter back up the way.
+						bool bInheritDefs1 = bInheritDefs, bInheritUndefs1 = bInheritUndefs;
+						recursiveAddToolDetails(sourceForAnalysis, projectConfig, propSheetTool, propSheet.PropertySheets, ref bInheritDefs1, ref bInheritUndefs1);
 					}
 				}
 			}
 		}
 
-		private static async Task<SourceFile> createSourceFileAsync(string filePath, Configuration configuration, Project project)
+		private static async Task<SourceFile> createSourceFileAsync(ProjectItem item)
 		{
 			try
 			{
 				await Instance.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				Debug.Assert(isVisualCppProjectKind(project.Kind));
-				
-				VCProject vcProject = project.Object as VCProject;
+				Debug.Assert(isVisualCppProjectKind(item.ContainingProject.Kind));
+
+				VCFile vcFile = item.Object as VCFile;
+				VCProject vcProject = item.ContainingProject.Object as VCProject;
 				VCConfiguration vcconfig = vcProject.ActiveConfiguration;
+				VCFileConfiguration fileConfig = vcFile.FileConfigurations.Item(vcconfig.Name);
 
-				String configurationName = configuration.ConfigurationName;
-				dynamic config = ((dynamic)project.Object).Configurations.Item(configurationName);
-
-				// TODO: This no longer works, why?
-				// string toolSetName = ((dynamic)vcconfig).PlatformToolsetFriendlyName;
-				string toolSetName = null;
+				string toolSetName = ((dynamic)vcconfig).PlatformToolsetFriendlyName;
 
 				string projectDirectory = vcProject.ProjectDirectory;
-				string projectName = project.Name;
+				string projectName = vcProject.Name;
 				SourceFile sourceForAnalysis = null;
-				dynamic toolsCollection = vcconfig.Tools;
-				foreach (var tool in toolsCollection)
-				{
-					// Project-specific includes
-					if (implementsInterface(tool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
-					{
-						sourceForAnalysis = new SourceFile(filePath, projectDirectory, projectName, toolSetName);
 
-						string includes = tool.FullIncludePath;
-						string[] includePaths = includes.Split(';');
+				if (item.FileCount > 0)
+				{
+					bool bInheritDefs = true, bInheritUndefs = true;
+					string[] includePaths = { };
+
+					// Do the file-level first in case it disables inheritance. Include files don't have file-level config.
+					if (implementsInterface(fileConfig.Tool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
+					{
+						sourceForAnalysis = new SourceFile(item.FileNames[1], projectDirectory, projectName, toolSetName);
+						includePaths = fileConfig.Tool.FullIncludePath.Split(';');
+
+						// Other details may be gathered from the file, project or any inherited property sheets.
+						recursiveAddToolDetails(sourceForAnalysis, vcconfig, fileConfig.Tool, null, ref bInheritDefs, ref bInheritUndefs);
+					}
+
+					// Now get the full include path
+					VCCLCompilerTool projectTool = (VCCLCompilerTool)vcconfig.Tools.Item("VCCLCompilerTool");
+					if (projectTool != null && implementsInterface(projectTool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
+					{
+						if (sourceForAnalysis == null)
+						{
+							sourceForAnalysis = new SourceFile(item.FileNames[1], projectDirectory, projectName, toolSetName);
+							includePaths = projectTool.FullIncludePath.Split(';');
+						}
+
+						// Take the full include path from file level, which is already fully resolved.
 						for (int i = 0; i < includePaths.Length; ++i)
 						{
 							includePaths[i] = Environment.ExpandEnvironmentVariables(vcconfig.Evaluate(includePaths[i]));
 						}
 						sourceForAnalysis.addIncludePaths(includePaths);
 
-						recursiveAddToolDetails(sourceForAnalysis, vcconfig, vcconfig.PropertySheets, tool);
+						recursiveAddToolDetails(sourceForAnalysis, vcconfig, projectTool, vcconfig.PropertySheets, ref bInheritDefs, ref bInheritUndefs);
 					}
 				}
 
@@ -720,15 +798,24 @@ namespace VSPackage.CPPCheckPlugin
 					if (e.FilesChecked == 0 || e.TotalFilesNumber == 0)
 						label = "cppcheck analysis in progress...";
 					else
-						label = "cppcheck analysis in progress (" + e.FilesChecked + " out of " + e.TotalFilesNumber + " files checked)";
+						label = "cppcheck analysis in progress (" + (completedFileCount + e.FilesChecked) + " out of " + (completedFileCount + e.TotalFilesNumber) + " files checked)";
+
+					lastAnalyzerTotalFiles = e.TotalFilesNumber;
 
 					statusBar.Progress(true, label, progress, 100);
 				}
 				else
 				{
 					label = "cppcheck analysis completed";
+					completedFileCount += lastAnalyzerTotalFiles;
+					lastAnalyzerTotalFiles = 0;
 
-					statusBar.Progress(true, label, progress, 100);
+					try
+					{
+						// This raises an exception during shutdown.
+						statusBar.Progress(true, label, progress, 100);
+					}
+					catch (Exception) { }
 
 					_ = System.Threading.Tasks.Task.Run(async delegate
 					{

@@ -103,7 +103,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		public void addMacro(string macro)
 		{
-			if (!String.IsNullOrEmpty(macro))
+			if (!String.IsNullOrEmpty(macro) && !macro.Equals("\\\"\\\""))
             {
 				_activeMacros.Add(macro);
 			}
@@ -119,7 +119,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		public void addMacroToUndefine(string macro)
 		{
-			if (!String.IsNullOrEmpty(macro))
+			if (!String.IsNullOrEmpty(macro) && !macro.Equals("\\\"\\\""))
 			{
 				_macrosToUndefine.Add(macro);
 			}
