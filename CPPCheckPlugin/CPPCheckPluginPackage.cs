@@ -106,6 +106,22 @@ namespace VSPackage.CPPCheckPlugin
 
 		#region Package Members
 
+		MenuCommand menuCheckCurrentProject, menuCheckCurrentProjectContext, menuCheckCurrentProjectsContext;
+		MenuCommand menuShowSettingsWindow;
+		MenuCommand menuCancelCheck;
+		MenuCommand menuCheckSelections, checkMultiSelections;
+
+		private void setMenuState(bool bBusy)
+		{
+			menuCheckCurrentProject.Enabled = !bBusy;
+			menuCheckCurrentProjectContext.Enabled = !bBusy;
+			menuCheckCurrentProjectsContext.Enabled = !bBusy;
+			menuShowSettingsWindow.Enabled = !bBusy;
+			menuCancelCheck.Enabled = bBusy;
+			menuCheckSelections.Enabled = !bBusy;
+			checkMultiSelections.Enabled = !bBusy;
+		}
+
 		private void CommandEvents_BeforeExecute(string Guid, int ID, object CustomIn, object CustomOut, ref bool CancelDefault)
 		{
 			if (ID == commandEventIdSave || ID == commandEventIdSaveAll)
@@ -153,46 +169,48 @@ namespace VSPackage.CPPCheckPlugin
 				// Create the command for the menu item.
 				{
 					CommandID menuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidCheckProjectCppcheck);
-					MenuCommand menuItem = new MenuCommand(onCheckCurrentProjectRequested, menuCommandID);
-					mcs.AddCommand(menuItem);
+					menuCheckCurrentProject = new MenuCommand(onCheckCurrentProjectRequested, menuCommandID);
+					mcs.AddCommand(menuCheckCurrentProject);
 				}
 
 				{
 					// Create the command for the settings window
 					CommandID settingsWndCmdId = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidSettings);
-					MenuCommand menuSettings = new MenuCommand(onSettingsWindowRequested, settingsWndCmdId);
-					mcs.AddCommand(menuSettings);
+					menuShowSettingsWindow = new MenuCommand(onSettingsWindowRequested, settingsWndCmdId);
+					mcs.AddCommand(menuShowSettingsWindow);
 				}
 
 				{
 					CommandID stopCheckMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidStopCppcheck);
-					MenuCommand stopCheckMenuItem = new MenuCommand(onStopCheckRequested, stopCheckMenuCommandID);
-					mcs.AddCommand(stopCheckMenuItem);
+					menuCancelCheck = new MenuCommand(onStopCheckRequested, stopCheckMenuCommandID);
+					mcs.AddCommand(menuCancelCheck);
 				}
 
 				{
 					CommandID selectionsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidCheckMultiItemCppcheck);
-					MenuCommand selectionsMenuItem = new MenuCommand(onCheckSelectionsRequested, selectionsMenuCommandID);
-					mcs.AddCommand(selectionsMenuItem);
+					menuCheckSelections = new MenuCommand(onCheckSelectionsRequested, selectionsMenuCommandID);
+					mcs.AddCommand(menuCheckSelections);
 				}
 
 				{
 					CommandID projectMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginProjectCmdSet, (int)PkgCmdIDList.cmdidCheckProjectCppcheck1);
-					MenuCommand projectMenuItem = new MenuCommand(onCheckCurrentProjectRequested, projectMenuCommandID);
-					mcs.AddCommand(projectMenuItem);
+					menuCheckCurrentProjectContext = new MenuCommand(onCheckCurrentProjectRequested, projectMenuCommandID);
+					mcs.AddCommand(menuCheckCurrentProjectContext);
 				}
 
 				{
 					CommandID projectsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginMultiProjectCmdSet, (int)PkgCmdIDList.cmdidCheckProjectsCppcheck);
-					MenuCommand projectsMenuItem = new MenuCommand(onCheckAllProjectsRequested, projectsMenuCommandID);
-					mcs.AddCommand(projectsMenuItem);
+					menuCheckCurrentProjectsContext = new MenuCommand(onCheckAllProjectsRequested, projectsMenuCommandID);
+					mcs.AddCommand(menuCheckCurrentProjectsContext);
 				}
 
 				{
 					CommandID selectionsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginMultiItemProjectCmdSet, (int)PkgCmdIDList.cmdidCheckMultiItemCppcheck1);
-					MenuCommand selectionsMenuItem = new MenuCommand(onCheckSelectionsRequested, selectionsMenuCommandID);
-					mcs.AddCommand(selectionsMenuItem);
+					checkMultiSelections = new MenuCommand(onCheckSelectionsRequested, selectionsMenuCommandID);
+					mcs.AddCommand(checkMultiSelections);
 				}
+
+				setMenuState(false);
 			}
 		}
 
@@ -408,6 +426,7 @@ namespace VSPackage.CPPCheckPlugin
 					if (sourceFile != null)
 					{
 						configuredFiles.addOrUpdateFile(sourceFile);
+						scanProgressUpdated(configuredFiles.Count());
 					}
 				}
 			}
@@ -465,6 +484,7 @@ namespace VSPackage.CPPCheckPlugin
 		private async Task checkProjectsAsync(List<Project> projects)
 		{
 			Debug.Assert(projects.Any());
+			setMenuState(true);
 
 			List<SourceFilesWithConfiguration> allConfiguredFiles = new List<SourceFilesWithConfiguration>();
 			foreach (var project in projects)
@@ -530,6 +550,7 @@ namespace VSPackage.CPPCheckPlugin
 				MainToolWindow.Instance.showIfWindowNotCreated();
 			});
 
+			scanProgressUpdated(-1);
 			runAnalysis(allConfiguredFiles, false);
 		}
 
@@ -736,6 +757,30 @@ namespace VSPackage.CPPCheckPlugin
 			return requestedInterface != null;
 		}
 
+		private async void scanProgressUpdated(int filesScanned)
+		{
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			EnvDTE.StatusBar statusBar = _dte.StatusBar;
+			if (statusBar != null)
+			{
+				try
+				{
+					if (filesScanned >= 0)
+					{
+						string label = "cppcheck scanning for files (" + filesScanned + ")";
+
+						statusBar.Text = label;
+					}
+					else
+					{
+						statusBar.Clear();
+					}
+				}
+				catch (Exception ex) { }
+			}
+		}
+
 		private async void checkProgressUpdated(object sender, ICodeAnalyzer.ProgressEvenArgs e)
 		{
 			int progress = e.Progress;
@@ -782,6 +827,8 @@ namespace VSPackage.CPPCheckPlugin
 						}
 						catch (Exception) { }
 					 });
+
+					setMenuState(false);
 				}
 			}
 		}
