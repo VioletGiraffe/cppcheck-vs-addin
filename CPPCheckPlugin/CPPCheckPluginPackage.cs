@@ -164,54 +164,58 @@ namespace VSPackage.CPPCheckPlugin
 
 			// Add our command handlers for menu (commands must exist in the .vsct file)
 			OleMenuCommandService mcs = await GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
-			if (null != mcs)
+			if (mcs == null)
 			{
-				// Create the command for the menu item.
-				{
-					CommandID menuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidCheckProjectCppcheck);
-					menuCheckCurrentProject = new MenuCommand(onCheckCurrentProjectRequested, menuCommandID);
-					mcs.AddCommand(menuCheckCurrentProject);
-				}
-
-				{
-					// Create the command for the settings window
-					CommandID settingsWndCmdId = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidSettings);
-					menuShowSettingsWindow = new MenuCommand(onSettingsWindowRequested, settingsWndCmdId);
-					mcs.AddCommand(menuShowSettingsWindow);
-				}
-
-				{
-					CommandID stopCheckMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidStopCppcheck);
-					menuCancelCheck = new MenuCommand(onStopCheckRequested, stopCheckMenuCommandID);
-					mcs.AddCommand(menuCancelCheck);
-				}
-
-				{
-					CommandID selectionsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidCheckMultiItemCppcheck);
-					menuCheckSelections = new MenuCommand(onCheckSelectionsRequested, selectionsMenuCommandID);
-					mcs.AddCommand(menuCheckSelections);
-				}
-
-				{
-					CommandID projectMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginProjectCmdSet, (int)PkgCmdIDList.cmdidCheckProjectCppcheck1);
-					menuCheckCurrentProjectContext = new MenuCommand(onCheckCurrentProjectRequested, projectMenuCommandID);
-					mcs.AddCommand(menuCheckCurrentProjectContext);
-				}
-
-				{
-					CommandID projectsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginMultiProjectCmdSet, (int)PkgCmdIDList.cmdidCheckProjectsCppcheck);
-					menuCheckCurrentProjectsContext = new MenuCommand(onCheckAllProjectsRequested, projectsMenuCommandID);
-					mcs.AddCommand(menuCheckCurrentProjectsContext);
-				}
-
-				{
-					CommandID selectionsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginMultiItemProjectCmdSet, (int)PkgCmdIDList.cmdidCheckMultiItemCppcheck1);
-					checkMultiSelections = new MenuCommand(onCheckSelectionsRequested, selectionsMenuCommandID);
-					mcs.AddCommand(checkMultiSelections);
-				}
-
-				setMenuState(false);
+				Debug.Assert(mcs != null);
+				return;
 			}
+
+
+			// Create the command for the menu item.
+			{
+				CommandID menuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidCheckProjectCppcheck);
+				menuCheckCurrentProject = new MenuCommand(onCheckCurrentProjectRequested, menuCommandID);
+				mcs.AddCommand(menuCheckCurrentProject);
+			}
+
+			{
+				// Create the command for the settings window
+				CommandID settingsWndCmdId = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidSettings);
+				menuShowSettingsWindow = new MenuCommand(onSettingsWindowRequested, settingsWndCmdId);
+				mcs.AddCommand(menuShowSettingsWindow);
+			}
+
+			{
+				CommandID stopCheckMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidStopCppcheck);
+				menuCancelCheck = new MenuCommand(onStopCheckRequested, stopCheckMenuCommandID);
+				mcs.AddCommand(menuCancelCheck);
+			}
+
+			{
+				CommandID selectionsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidCheckMultiItemCppcheck);
+				menuCheckSelections = new MenuCommand(onCheckSelectionsRequested, selectionsMenuCommandID);
+				mcs.AddCommand(menuCheckSelections);
+			}
+
+			{
+				CommandID projectMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginProjectCmdSet, (int)PkgCmdIDList.cmdidCheckProjectCppcheck1);
+				menuCheckCurrentProjectContext = new MenuCommand(onCheckCurrentProjectRequested, projectMenuCommandID);
+				mcs.AddCommand(menuCheckCurrentProjectContext);
+			}
+
+			{
+				CommandID projectsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginMultiProjectCmdSet, (int)PkgCmdIDList.cmdidCheckProjectsCppcheck);
+				menuCheckCurrentProjectsContext = new MenuCommand(onCheckAllProjectsRequested, projectsMenuCommandID);
+				mcs.AddCommand(menuCheckCurrentProjectsContext);
+			}
+
+			{
+				CommandID selectionsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginMultiItemProjectCmdSet, (int)PkgCmdIDList.cmdidCheckMultiItemCppcheck1);
+				checkMultiSelections = new MenuCommand(onCheckSelectionsRequested, selectionsMenuCommandID);
+				mcs.AddCommand(checkMultiSelections);
+			}
+
+			setMenuState(false);
 		}
 
 		protected override void Dispose(bool disposing)

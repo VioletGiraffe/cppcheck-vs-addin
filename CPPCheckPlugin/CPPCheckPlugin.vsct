@@ -95,7 +95,7 @@
         <Parent guid="guidCPPCheckPluginCmdSet" id="MyMenuGroup" />
         <Icon guid="guidImages" id="bmpPic1" />
         <Strings>
-          <ButtonText>Check selected items</ButtonText>
+          <ButtonText>Check selected projects</ButtonText>
         </Strings>
       </Button>
 
@@ -136,7 +136,7 @@
         <Parent guid="guidCPPCheckPluginMultiItemCmdSet" id="MyMultiItemMenuGroup" />
         <Icon guid="guidImages" id="bmpPic1" />
         <Strings>
-          <ButtonText>CPPCheck selected items</ButtonText>
+          <ButtonText>CPPCheck selected projects</ButtonText>
         </Strings>
       </Button>
 
