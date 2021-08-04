@@ -134,10 +134,10 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
-        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
-        {
-            // Switches to the UI thread in order to consume some services used in command initialization
-            await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+		{
+			// Switches to the UI thread in order to consume some services used in command initialization
+			await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
 			Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
 
@@ -513,7 +513,7 @@ namespace VSPackage.CPPCheckPlugin
 				allSourceFiles.Reverse();
 
 				while (allSourceFiles.Any())
-                {
+				{
 					SourceFilesWithConfiguration newConfig = new SourceFilesWithConfiguration();
 					newConfig.Configuration = config;
 
@@ -526,24 +526,25 @@ namespace VSPackage.CPPCheckPlugin
 						SourceFile otherFile = allSourceFiles[i];
 
 						if (otherFile.Macros.All(templateFile.Macros.Contains) && templateFile.Macros.All(otherFile.Macros.Contains) &&
-							otherFile.MacrosToUndefine.All(templateFile.MacrosToUndefine.Contains) && templateFile.MacrosToUndefine.All(otherFile.MacrosToUndefine.Contains)  &&
+							otherFile.MacrosToUndefine.All(templateFile.MacrosToUndefine.Contains) && templateFile.MacrosToUndefine.All(otherFile.MacrosToUndefine.Contains) &&
 							otherFile.IncludePaths.All(templateFile.IncludePaths.Contains) && templateFile.IncludePaths.All(otherFile.IncludePaths.Contains) &&
 							otherFile.ProjectName == templateFile.ProjectName
 							)
-                        {
+						{
 							newConfig.addOrUpdateFile(otherFile);
 							allSourceFiles.RemoveAt(i);
 						}
 					}
 
 					if (newConfig.Any())
-                    {
+					{
 						allConfiguredFiles.Add(newConfig);
-                    }
+					}
 				}
 			}
 
-			_ = JoinableTaskFactory.RunAsync(async () => {
+			_ = JoinableTaskFactory.RunAsync(async () =>
+			{
 				await JoinableTaskFactory.SwitchToMainThreadAsync();
 
 				MainToolWindow.Instance.ContentsType = ICodeAnalyzer.AnalysisType.ProjectAnalysis;
@@ -569,7 +570,7 @@ namespace VSPackage.CPPCheckPlugin
 				case "{8E7B96A8-E33D-11D0-A6D5-00C04FB67F6A}":
 				case VSConstants.ItemTypeGuid.PhysicalFile_string:
 					if (item.ConfigurationManager != null)
-                    {
+					{
 						try
 						{
 							VCFile vcFile = item.Object as VCFile;
@@ -580,8 +581,8 @@ namespace VSPackage.CPPCheckPlugin
 							{
 								if (item.FileCodeModel != null && item.FileCodeModel.Language == CodeModelLanguageConstants.vsCMLanguageVC)
 								{
-                                    switch (vcFile.ItemType)
-                                    {
+									switch (vcFile.ItemType)
+									{
 										case "ClInclude":
 											return ProjectItemType.headerFile;
 
@@ -592,9 +593,9 @@ namespace VSPackage.CPPCheckPlugin
 							}
 						}
 						catch (Exception)
-                        {
-                        }
-                    }
+						{
+						}
+					}
 
 					return ProjectItemType.other;
 
@@ -639,7 +640,7 @@ namespace VSPackage.CPPCheckPlugin
 		}
 
 		private static void recursiveAddToolDetails(SourceFile sourceForAnalysis, VCConfiguration projectConfig, VCCLCompilerTool tool, dynamic propertySheets, ref bool bInheritDefs, ref bool bInheritUndefs)
-        {
+		{
 			// TODO: If the special keyword "\\\"$(INHERIT)\\\"" appears, we should inherit at that specific point.
 			if (bInheritDefs)
 			{
@@ -778,7 +779,7 @@ namespace VSPackage.CPPCheckPlugin
 					statusBar.Clear();
 				}
 			}
-			catch (Exception) {}
+			catch (Exception) { }
 		}
 
 		private async void updateStatusBarProgress(bool inProgress, string label, int currentPercentage)
@@ -787,7 +788,8 @@ namespace VSPackage.CPPCheckPlugin
 			try
 			{
 				_dte.StatusBar.Progress(inProgress, label, currentPercentage, 100);
-			} catch (Exception) {}
+			}
+			catch (Exception) { }
 		}
 
 		private async void checkProgressUpdated(object sender, ICodeAnalyzer.ProgressEvenArgs e)

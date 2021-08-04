@@ -30,7 +30,8 @@ namespace VSPackage.CPPCheckPlugin
 
 		public static MainToolWindow Instance
 		{
-			get {
+			get
+			{
 				var package = CPPCheckPluginPackage.Instance;
 				// Searching for existing window 
 				MainToolWindow window = package.FindToolWindow(typeof(MainToolWindow), 0, false) as MainToolWindow;
@@ -53,7 +54,7 @@ namespace VSPackage.CPPCheckPlugin
 			frame.IsOnScreen(out onScreen);
 			if (onScreen == 0)
 				frame.ShowNoActivate();
-            */
+			*/
 		}
 
 		public void showIfWindowNotCreated()

@@ -104,7 +104,7 @@ namespace VSPackage.CPPCheckPlugin
 		public void addMacro(string macro)
 		{
 			if (!String.IsNullOrEmpty(macro) && !macro.Equals("\\\"\\\""))
-            {
+			{
 				_activeMacros.Add(macro);
 			}
 		}
@@ -217,16 +217,17 @@ namespace VSPackage.CPPCheckPlugin
 			return result;
 		}
 
-		private string _fullPath        = null;
+		private string _fullPath = null;
 		private string _projectBasePath = null;
-		private string _projectName     = null;
+		private string _projectName = null;
 		private List<string> _includePaths = new List<string>();
 		private List<string> _activeMacros = new List<string>();
 		private List<string> _macrosToUndefine = new List<string>();
 		private VCCompilerVersion _compilerVersion;
 	}
 
-	public class SourceFilesWithConfiguration {
+	public class SourceFilesWithConfiguration
+	{
 		public IEnumerable<SourceFile> Files
 		{
 			get { return _files.Values; }
@@ -244,14 +245,14 @@ namespace VSPackage.CPPCheckPlugin
 		}
 
 		public int Count()
-        {
+		{
 			return _files.Count;
-        }
+		}
 
 		public bool Exists(string filePath)
-        {
+		{
 			return _files.ContainsKey(filePath);
-        }
+		}
 
 		public void addOrUpdateFile(SourceFile file)
 		{

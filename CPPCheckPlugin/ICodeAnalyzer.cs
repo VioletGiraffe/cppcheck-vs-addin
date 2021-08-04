@@ -285,7 +285,8 @@ namespace VSPackage.CPPCheckPlugin
 			if (!String.IsNullOrEmpty(output))
 			{
 				addProblemsToToolwindow(parseOutput(output));
-				try {
+				try
+				{
 					_ = CPPCheckPluginPackage.AddTextToOutputWindowAsync(output + "\n");
 				}
 				catch (Exception) { }

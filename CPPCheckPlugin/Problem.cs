@@ -93,11 +93,11 @@ namespace VSPackage.CPPCheckPlugin
 
 		private ICodeAnalyzer _analyzer;
 		private SeverityLevel _severity;
-		private String        _messageId;
-		private String        _message;
-		private String        _file;
-		private String        _baseProjectPath;
-		private String        _projectName;
-		private int           _line;
+		private String _messageId;
+		private String _message;
+		private String _file;
+		private String _baseProjectPath;
+		private String _projectName;
+		private int _line;
 	}
 }
