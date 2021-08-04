@@ -708,11 +708,12 @@ namespace VSPackage.CPPCheckPlugin
 					// Do the file-level first in case it disables inheritance. Include files don't have file-level config.
 					if (implementsInterface(fileConfig.Tool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
 					{
+						VCCLCompilerTool vcTool = (VCCLCompilerTool)fileConfig.Tool;
 						sourceForAnalysis = new SourceFile(item.FileNames[1], projectDirectory, projectName, toolSetName);
-						includePaths = fileConfig.Tool.FullIncludePath.Split(';');
-
+						includePaths = vcTool.FullIncludePath.Split(';');
+						string macros = vcTool.PreprocessorDefinitions;
 						// Other details may be gathered from the file, project or any inherited property sheets.
-						recursiveAddToolDetails(sourceForAnalysis, vcconfig, fileConfig.Tool, null, ref bInheritDefs, ref bInheritUndefs);
+						recursiveAddToolDetails(sourceForAnalysis, vcconfig, vcTool, null, ref bInheritDefs, ref bInheritUndefs);
 					}
 
 					// Now get the full include path
@@ -762,23 +763,31 @@ namespace VSPackage.CPPCheckPlugin
 			await JoinableTaskFactory.SwitchToMainThreadAsync();
 
 			EnvDTE.StatusBar statusBar = _dte.StatusBar;
-			if (statusBar != null)
-			{
-				try
-				{
-					if (filesScanned >= 0)
-					{
-						string label = "cppcheck scanning for files (" + filesScanned + ")";
+			if (statusBar == null)
+				return;
 
-						statusBar.Text = label;
-					}
-					else
-					{
-						statusBar.Clear();
-					}
+			try
+			{
+				if (filesScanned >= 0)
+				{
+					string label = "cppcheck scanning for files (" + filesScanned + ")";
+					statusBar.Text = label;
 				}
-				catch (Exception ex) { }
+				else
+				{
+					statusBar.Clear();
+				}
 			}
+			catch (Exception) {}
+		}
+
+		private async void updateStatusBarProgress(bool inProgress, string label, int currentPercentage)
+		{
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
+			try
+			{
+				_dte.StatusBar.Progress(inProgress, label, currentPercentage, 100);
+			} catch (Exception) {}
 		}
 
 		private async void checkProgressUpdated(object sender, ICodeAnalyzer.ProgressEvenArgs e)
@@ -789,47 +798,34 @@ namespace VSPackage.CPPCheckPlugin
 
 			await JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			EnvDTE.StatusBar statusBar = _dte.StatusBar;
-			if (statusBar != null)
+			string label = "";
+			if (progress < 100)
 			{
-				string label = "";
-				if (progress < 100)
-				{
-					if (e.FilesChecked == 0 || e.TotalFilesNumber == 0)
-						label = "cppcheck analysis in progress...";
-					else
-						label = "cppcheck analysis in progress (" + (completedFileCount + e.FilesChecked) + " out of " + (completedFileCount + e.TotalFilesNumber) + " files checked)";
-
-					lastAnalyzerTotalFiles = e.TotalFilesNumber;
-
-					statusBar.Progress(true, label, progress, 100);
-				}
+				if (e.FilesChecked == 0 || e.TotalFilesNumber == 0)
+					label = "cppcheck analysis in progress...";
 				else
+					label = "cppcheck analysis in progress (" + (completedFileCount + e.FilesChecked) + " out of " + (completedFileCount + e.TotalFilesNumber) + " files checked)";
+
+				lastAnalyzerTotalFiles = e.TotalFilesNumber;
+
+				updateStatusBarProgress(true, label, progress);
+			}
+			else
+			{
+				label = "cppcheck analysis completed";
+				completedFileCount += lastAnalyzerTotalFiles;
+				lastAnalyzerTotalFiles = 0;
+
+				updateStatusBarProgress(true, label, Math.Max(progress, 100));
+
+				_ = System.Threading.Tasks.Task.Run(async delegate
 				{
-					label = "cppcheck analysis completed";
-					completedFileCount += lastAnalyzerTotalFiles;
-					lastAnalyzerTotalFiles = 0;
+					await System.Threading.Tasks.Task.Delay(5000);
+					await JoinableTaskFactory.SwitchToMainThreadAsync();
+					updateStatusBarProgress(false, label, 100);
+				});
 
-					try
-					{
-						// This raises an exception during shutdown.
-						statusBar.Progress(true, label, progress, 100);
-					}
-					catch (Exception) { }
-
-					_ = System.Threading.Tasks.Task.Run(async delegate
-					{
-						await System.Threading.Tasks.Task.Delay(5000);
-						await JoinableTaskFactory.SwitchToMainThreadAsync();
-						try
-						{
-							statusBar.Progress(false, label, 100, 100);
-						}
-						catch (Exception) { }
-					 });
-
-					setMenuState(false);
-				}
+				setMenuState(false);
 			}
 		}
 
