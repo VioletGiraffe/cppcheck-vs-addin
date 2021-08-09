@@ -193,7 +193,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			{
 				CommandID selectionsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginCmdSet, (int)PkgCmdIDList.cmdidCheckMultiItemCppcheck);
-				menuCheckSelections = new MenuCommand(onCheckSelectionsRequested, selectionsMenuCommandID);
+				menuCheckSelections = new MenuCommand(onCheckSelectedProjects, selectionsMenuCommandID);
 				mcs.AddCommand(menuCheckSelections);
 			}
 
@@ -211,7 +211,7 @@ namespace VSPackage.CPPCheckPlugin
 
 			{
 				CommandID selectionsMenuCommandID = new CommandID(GuidList.guidCPPCheckPluginMultiItemProjectCmdSet, (int)PkgCmdIDList.cmdidCheckMultiItemCppcheck1);
-				checkMultiSelections = new MenuCommand(onCheckSelectionsRequested, selectionsMenuCommandID);
+				checkMultiSelections = new MenuCommand(onCheckSelectedProjects, selectionsMenuCommandID);
 				mcs.AddCommand(checkMultiSelections);
 			}
 
@@ -247,8 +247,7 @@ namespace VSPackage.CPPCheckPlugin
 		{
 			JoinableTaskFactory.Run(async () =>
 			{
-				await JoinableTaskFactory.SwitchToMainThreadAsync();
-				_ = checkFirstActiveProjectAsync();
+				await checkFirstActiveProjectAsync();
 			});
 		}
 
@@ -269,7 +268,7 @@ namespace VSPackage.CPPCheckPlugin
 			});
 		}
 
-		private void onCheckSelectionsRequested(object sender, EventArgs e)
+		private void onCheckSelectedProjects(object sender, EventArgs e)
 		{
 			JoinableTaskFactory.Run(async () =>
 			{
@@ -461,6 +460,7 @@ namespace VSPackage.CPPCheckPlugin
 		private async Task checkFirstActiveProjectAsync()
 		{
 			await JoinableTaskFactory.SwitchToMainThreadAsync();
+			
 
 			var activeProjects = await findSelectedCppProjectsAsync();
 			Assumes.NotNull(activeProjects);
@@ -507,7 +507,10 @@ namespace VSPackage.CPPCheckPlugin
 
 				foreach (ProjectItem projectItem in project.ProjectItems)
 				{
+					Stopwatch sw = Stopwatch.StartNew();
 					await scanProjectItemForSourceFilesAsync(projectItem, sourceFiles, config, project);
+					sw.Stop();
+					await AddTextToOutputWindowAsync("scanProjectItemForSourceFilesAsync for " + projectItem.Name + " took " + sw.ElapsedMilliseconds + " ms\n");
 				}
 
 				// Although we're using the same base configuration, it's possible for each file to override that.
@@ -783,17 +786,17 @@ namespace VSPackage.CPPCheckPlugin
 					statusBar.Clear();
 				}
 			}
-			catch (Exception) { }
+			catch (Exception) {}
 		}
 
 		private async void updateStatusBarProgress(bool inProgress, string label, int currentPercentage)
 		{
-			await JoinableTaskFactory.SwitchToMainThreadAsync();
 			try
 			{
+				await JoinableTaskFactory.SwitchToMainThreadAsync();
 				_dte.StatusBar.Progress(inProgress, label, currentPercentage, 100);
 			}
-			catch (Exception) { }
+			catch (Exception) {}
 		}
 
 		private async void checkProgressUpdated(object sender, ICodeAnalyzer.ProgressEvenArgs e)

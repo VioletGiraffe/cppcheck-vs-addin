@@ -4,6 +4,7 @@ using EnvDTE;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.IO;
+using System.Threading;
 
 namespace VSPackage.CPPCheckPlugin
 {
@@ -160,8 +161,11 @@ namespace VSPackage.CPPCheckPlugin
 			{
 				try
 				{
-					_terminateThread = true;
-					_thread.Join();
+					_terminateThread.Value = true;
+					if (!_thread.Join(TimeSpan.FromSeconds(5)))
+					{
+						_thread.Abort();
+					}
 				}
 				catch (Exception ex)
 				{
@@ -173,7 +177,7 @@ namespace VSPackage.CPPCheckPlugin
 
 		private void analyzerThreadFunc(string analyzerExePath)
 		{
-			_terminateThread = false;
+			_terminateThread.Value = false;
 			foreach (var arguments in _allArguments)
 			{
 				// Don't start subsequent processes if we've been requested to cancel.
@@ -326,7 +330,7 @@ namespace VSPackage.CPPCheckPlugin
 		protected int _numCores;
 
 		private System.Threading.Thread _thread = null;
-		private bool _terminateThread = false;
+		private AtomicBool _terminateThread = new AtomicBool(false);
 		private List<string> _allArguments;
 	}
 }
