@@ -582,7 +582,8 @@ namespace VSPackage.CPPCheckPlugin
 						{
 							VCFile vcFile = item.Object as VCFile;
 							VCProject vcProject = item.ContainingProject.Object as VCProject;
-							VCFileConfiguration fileConfig = vcFile.FileConfigurations.Item(vcProject.ActiveConfiguration.Name);
+                            dynamic vcFileFileConfigurations = vcFile.FileConfigurations;
+                            VCFileConfiguration fileConfig = vcFileFileConfigurations.Item(vcProject.ActiveConfiguration.Name);
 
 							if (!fileConfig.ExcludedFromBuild)
 							{
@@ -700,7 +701,8 @@ namespace VSPackage.CPPCheckPlugin
 				VCFile vcFile = item.Object as VCFile;
 				VCProject vcProject = item.ContainingProject.Object as VCProject;
 				VCConfiguration vcconfig = vcProject.ActiveConfiguration;
-				VCFileConfiguration fileConfig = vcFile.FileConfigurations.Item(vcconfig.Name);
+				dynamic  vcFileFileConfigurations = vcFile.FileConfigurations;
+                VCFileConfiguration fileConfig = vcFileFileConfigurations.Item(vcconfig.Name);
 
 				string toolSetName = ((dynamic)vcconfig).PlatformToolsetFriendlyName;
 
@@ -724,8 +726,9 @@ namespace VSPackage.CPPCheckPlugin
 						recursiveAddToolDetails(sourceForAnalysis, vcconfig, vcTool, null, ref bInheritDefs, ref bInheritUndefs);
 					}
 
-					// Now get the full include path
-					VCCLCompilerTool projectTool = (VCCLCompilerTool)vcconfig.Tools.Item("VCCLCompilerTool");
+                    // Now get the full include path
+                    dynamic vcconfigTools = vcconfig.Tools;
+                    VCCLCompilerTool projectTool = (VCCLCompilerTool)vcconfigTools.Item("VCCLCompilerTool");
 					if (projectTool != null && implementsInterface(projectTool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
 					{
 						if (sourceForAnalysis == null)
