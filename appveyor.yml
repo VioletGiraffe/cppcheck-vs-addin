@@ -1,5 +1,5 @@
-version: 1.4.{build}
-image: Visual Studio 2019
+version: 1.5.{build}
+image: Visual Studio 2022
 configuration: Release
 platform: Any CPU
 assembly_info:
