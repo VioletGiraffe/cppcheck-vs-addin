@@ -21,18 +21,8 @@ NOTE: The add-in does not deploy Cppcheck executable. Please, go to [Cppcheck](h
 
 Should you decide to open, build and debug the project please follow these steps:
 
- * Install Visual Studio SDK for your version of Visual Studio.
-If you plan to open the project in more that one supported version you'll have to install
-the matching Visual Studio SDK for each version of Visual Studio separately.
-<a href="http://www.microsoft.com/en-us/download/details.aspx?id=30668">Here's Visual Studio 2012 SDK</a>
-and <a href="http://www.microsoft.com/en-us/download/details.aspx?id=40758">here's Visual Studio 2013 SDK</a>. Starting with Visual Studio 2015, the <a href="https://msdn.microsoft.com/en-us/library/mt683786.aspx">SDK is an optional feature</a> to install.
-
-  * Note: if the Visual Studio instance in which you planned to open the project was running
- while you were installing the SDK you'll have to restart
- that Visual Studio instance - otherwise the project won't open.
-
- * Once Visual Studio SDK has been installed you can start Visual Studio and open the project.
-
+Use Visual Studio 2022 - ensure you have the workload for Extension Development installed. All SDKs are referenced as nuget packages and should 
+ 
  * Press F5 (*Debug* -> *Start Debugging*) to have the project built and deployed into "Experimental Instance" of Visual Studio.
  This should start another ("experimental") instance of Visual Studio *of the same version* with the addin deployed there.
 
@@ -41,5 +31,6 @@ and <a href="http://www.microsoft.com/en-us/download/details.aspx?id=40758">here
 or the wrong Visual Studio version is started do the following:
   * right-click the project in Solution Explorer and get to *Properties*
   * get to *Debug* tab
-  * next to *start external program* alter the path so that it points to where the right version of Visual Studio is installed. Path should be something like *"C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE\devenv.exe"*
+  * next to *start external program* alter the path so that it points to where the right version of Visual Studio is installed. Path should be something like *"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\devenv.exe"*
   * In the same window add */rootsuffix Exp* to *Command line arguments*
+
