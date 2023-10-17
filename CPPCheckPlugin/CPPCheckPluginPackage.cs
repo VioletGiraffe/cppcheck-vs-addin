@@ -690,6 +690,37 @@ namespace VSPackage.CPPCheckPlugin
 			}
 		}
 
+		private static void recursiveAddToolDetails(SourceFile sourceForAnalysis, VCConfiguration projectConfig, VCNMakeTool tool, dynamic propertySheets, ref bool bInheritDefs, ref bool bInheritUndefs)
+		{
+			// TODO: If the special keyword "\\\"$(INHERIT)\\\"" appears, we should inherit at that specific point.
+			if (bInheritDefs)
+			{
+				string[] macrosToDefine = tool.PreprocessorDefinitions.Split(';');
+				bInheritDefs = !macrosToDefine.Contains("\\\"$(NOINHERIT)\\\"");
+				for (int i = 0; i < macrosToDefine.Length; ++i)
+				{
+					macrosToDefine[i] = Environment.ExpandEnvironmentVariables(projectConfig.Evaluate(macrosToDefine[i]));
+				}
+
+				sourceForAnalysis.addMacros(macrosToDefine);
+			}
+
+			if (propertySheets != null && (bInheritDefs || bInheritUndefs))
+			{
+				// Scan any inherited property sheets.
+				foreach (var propSheet in propertySheets)
+				{
+					VCNMakeTool propSheetTool = (VCNMakeTool)propSheet.Tools.Item("VCNMakeTool");
+					if (propSheetTool != null)
+					{
+						// When looping over the inherited property sheets, don't allow rules to filter back up the way.
+						bool bInheritDefs1 = bInheritDefs, bInheritUndefs1 = bInheritUndefs;
+						recursiveAddToolDetails(sourceForAnalysis, projectConfig, propSheetTool, propSheet.PropertySheets, ref bInheritDefs1, ref bInheritUndefs1);
+					}
+				}
+			}
+		}
+
 		private static async Task<SourceFile> createSourceFileAsync(ProjectItem item)
 		{
 			try
@@ -715,15 +746,23 @@ namespace VSPackage.CPPCheckPlugin
 					bool bInheritDefs = true, bInheritUndefs = true;
 					string[] includePaths = { };
 
-					// Do the file-level first in case it disables inheritance. Include files don't have file-level config.
-					if (implementsInterface(fileConfig.Tool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
+					// Possible exception thrown for nmake based project
+					try
 					{
-						VCCLCompilerTool vcTool = (VCCLCompilerTool)fileConfig.Tool;
-						sourceForAnalysis = new SourceFile(item.FileNames[1], projectDirectory, projectName, toolSetName);
-						includePaths = vcTool.FullIncludePath.Split(';');
-						string macros = vcTool.PreprocessorDefinitions;
-						// Other details may be gathered from the file, project or any inherited property sheets.
-						recursiveAddToolDetails(sourceForAnalysis, vcconfig, vcTool, null, ref bInheritDefs, ref bInheritUndefs);
+						// Do the file-level first in case it disables inheritance. Include files don't have file-level config.
+						if (implementsInterface(fileConfig.Tool, "Microsoft.VisualStudio.VCProjectEngine.VCCLCompilerTool"))
+						{
+							VCCLCompilerTool vcTool = (VCCLCompilerTool)fileConfig.Tool;
+							sourceForAnalysis = new SourceFile(item.FileNames[1], projectDirectory, projectName, toolSetName);
+							includePaths = vcTool.FullIncludePath.Split(';');
+							string macros = vcTool.PreprocessorDefinitions;
+							// Other details may be gathered from the file, project or any inherited property sheets.
+							recursiveAddToolDetails(sourceForAnalysis, vcconfig, vcTool, null, ref bInheritDefs, ref bInheritUndefs);
+						}
+					}
+					catch (Exception ex)
+					{
+						DebugTracer.Trace(ex);
 					}
 
 					// Now get the full include path
@@ -745,6 +784,25 @@ namespace VSPackage.CPPCheckPlugin
 						sourceForAnalysis.addIncludePaths(includePaths);
 
 						recursiveAddToolDetails(sourceForAnalysis, vcconfig, projectTool, vcconfig.PropertySheets, ref bInheritDefs, ref bInheritUndefs);
+					}
+
+					VCNMakeTool nmakeTool = (VCNMakeTool)vcconfigTools.Item("VCNMakeTool");
+					if (null != nmakeTool && implementsInterface(nmakeTool, "Microsoft.VisualStudio.VCProjectEngine.VCNMakeTool"))
+					{
+						if (sourceForAnalysis == null)
+						{
+							sourceForAnalysis = new SourceFile(item.FileNames[1], projectDirectory, projectName, toolSetName);
+							includePaths = nmakeTool.IncludeSearchPath.Split(';');
+						}
+
+						// Take the full include path from file level, which is already fully resolved.
+						for (int i = 0; i < includePaths.Length; ++i)
+						{
+							includePaths[i] = Environment.ExpandEnvironmentVariables(vcconfig.Evaluate(includePaths[i]));
+						}
+						sourceForAnalysis.addIncludePaths(includePaths);
+
+						recursiveAddToolDetails(sourceForAnalysis, vcconfig, nmakeTool, vcconfig.PropertySheets, ref bInheritDefs, ref bInheritUndefs);
 					}
 				}
 
